@@ -1,0 +1,13 @@
+{
+  "rootFunction": "submitSearch",
+  "functions": [
+    "buildQuery",
+    "submitSearch"
+  ],
+  "calls": [
+    {
+      "from": "submitSearch",
+      "to": "buildQuery"
+    }
+  ]
+}

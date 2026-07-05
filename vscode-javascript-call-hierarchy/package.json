@@ -1,0 +1,83 @@
+{
+  "name": "javascript-call-hierarchy",
+  "displayName": "JavaScript/TypeScript Call Hierarchy Analyzer",
+  "description": "Analyze and visualize JavaScript/TypeScript function call hierarchies",
+  "version": "0.2.0",
+  "publisher": "share-github",
+  "license": "MIT",
+  "author": "share-github",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact",
+    "onLanguage:html",
+    "onLanguage:jsp"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "jsCallHierarchy.openCallCanvasViewer",
+        "title": "CallCanvas: Open Viewer with File (JavaScript)",
+        "category": "JS Call Hierarchy"
+      },
+      {
+        "command": "jsCallHierarchy.exportIncludeMap",
+        "title": "Export HTML Include Map as CallCanvas JSON",
+        "category": "JS Call Hierarchy"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "jsCallHierarchy.openCallCanvasViewer",
+          "when": "editorLangId =~ /^(javascript|javascriptreact)$/",
+          "group": "navigation"
+        },
+        {
+          "command": "jsCallHierarchy.exportIncludeMap",
+          "when": "editorLangId =~ /^(html|jsp)$/",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "JS Call Hierarchy",
+      "properties": {
+        "jsCallHierarchy.depth": {
+          "type": "number",
+          "default": 5,
+          "description": "Maximum depth of call hierarchy analysis"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "npx vsce package --allow-missing-repository",
+    "test": "npm run compile && node test-fixtures/golden/run-test.js",
+    "test:update": "npm run compile && node test-fixtures/golden/run-test.js --update"
+  },
+  "dependencies": {
+    "typescript": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/vsce": "^3.7.1",
+    "eslint": "^8.54.0"
+  }
+}

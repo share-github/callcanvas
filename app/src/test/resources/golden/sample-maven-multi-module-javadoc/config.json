@@ -1,0 +1,9 @@
+{
+  "description": "sample-maven-multi-module-javadoc: Javadoc付きメソッドのCallCanvas出力検証（submitOrderFromApi）",
+  "projectPath": "sample-project/sample-maven-multi-module",
+  "src": "module-app/src/main/java,module-service/src/main/java,module-domain/src/main/java",
+  "classes": "module-app/target/classes,module-service/target/classes,module-domain/target/classes",
+  "cp": "module-app/target/module-app-1.0.0.jar,module-service/target/module-service-1.0.0.jar,module-domain/target/module-domain-1.0.0.jar",
+  "root": "OrderController#submitOrderFromApi(String,String,String)",
+  "depth": 5
+}

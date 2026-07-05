@@ -1,0 +1,13 @@
+{
+  "rootFunction": "createNoteAction",
+  "functions": [
+    "createNoteAction",
+    "validateNoteInput"
+  ],
+  "calls": [
+    {
+      "from": "createNoteAction",
+      "to": "validateNoteInput"
+    }
+  ]
+}

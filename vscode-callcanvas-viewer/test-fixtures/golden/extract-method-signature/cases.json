@@ -1,0 +1,47 @@
+[
+  {
+    "label": "Full Java signature with FQN",
+    "input": {
+      "displayName": "UserService # save",
+      "code": "public void save(User user) {",
+      "filePath": "src/main/java/com/example/service/UserService.java"
+    },
+    "expected": "com.example.service.UserService#save(User)"
+  },
+  {
+    "label": "No filePath - simple class name",
+    "input": {
+      "displayName": "Foo # bar",
+      "code": "public String bar(int x, String y) {",
+      "filePath": null
+    },
+    "expected": "Foo#bar(int,String)"
+  },
+  {
+    "label": "No params",
+    "input": {
+      "displayName": "Service # init",
+      "code": "public void init() {",
+      "filePath": "src/main/java/com/example/Service.java"
+    },
+    "expected": "com.example.Service#init()"
+  },
+  {
+    "label": "Invalid displayName - no hash",
+    "input": {
+      "displayName": "justAName",
+      "code": "public void test() {",
+      "filePath": null
+    },
+    "expected": null
+  },
+  {
+    "label": "Generic return type method",
+    "input": {
+      "displayName": "TodoService # search",
+      "code": "public PageResult<TodoItem> search(String keyword, Boolean completed) {",
+      "filePath": "src/main/java/com/example/demo/service/TodoService.java"
+    },
+    "expected": "com.example.demo.service.TodoService#search(String,Boolean)"
+  }
+]

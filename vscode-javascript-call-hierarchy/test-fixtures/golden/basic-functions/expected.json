@@ -1,0 +1,28 @@
+{
+  "rootFunction": "init",
+  "functions": [
+    "fetchUser",
+    "formatDate",
+    "formatName",
+    "init",
+    "setupUI"
+  ],
+  "calls": [
+    {
+      "from": "fetchUser",
+      "to": "formatDate"
+    },
+    {
+      "from": "fetchUser",
+      "to": "formatName"
+    },
+    {
+      "from": "init",
+      "to": "fetchUser"
+    },
+    {
+      "from": "init",
+      "to": "setupUI"
+    }
+  ]
+}

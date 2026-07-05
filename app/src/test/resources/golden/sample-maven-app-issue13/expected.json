@@ -1,0 +1,98 @@
+{
+  "windows": [
+    {
+      "code": "    /**\n     * ターゲットメソッド - 解析対象\n     */\n    public String targetMethod(RequestData request, String param1, String param2) {\n        SessionData session = request.getSession();\n        DtoData dtoInfo = (DtoData) session.getAttribute(\"DTO_INFO\");\n        \n        if (dtoInfo != null && dtoInfo.getId() != null) {\n            try {\n                // ★ このパターンが問題\n                // 外側: serviceInstance.updateData(...) - 検出されるべき\n                // 内側: getHelperMethod(request) - 検出される\n                serviceInstance.updateData(session, dtoInfo, param2, getHelperMethod(request));\n            } catch (Exception e) {\n                session.removeAttribute(\"DTO_INFO\");\n                throw new RuntimeException(\"Error\", e);\n            }\n        }\n        return \"redirect:\" + param1;\n    }",
+      "displayName": "ControllerWithService # targetMethod",
+      "startLine": 22,
+      "filePath": "src/main/java/com/example/demo/issue13/ControllerWithService.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    /**\n     * ヘルパーメソッド - 引数で使用される\n     */\n    public HelperEnum getHelperMethod(RequestData request) {\n        return HelperEnum.DEFAULT;\n    }",
+      "displayName": "CoreController # getHelperMethod",
+      "startLine": 8,
+      "filePath": "src/main/java/com/example/demo/issue13/CoreController.java",
+      "id": "window-6"
+    },
+    {
+      "code": "    /**\n     * データ更新メソッド - 引数にネストしたメソッド呼び出しを含む呼び出しの対象\n     * \n     * このメソッドが呼び出し元（ControllerWithService#targetMethod）から\n     * 検出されることを確認する\n     */\n    public void updateData(SessionData session, DtoData dto, String param, HelperEnum helper) {\n        // データ更新処理\n        String id = dto.getId();\n        System.out.println(\"Updating data: \" + id + \" with helper: \" + helper);\n    }",
+      "displayName": "DataService # updateData",
+      "startLine": 8,
+      "filePath": "src/main/java/com/example/demo/issue13/DataService.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    public String getId() {\n        return id;\n    }",
+      "displayName": "DtoData # getId",
+      "startLine": 19,
+      "filePath": "src/main/java/com/example/demo/issue13/DtoData.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    public SessionData getSession() {\n        return session;\n    }",
+      "displayName": "RequestData # getSession",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/demo/issue13/RequestData.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    public Object getAttribute(String name) {\n        return attributes.get(name);\n    }",
+      "displayName": "SessionData # getAttribute",
+      "startLine": 13,
+      "filePath": "src/main/java/com/example/demo/issue13/SessionData.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    public void removeAttribute(String name) {\n        attributes.remove(name);\n    }",
+      "displayName": "SessionData # removeAttribute",
+      "startLine": 21,
+      "filePath": "src/main/java/com/example/demo/issue13/SessionData.java",
+      "id": "window-7"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 26,
+      "from": "window-1",
+      "callEndLine": 26,
+      "to": "window-2"
+    },
+    {
+      "callLine": 27,
+      "from": "window-1",
+      "callEndLine": 27,
+      "to": "window-3"
+    },
+    {
+      "callLine": 29,
+      "from": "window-1",
+      "callEndLine": 29,
+      "to": "window-4"
+    },
+    {
+      "callLine": 34,
+      "from": "window-1",
+      "callEndLine": 34,
+      "to": "window-5"
+    },
+    {
+      "callLine": 34,
+      "from": "window-1",
+      "callEndLine": 34,
+      "to": "window-6"
+    },
+    {
+      "callLine": 36,
+      "from": "window-1",
+      "callEndLine": 36,
+      "to": "window-7"
+    },
+    {
+      "callLine": 16,
+      "from": "window-5",
+      "callEndLine": 16,
+      "to": "window-4"
+    }
+  ],
+  "autoLayout": true
+}

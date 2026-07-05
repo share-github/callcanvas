@@ -1,0 +1,9 @@
+{
+  "description": "sample-cross-module-app: 親POMなしマルチモジュール構成でクロスモジュール呼び出しが正しくFQN解決されることを検証する（module-frontからmodule-coreへの呼び出し）",
+  "projectPath": "sample-project/sample-cross-module-app",
+  "src": "module-front/src/main/java,module-core/src/main/java",
+  "classes": "module-front/target/classes,module-core/target/classes",
+  "root": "FrontService#processOrder(OrderFormDto,String)",
+  "depth": 2,
+  "buildIndex": true
+}

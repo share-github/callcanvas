@@ -1,0 +1,516 @@
+[
+  {
+    "label": "String code to array conversion",
+    "input": {
+      "code": "public void foo() {\n    bar();\n}",
+      "startLine": 10,
+      "highlightLines": [
+        11
+      ],
+      "filePath": "Foo.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 10,
+          "content": "public void foo() {",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        },
+        {
+          "line": 11,
+          "content": "    bar();",
+          "highlight": true,
+          "hasWarning": false,
+          "isComment": false
+        },
+        {
+          "line": 12,
+          "content": "}",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        }
+      ],
+      "startLine": 10,
+      "highlightLines": [
+        11
+      ],
+      "filePath": "Foo.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 137
+      },
+      "language": "java",
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "Already array code - passthrough with lineComments merge",
+    "input": {
+      "code": [
+        {
+          "line": 1,
+          "content": "int x = 1;",
+          "highlight": false
+        },
+        {
+          "line": 2,
+          "content": "return x;",
+          "highlight": true
+        }
+      ],
+      "filePath": "Bar.java",
+      "lineComments": {
+        "1": "initialize"
+      },
+      "position": {
+        "top": 100,
+        "left": 200,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 1,
+          "content": "int x = 1;",
+          "highlight": false,
+          "comment": "initialize"
+        },
+        {
+          "line": 2,
+          "content": "return x;",
+          "highlight": true
+        }
+      ],
+      "filePath": "Bar.java",
+      "lineComments": {
+        "1": "initialize"
+      },
+      "position": {
+        "top": 100,
+        "left": 200,
+        "width": 600,
+        "height": 117
+      },
+      "language": "java",
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "Comment line detection",
+    "input": {
+      "code": "// comment\n/* block */\n* javadoc\ncode();",
+      "startLine": 1,
+      "filePath": "Test.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 1,
+          "content": "// comment",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": true
+        },
+        {
+          "line": 2,
+          "content": "/* block */",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": true
+        },
+        {
+          "line": 3,
+          "content": "* javadoc",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": true
+        },
+        {
+          "line": 4,
+          "content": "code();",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        }
+      ],
+      "startLine": 1,
+      "filePath": "Test.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 157
+      },
+      "language": "java",
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "warningLines processing",
+    "input": {
+      "code": "line1\nline2",
+      "startLine": 1,
+      "warningLines": [
+        2
+      ],
+      "filePath": "Warn.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 1,
+          "content": "line1",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        },
+        {
+          "line": 2,
+          "content": "line2",
+          "highlight": false,
+          "hasWarning": true,
+          "isComment": false
+        }
+      ],
+      "startLine": 1,
+      "warningLines": [
+        2
+      ],
+      "filePath": "Warn.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 117
+      },
+      "language": "java",
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "collapsed true preserved",
+    "input": {
+      "code": "x",
+      "startLine": 1,
+      "collapsed": true,
+      "filePath": "A.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 1,
+          "content": "x",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        }
+      ],
+      "startLine": 1,
+      "collapsed": true,
+      "filePath": "A.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 97
+      },
+      "language": "java",
+      "visible": true,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "visible false preserved",
+    "input": {
+      "code": "x",
+      "startLine": 1,
+      "visible": false,
+      "filePath": "A.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 1,
+          "content": "x",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        }
+      ],
+      "startLine": 1,
+      "visible": false,
+      "filePath": "A.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 97
+      },
+      "language": "java",
+      "collapsed": false,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "fullHeight true preserved",
+    "input": {
+      "code": "x",
+      "startLine": 1,
+      "fullHeight": true,
+      "filePath": "A.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 1,
+          "content": "x",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        }
+      ],
+      "startLine": 1,
+      "fullHeight": true,
+      "filePath": "A.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 97
+      },
+      "language": "java",
+      "collapsed": false,
+      "visible": true
+    }
+  },
+  {
+    "label": "startLine defaults to 1",
+    "input": {
+      "code": "only line",
+      "filePath": "A.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 1,
+          "content": "only line",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        }
+      ],
+      "filePath": "A.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 97
+      },
+      "language": "java",
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "TypeScript file language detection",
+    "input": {
+      "code": "const x = 1;",
+      "startLine": 1,
+      "filePath": "app.ts",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 1,
+          "content": "const x = 1;",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        }
+      ],
+      "startLine": 1,
+      "filePath": "app.ts",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 97
+      },
+      "language": "typescript",
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "lineComments with string code - comment attached",
+    "input": {
+      "code": "line1\nline2",
+      "startLine": 5,
+      "lineComments": {
+        "6": "important"
+      },
+      "filePath": "X.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 5,
+          "content": "line1",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        },
+        {
+          "line": 6,
+          "content": "line2",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false,
+          "comment": "important"
+        }
+      ],
+      "startLine": 5,
+      "lineComments": {
+        "6": "important"
+      },
+      "filePath": "X.java",
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 117
+      },
+      "language": "java",
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false
+    }
+  },
+  {
+    "label": "nestedOmissions collapses range to one preview row",
+    "input": {
+      "code": "a\nb\n    c\nd\ne",
+      "startLine": 10,
+      "filePath": "hook.ts",
+      "nestedOmissions": [
+        {
+          "startLine": 12,
+          "endLine": 14,
+          "previewText": "const onMessage = (e: MessageEvent) => {...}"
+        }
+      ],
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600
+      }
+    },
+    "expected": {
+      "code": [
+        {
+          "line": 10,
+          "content": "a",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        },
+        {
+          "line": 11,
+          "content": "b",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false
+        },
+        {
+          "line": 12,
+          "content": "    const onMessage = (e: MessageEvent) => {...}",
+          "highlight": false,
+          "hasWarning": false,
+          "isComment": false,
+          "nestedOmitCard": true,
+          "omitEndLine": 14
+        }
+      ],
+      "startLine": 10,
+      "filePath": "hook.ts",
+      "nestedOmissions": [
+        {
+          "startLine": 12,
+          "endLine": 14,
+          "previewText": "const onMessage = (e: MessageEvent) => {...}"
+        }
+      ],
+      "position": {
+        "top": 0,
+        "left": 0,
+        "width": 600,
+        "height": 137
+      },
+      "language": "typescript",
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false
+    }
+  }
+]

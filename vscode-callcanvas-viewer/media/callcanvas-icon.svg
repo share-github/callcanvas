@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- 案1: シンプル2枚スタック（ディテール削減） -->
+  <!-- 背面カード -->
+  <rect x="4" y="2" width="10" height="9" rx="1.5" fill="#264f78"/>
+  <!-- 前面カード -->
+  <rect x="2" y="5" width="10" height="9" rx="1.5" fill="#569cd6"/>
+</svg>

@@ -1,0 +1,8 @@
+{
+  "description": "service-overload フィクスチャ: --cpdir で依存JARを渡した場合、facade.solve() が成功し正常解決パスで IServiceImpl が1件だけ出力される（フォールバック不要）。フィクスチャは sample-project/sample-maven-service-overload。",
+  "projectPath": "sample-project/sample-maven-service-overload",
+  "src": "src/main/java",
+  "cpdir": "fixtures/dependency",
+  "root": "CallerImpl#doProcess(String,Map)",
+  "depth": 3
+}

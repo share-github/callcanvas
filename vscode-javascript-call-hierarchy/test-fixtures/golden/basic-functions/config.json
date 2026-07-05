@@ -1,0 +1,6 @@
+{
+  "files": ["app.js", "service.js", "utils.js"],
+  "targetFile": "app.js",
+  "targetLine": 1,
+  "depth": 5
+}

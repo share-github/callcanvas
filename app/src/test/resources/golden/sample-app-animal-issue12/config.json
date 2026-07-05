@@ -1,0 +1,9 @@
+{
+  "description": "issue12: 継承元クラスのメソッド呼び出し検出（親クラスのprotectedメソッド）",
+  "projectPath": "sample-project/sample-app-animal",
+  "src": "src/main/java",
+  "classes": "build/classes/java/main",
+  "cp": "build/libs/animal-app-1.0.0.jar",
+  "root": "ChildController#handleRequest(String)",
+  "depth": 3
+}

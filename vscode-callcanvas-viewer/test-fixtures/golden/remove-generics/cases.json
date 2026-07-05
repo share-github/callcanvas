@@ -1,0 +1,44 @@
+[
+  {
+    "label": "Simple generic",
+    "input": {
+      "type": "List<String>"
+    },
+    "expected": "List"
+  },
+  {
+    "label": "Nested generics",
+    "input": {
+      "type": "Map<Integer, Map<String, Hoge>>"
+    },
+    "expected": "Map"
+  },
+  {
+    "label": "No generics",
+    "input": {
+      "type": "String"
+    },
+    "expected": "String"
+  },
+  {
+    "label": "Multiple level generics",
+    "input": {
+      "type": "Optional<List<Map<String, Object>>>"
+    },
+    "expected": "Optional"
+  },
+  {
+    "label": "Empty string",
+    "input": {
+      "type": ""
+    },
+    "expected": ""
+  },
+  {
+    "label": "Wildcard generic",
+    "input": {
+      "type": "Class<?>"
+    },
+    "expected": "Class"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "rootFunction": "NoteFormCallCanvas",
+  "functions": [
+    "NoteFormCallCanvas",
+    "saveNoteAction"
+  ],
+  "calls": [
+    {
+      "from": "NoteFormCallCanvas",
+      "to": "saveNoteAction"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "rootFunction": "useChat",
+  "functions": [
+    "logError",
+    "onError",
+    "onFlush",
+    "register",
+    "saveAll",
+    "useChat",
+    "useEffect",
+    "useEffect_callback"
+  ],
+  "calls": [
+    {
+      "from": "onError",
+      "to": "logError"
+    },
+    {
+      "from": "onFlush",
+      "to": "saveAll"
+    },
+    {
+      "from": "useChat",
+      "to": "useEffect"
+    },
+    {
+      "from": "useChat",
+      "to": "useEffect_callback"
+    },
+    {
+      "from": "useEffect_callback",
+      "to": "onError"
+    },
+    {
+      "from": "useEffect_callback",
+      "to": "onFlush"
+    },
+    {
+      "from": "useEffect_callback",
+      "to": "register"
+    }
+  ]
+}

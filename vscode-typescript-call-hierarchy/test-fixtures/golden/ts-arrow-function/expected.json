@@ -1,0 +1,13 @@
+{
+  "rootFunction": "createPrismaAdapter",
+  "functions": [
+    "createPrismaAdapter",
+    "resolveSqlitePath"
+  ],
+  "calls": [
+    {
+      "from": "createPrismaAdapter",
+      "to": "resolveSqlitePath"
+    }
+  ]
+}

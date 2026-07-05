@@ -1,0 +1,58 @@
+[
+  {
+    "label": "Standard Maven path",
+    "input": {
+      "filePath": "src/main/java/com/example/service/UserService.java"
+    },
+    "expected": "com.example.service.UserService"
+  },
+  {
+    "label": "Deep package path",
+    "input": {
+      "filePath": "sample-app/src/main/java/com/example/demo/service/TodoService.java"
+    },
+    "expected": "com.example.demo.service.TodoService"
+  },
+  {
+    "label": "src/java path",
+    "input": {
+      "filePath": "src/java/com/example/Foo.java"
+    },
+    "expected": "com.example.Foo"
+  },
+  {
+    "label": "Windows backslash path",
+    "input": {
+      "filePath": "src\\main\\java\\com\\example\\Foo.java"
+    },
+    "expected": "com.example.Foo"
+  },
+  {
+    "label": "Non-Java path returns null",
+    "input": {
+      "filePath": "src/main/kotlin/com/example/Bar.kt"
+    },
+    "expected": null
+  },
+  {
+    "label": "No src/main/java returns null",
+    "input": {
+      "filePath": "com/example/Foo.java"
+    },
+    "expected": null
+  },
+  {
+    "label": "src/test/java path returns null (not supported)",
+    "input": {
+      "filePath": "src/test/java/com/example/FooTest.java"
+    },
+    "expected": null
+  },
+  {
+    "label": "Default package directly under src/main/java",
+    "input": {
+      "filePath": "src/main/java/Main.java"
+    },
+    "expected": "Main"
+  }
+]

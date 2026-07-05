@@ -1,0 +1,38 @@
+[
+  {
+    "label": "Standard displayName with hash",
+    "input": {
+      "displayName": "utils # formatDate",
+      "filePath": "src/utils.js",
+      "startLine": 42
+    },
+    "expected": "src/utils.js#formatDate:42"
+  },
+  {
+    "label": "ClassName style displayName",
+    "input": {
+      "displayName": "UserService # getUser",
+      "filePath": "src/services/UserService.ts",
+      "startLine": 15
+    },
+    "expected": "src/services/UserService.ts#getUser:15"
+  },
+  {
+    "label": "No hash in displayName - returns null",
+    "input": {
+      "displayName": "standalone",
+      "filePath": "src/app.js",
+      "startLine": 1
+    },
+    "expected": null
+  },
+  {
+    "label": "Hash with extra spaces",
+    "input": {
+      "displayName": "module  #  handler",
+      "filePath": "src/handler.js",
+      "startLine": 100
+    },
+    "expected": "src/handler.js#handler:100"
+  }
+]

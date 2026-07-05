@@ -1,0 +1,329 @@
+{
+  "windows": [
+    {
+      "code": "    private void executeProcessing(Order order) {\n        System.out.println(\"Processing order: \" + order.getId());\n    }",
+      "displayName": "DefaultOrderProcessor # executeProcessing",
+      "startLine": 26,
+      "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
+      "id": "window-21"
+    },
+    {
+      "code": "    @Override\n    public void process(Order order) {\n        order.setStatus(OrderStatus.PROCESSING);\n        executeProcessing(order);\n        order.setStatus(OrderStatus.COMPLETED);\n    }",
+      "displayName": "DefaultOrderProcessor # process",
+      "startLine": 19,
+      "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
+      "id": "window-20"
+    },
+    {
+      "code": "    @Override\n    public void validate(Order order) {\n        if (order.getProductName() == null || order.getProductName().isBlank()) {\n            throw new IllegalArgumentException(\"Product name is required\");\n        }\n        if (order.getAmount() == null || order.getAmount().signum() <= 0) {\n            throw new IllegalArgumentException(\"Amount must be positive\");\n        }\n        order.setStatus(OrderStatus.VALIDATED);\n    }",
+      "displayName": "DefaultOrderProcessor # validate",
+      "startLine": 8,
+      "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
+      "id": "window-12"
+    },
+    {
+      "code": "    public BigDecimal getAmount() { return amount; }",
+      "displayName": "Order # getAmount",
+      "startLine": 26,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "id": "window-14"
+    },
+    {
+      "code": "    public Long getId() { return id; }",
+      "displayName": "Order # getId",
+      "startLine": 22,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "id": "window-22"
+    },
+    {
+      "code": "    public String getProductName() { return productName; }",
+      "displayName": "Order # getProductName",
+      "startLine": 24,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "id": "window-13"
+    },
+    {
+      "code": "    public void setStatus(OrderStatus status) { this.status = status; }",
+      "displayName": "Order # setStatus",
+      "startLine": 29,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "id": "window-8"
+    },
+    {
+      "code": "    private Order createOrder(String productName, String amount) {\n        return new Order(null, productName, new BigDecimal(amount));\n    }",
+      "displayName": "OrderController # createOrder",
+      "startLine": 66,
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    public Order handleNewOrder(String productName, String amount, String paymentMethod) {\n        Order order = createOrder(productName, amount);\n        return orderService.createAndProcessOrder(order, paymentMethod);\n    }",
+      "displayName": "OrderController # handleNewOrder",
+      "startLine": 31,
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    /**\n     * Entry point for order creation from external systems (e.g. REST API).\n     * Delegates to handleNewOrder for actual processing.\n     * Used by golden file test to verify Javadoc inclusion in CallCanvas export.\n     */\n    public Order submitOrderFromApi(String productName, String amount, String paymentMethod) {\n        return handleNewOrder(productName, amount, paymentMethod);\n    }",
+      "displayName": "OrderController # submitOrderFromApi",
+      "startLine": 116,
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    void process(Order order);",
+      "displayName": "OrderProcessor # process",
+      "startLine": 7,
+      "filePath": "src/main/java/com/example/service/OrderProcessor.java",
+      "id": "window-10"
+    },
+    {
+      "code": "    void validate(Order order);",
+      "displayName": "OrderProcessor # validate",
+      "startLine": 6,
+      "filePath": "src/main/java/com/example/service/OrderProcessor.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    /**\n     * Validates the order, processes payment, runs order processing, then notifies completion.\n     * Used by golden file test to verify Javadoc on callee methods.\n     */\n    public Order createAndProcessOrder(Order order, String paymentMethod) {\n        // Validate\n        orderProcessor.validate(order);\n\n        // Process payment\n        PaymentResult paymentResult = paymentService.processPayment(order, paymentMethod);\n        if (!paymentResult.isSuccess()) {\n            order.setStatus(OrderStatus.FAILED);\n            throw new RuntimeException(\"Payment failed: \" + paymentResult.getMessage());\n        }\n\n        // Process order\n        orderProcessor.process(order);\n\n        notifyCompletion(order);\n        return order;\n    }",
+      "displayName": "OrderService # createAndProcessOrder",
+      "startLine": 16,
+      "filePath": "src/main/java/com/example/service/OrderService.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    private void notifyCompletion(Order order) {\n        System.out.println(\"Order \" + order.getId() + \" completed\");\n    }",
+      "displayName": "OrderService # notifyCompletion",
+      "startLine": 38,
+      "filePath": "src/main/java/com/example/service/OrderService.java",
+      "id": "window-11"
+    },
+    {
+      "code": "    public static PaymentResult failure(String reason) {\n        return new PaymentResult(false, reason);\n    }",
+      "displayName": "PaymentResult # failure",
+      "startLine": 16,
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-16"
+    },
+    {
+      "code": "    public String getMessage() { return message; }",
+      "displayName": "PaymentResult # getMessage",
+      "startLine": 21,
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-9"
+    },
+    {
+      "code": "    public boolean isSuccess() { return success; }",
+      "displayName": "PaymentResult # isSuccess",
+      "startLine": 20,
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-7"
+    },
+    {
+      "code": "    public static PaymentResult success() {\n        return new PaymentResult(true, \"Payment processed successfully\");\n    }",
+      "displayName": "PaymentResult # success",
+      "startLine": 12,
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-19"
+    },
+    {
+      "code": "    private boolean checkFunds(BigDecimal amount) {\n        return amount.compareTo(new BigDecimal(\"10000\")) <= 0;\n    }",
+      "displayName": "PaymentService # checkFunds",
+      "startLine": 26,
+      "filePath": "src/main/java/com/example/service/PaymentService.java",
+      "id": "window-17"
+    },
+    {
+      "code": "    private void executePayment(Order order, String method) {\n        System.out.println(\"Payment executed for order \" + order.getId() + \" via \" + method);\n    }",
+      "displayName": "PaymentService # executePayment",
+      "startLine": 30,
+      "filePath": "src/main/java/com/example/service/PaymentService.java",
+      "id": "window-18"
+    },
+    {
+      "code": "    public PaymentResult processPayment(Order order, String paymentMethod) {\n        if (!validatePaymentMethod(paymentMethod)) {\n            return PaymentResult.failure(\"Invalid payment method\");\n        }\n\n        if (!checkFunds(order.getAmount())) {\n            return PaymentResult.failure(\"Insufficient funds\");\n        }\n\n        executePayment(order, paymentMethod);\n        return PaymentResult.success();\n    }",
+      "displayName": "PaymentService # processPayment",
+      "startLine": 9,
+      "filePath": "src/main/java/com/example/service/PaymentService.java",
+      "id": "window-6"
+    },
+    {
+      "code": "    private boolean validatePaymentMethod(String method) {\n        return method != null && !method.isBlank();\n    }",
+      "displayName": "PaymentService # validatePaymentMethod",
+      "startLine": 22,
+      "filePath": "src/main/java/com/example/service/PaymentService.java",
+      "id": "window-15"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 122,
+      "from": "window-1",
+      "callEndLine": 122,
+      "to": "window-2"
+    },
+    {
+      "callLine": 7,
+      "from": "window-10",
+      "callEndLine": 7,
+      "to": "window-20"
+    },
+    {
+      "callLine": 39,
+      "from": "window-11",
+      "callEndLine": 39,
+      "to": "window-22"
+    },
+    {
+      "callLine": 10,
+      "from": "window-12",
+      "callEndLine": 10,
+      "to": "window-13"
+    },
+    {
+      "callLine": 13,
+      "from": "window-12",
+      "callEndLine": 13,
+      "to": "window-14"
+    },
+    {
+      "callLine": 16,
+      "from": "window-12",
+      "callEndLine": 16,
+      "to": "window-8"
+    },
+    {
+      "callLine": 31,
+      "from": "window-18",
+      "callEndLine": 31,
+      "to": "window-22"
+    },
+    {
+      "callLine": 32,
+      "from": "window-2",
+      "callEndLine": 32,
+      "to": "window-3"
+    },
+    {
+      "callLine": 33,
+      "from": "window-2",
+      "callEndLine": 33,
+      "to": "window-4"
+    },
+    {
+      "callLine": 22,
+      "from": "window-20",
+      "callEndLine": 22,
+      "to": "window-21"
+    },
+    {
+      "callLine": 21,
+      "from": "window-20",
+      "callEndLine": 21,
+      "to": "window-8"
+    },
+    {
+      "callLine": 23,
+      "from": "window-20",
+      "callEndLine": 23,
+      "to": "window-8"
+    },
+    {
+      "callLine": 27,
+      "from": "window-21",
+      "callEndLine": 27,
+      "to": "window-22"
+    },
+    {
+      "callLine": 32,
+      "from": "window-4",
+      "callEndLine": 32,
+      "to": "window-10"
+    },
+    {
+      "callLine": 34,
+      "from": "window-4",
+      "callEndLine": 34,
+      "to": "window-11"
+    },
+    {
+      "callLine": 22,
+      "from": "window-4",
+      "callEndLine": 22,
+      "to": "window-5"
+    },
+    {
+      "callLine": 25,
+      "from": "window-4",
+      "callEndLine": 25,
+      "to": "window-6"
+    },
+    {
+      "callLine": 26,
+      "from": "window-4",
+      "callEndLine": 26,
+      "to": "window-7"
+    },
+    {
+      "callLine": 27,
+      "from": "window-4",
+      "callEndLine": 27,
+      "to": "window-8"
+    },
+    {
+      "callLine": 28,
+      "from": "window-4",
+      "callEndLine": 28,
+      "to": "window-9"
+    },
+    {
+      "callLine": 6,
+      "from": "window-5",
+      "callEndLine": 6,
+      "to": "window-12"
+    },
+    {
+      "callLine": 14,
+      "from": "window-6",
+      "callEndLine": 14,
+      "to": "window-14"
+    },
+    {
+      "callLine": 10,
+      "from": "window-6",
+      "callEndLine": 10,
+      "to": "window-15"
+    },
+    {
+      "callLine": 11,
+      "from": "window-6",
+      "callEndLine": 11,
+      "to": "window-16"
+    },
+    {
+      "callLine": 15,
+      "from": "window-6",
+      "callEndLine": 15,
+      "to": "window-16"
+    },
+    {
+      "callLine": 14,
+      "from": "window-6",
+      "callEndLine": 14,
+      "to": "window-17"
+    },
+    {
+      "callLine": 18,
+      "from": "window-6",
+      "callEndLine": 18,
+      "to": "window-18"
+    },
+    {
+      "callLine": 19,
+      "from": "window-6",
+      "callEndLine": 19,
+      "to": "window-19"
+    }
+  ],
+  "autoLayout": true
+}

@@ -1,0 +1,281 @@
+[
+  {
+    "label": "Single path A→B→C, target C",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "A",
+            "to": "B"
+          },
+          {
+            "from": "B",
+            "to": "C"
+          }
+        ]
+      },
+      "rootIds": [
+        "A"
+      ],
+      "targetIds": [
+        "C"
+      ]
+    },
+    "expected": [
+      "A",
+      "B",
+      "C"
+    ]
+  },
+  {
+    "label": "Multiple paths A→B→D, A→C→D, target D",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "A",
+            "to": "B"
+          },
+          {
+            "from": "A",
+            "to": "C"
+          },
+          {
+            "from": "B",
+            "to": "D"
+          },
+          {
+            "from": "C",
+            "to": "D"
+          }
+        ]
+      },
+      "rootIds": [
+        "A"
+      ],
+      "targetIds": [
+        "D"
+      ]
+    },
+    "expected": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "label": "Target is root itself",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "A",
+            "to": "B"
+          }
+        ]
+      },
+      "rootIds": [
+        "A"
+      ],
+      "targetIds": [
+        "A"
+      ]
+    },
+    "expected": [
+      "A"
+    ]
+  },
+  {
+    "label": "Target unreachable",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "A",
+            "to": "B"
+          }
+        ]
+      },
+      "rootIds": [
+        "A"
+      ],
+      "targetIds": [
+        "Z"
+      ]
+    },
+    "expected": [
+      "A"
+    ]
+  },
+  {
+    "label": "Disconnected graph - no connections",
+    "input": {
+      "currentData": {
+        "connections": []
+      },
+      "rootIds": [
+        "A"
+      ],
+      "targetIds": [
+        "B"
+      ]
+    },
+    "expected": [
+      "A"
+    ]
+  },
+  {
+    "label": "Null connections",
+    "input": {
+      "currentData": null,
+      "rootIds": [
+        "A"
+      ],
+      "targetIds": [
+        "B"
+      ]
+    },
+    "expected": [
+      "A"
+    ]
+  },
+  {
+    "label": "Multiple targets, some reachable",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "A",
+            "to": "B"
+          },
+          {
+            "from": "B",
+            "to": "C"
+          },
+          {
+            "from": "A",
+            "to": "D"
+          }
+        ]
+      },
+      "rootIds": [
+        "A"
+      ],
+      "targetIds": [
+        "C",
+        "D"
+      ]
+    },
+    "expected": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "label": "Cycle in graph A→B→C→A, target C",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "A",
+            "to": "B"
+          },
+          {
+            "from": "B",
+            "to": "C"
+          },
+          {
+            "from": "C",
+            "to": "A"
+          }
+        ]
+      },
+      "rootIds": [
+        "A"
+      ],
+      "targetIds": [
+        "C"
+      ]
+    },
+    "expected": [
+      "A",
+      "B",
+      "C"
+    ]
+  },
+  {
+    "label": "Multiple roots: R1→B→C, R2→D→C, target C",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "R1",
+            "to": "B"
+          },
+          {
+            "from": "B",
+            "to": "C"
+          },
+          {
+            "from": "R2",
+            "to": "D"
+          },
+          {
+            "from": "D",
+            "to": "C"
+          }
+        ]
+      },
+      "rootIds": [
+        "R1",
+        "R2"
+      ],
+      "targetIds": [
+        "C"
+      ]
+    },
+    "expected": [
+      "B",
+      "C",
+      "D",
+      "R1",
+      "R2"
+    ]
+  },
+  {
+    "label": "Multiple roots: one root reaches target, other does not (unreachable root excluded)",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "R1",
+            "to": "B"
+          },
+          {
+            "from": "B",
+            "to": "C"
+          },
+          {
+            "from": "R2",
+            "to": "D"
+          }
+        ]
+      },
+      "rootIds": [
+        "R1",
+        "R2"
+      ],
+      "targetIds": [
+        "C"
+      ]
+    },
+    "expected": [
+      "B",
+      "C",
+      "R1"
+    ]
+  }
+]

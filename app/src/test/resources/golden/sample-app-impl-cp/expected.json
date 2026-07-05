@@ -1,0 +1,53 @@
+{
+  "windows": [
+    {
+      "code": "    /**\n     * ★ このメソッドを \"CallCanvas: Open Viewer with File\" で解析すると、\n     *   IService#execute(String, String[], ...) の先が解析されない（不具合）\n     *\n     * 原因: config.getString() の型 (org.apache.commons.configuration.Configuration) が\n     *       tool の --classes に未登録のため facade.solve() が失敗し、\n     *       フォールバックが引数の数のみで誤ったオーバーロードを選択する。\n     *\n     * @param to        送信先アドレス\n     * @param customArgs カスタムパラメーター\n     * @return 処理結果\n     */\n    public boolean doProcess(String to, Map<String, String> customArgs) {\n        // ★ ここで IService#execute(String, String[], ...) を呼び出す\n        // config.getString() の戻り型が facade で解決できないため\n        // call-index.json には execute(String[], String[], ...) と誤って記録される\n        boolean result = service.execute(\n                to,\n                null,\n                customArgs.get(\"title\"),\n                customArgs.get(\"body\"),\n                config.getString(\"name\"),   // ← Configuration は --classes 外 → facade 失敗の原因\n                \"SystemName\",\n                null,\n                customArgs,\n                config.getString(\"key\")         // ← 同上\n        );\n\n        return result;\n    }",
+      "displayName": "CallerImpl # doProcess",
+      "startLine": 11,
+      "filePath": "src/main/java/com/example/app/CallerImpl.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    boolean execute(String p1, String[] p2, String p3, String p4, String p5, String p6, String p7,\n                    Map<String, String> p8, String p9);",
+      "displayName": "IService # execute",
+      "startLine": 12,
+      "filePath": "src/main/java/com/example/app/IService.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    @Override\n    public boolean execute(String p1, String[] p2, String p3, String p4, String p5, String p6, String p7,\n                           Map<String, String> p8, String p9) {\n        return execute(new String[]{p1}, p2, p3, p4, p5, p6, p7, p8, p9);\n    }",
+      "displayName": "IServiceImpl # execute",
+      "startLine": 13,
+      "filePath": "src/main/java/com/example/app/IServiceImpl.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    @Override\n    public boolean execute(String[] p1, String[] p2, String p3, String p4, String p5, String p6, String p7,\n                           Map<String, String> p8, String p9) {\n        return true;\n    }",
+      "displayName": "IServiceImpl # execute",
+      "startLine": 19,
+      "filePath": "src/main/java/com/example/app/IServiceImpl.java",
+      "id": "window-4"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 27,
+      "from": "window-1",
+      "callEndLine": 37,
+      "to": "window-2"
+    },
+    {
+      "callLine": 12,
+      "from": "window-2",
+      "callEndLine": 13,
+      "to": "window-3"
+    },
+    {
+      "callLine": 16,
+      "from": "window-3",
+      "callEndLine": 16,
+      "to": "window-4"
+    }
+  ],
+  "autoLayout": true
+}

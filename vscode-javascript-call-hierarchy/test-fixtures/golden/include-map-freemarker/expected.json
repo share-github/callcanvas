@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    "head.ftl",
+    "main.ftl",
+    "nav.html"
+  ],
+  "edges": [
+    {
+      "from": "head.ftl",
+      "to": "nav.html",
+      "line": 2
+    },
+    {
+      "from": "main.ftl",
+      "to": "head.ftl",
+      "line": 2
+    }
+  ]
+}

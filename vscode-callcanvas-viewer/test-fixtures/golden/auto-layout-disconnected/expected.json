@@ -1,0 +1,66 @@
+{
+  "windows": [
+    {
+      "id": "A",
+      "code": [
+        {
+          "line": 1,
+          "content": "a"
+        }
+      ],
+      "position": {
+        "top": 80,
+        "left": 40,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 0
+    },
+    {
+      "id": "B",
+      "code": [
+        {
+          "line": 1,
+          "content": "b"
+        }
+      ],
+      "position": {
+        "top": 197,
+        "left": 40,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 1
+    },
+    {
+      "id": "C",
+      "code": [
+        {
+          "line": 1,
+          "content": "c"
+        }
+      ],
+      "position": {
+        "top": 314,
+        "left": 40,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 2
+    }
+  ],
+  "connections": [],
+  "autoLayout": true
+}

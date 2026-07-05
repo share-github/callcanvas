@@ -1,0 +1,23 @@
+{
+  "rootFunction": "renderPrice",
+  "functions": [
+    "formatCurrency",
+    "highlightActive",
+    "padLeft",
+    "renderPrice"
+  ],
+  "calls": [
+    {
+      "from": "formatCurrency",
+      "to": "padLeft"
+    },
+    {
+      "from": "renderPrice",
+      "to": "formatCurrency"
+    },
+    {
+      "from": "renderPrice",
+      "to": "highlightActive"
+    }
+  ]
+}

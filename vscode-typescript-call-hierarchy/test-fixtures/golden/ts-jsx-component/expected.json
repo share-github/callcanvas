@@ -1,0 +1,13 @@
+{
+  "rootFunction": "ParentComponent",
+  "functions": [
+    "ChildComponent",
+    "ParentComponent"
+  ],
+  "calls": [
+    {
+      "from": "ParentComponent",
+      "to": "ChildComponent"
+    }
+  ]
+}

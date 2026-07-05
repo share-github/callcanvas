@@ -1,0 +1,23 @@
+{
+  "rootFunction": "outer",
+  "functions": [
+    "helper",
+    "inner",
+    "outer",
+    "register"
+  ],
+  "calls": [
+    {
+      "from": "inner",
+      "to": "helper"
+    },
+    {
+      "from": "outer",
+      "to": "inner"
+    },
+    {
+      "from": "outer",
+      "to": "register"
+    }
+  ]
+}

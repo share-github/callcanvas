@@ -1,0 +1,6 @@
+{
+  "files": ["main.js", "helpers.js"],
+  "targetFile": "main.js",
+  "targetLine": 2,
+  "depth": 3
+}

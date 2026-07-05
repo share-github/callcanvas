@@ -1,0 +1,6 @@
+{
+  "templateFile": "main.jsp",
+  "targetFile": "app.js",
+  "targetLine": 1,
+  "depth": 3
+}

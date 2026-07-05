@@ -1,0 +1,18 @@
+{
+  "rootFunction": "ready_callback",
+  "functions": [
+    "attachListeners",
+    "ready_callback",
+    "renderPage"
+  ],
+  "calls": [
+    {
+      "from": "ready_callback",
+      "to": "attachListeners"
+    },
+    {
+      "from": "ready_callback",
+      "to": "renderPage"
+    }
+  ]
+}

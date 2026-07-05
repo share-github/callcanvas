@@ -1,0 +1,53 @@
+# OS
+.DS_Store
+
+# Environment
+.env
+
+# Gradle
+.gradle/
+app/.gradle/
+app/build/
+app/bin/
+
+# Node.js
+node_modules/
+
+# Next.js (nested apps under sample-project, etc.)
+**/.next/
+
+# TypeScript output
+out/
+
+# VS Code (個人設定)
+# .vscode/settings.json
+
+# Temporary files
+.callcanvas-temp*/
+.callcanvas-cache/
+
+# Temporary JAR files in extension directories
+vscode-java-call-hierarchy/java-call-hierarchy-analyzer-*.jar
+vscode-callcanvas-viewer/java-call-hierarchy-analyzer-*.jar
+
+# Call hierarchy output (解析結果出力)
+**/call-hierarchy-output/
+*_callcanvas.json
+*_callcanvas.json.bak
+
+# Gradle cache and build output (sample projects)
+sample-project/**/.gradle/
+sample-project/**/build/
+issue/minimal/target/
+issue/minimal/**/target/
+issue/impl/**/target/
+issue/minimal/lib/
+issue/minimal/classes/
+sample-project/**/target/
+
+# 各拡張の VSIX はビルド成果物（gitignore）。配布の正は release/<name>.vsix（安定名・追跡対象）。
+# 生成は各拡張の vsce package、集約は scripts/collect-vsix.sh。
+vscode-*/*.vsix
+
+# collect-vsix.sh のアトミック配置用一時ファイル
+release/.*.vsix.*

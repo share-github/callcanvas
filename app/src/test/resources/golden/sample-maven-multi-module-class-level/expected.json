@@ -1,0 +1,669 @@
+{
+  "symbolIndex": {
+    "OrderStatus.PROCESSING": {
+      "qualifier": "com.example.domain.OrderStatus",
+      "type": "enum",
+      "value": "92"
+    },
+    "OrderStatus.COMPLETED": {
+      "qualifier": "com.example.domain.OrderStatus",
+      "type": "enum",
+      "value": "93"
+    },
+    "OrderStatus.FAILED": {
+      "qualifier": "com.example.domain.OrderStatus",
+      "type": "enum",
+      "value": "94"
+    },
+    "DEFAULT_PAYMENT_METHOD": {
+      "qualifier": "com.example.app.constants.OrderSampleConstants",
+      "type": "String",
+      "value": "\"CARD\""
+    },
+    "OrderStatus.VALIDATED": {
+      "qualifier": "com.example.domain.OrderStatus",
+      "type": "enum",
+      "value": "91"
+    },
+    "DEFAULT_PRODUCT_NAME": {
+      "qualifier": "com.example.app.controller.OrderController",
+      "type": "String",
+      "value": "\"SampleProduct\""
+    },
+    "OrderStatus.PENDING": {
+      "qualifier": "com.example.domain.OrderStatus",
+      "type": "enum",
+      "value": "90"
+    }
+  },
+  "windows": [
+    {
+      "code": "    private void executeProcessing(Order order) {\n        System.out.println(\"Processing order: \" + order.getId());\n    }",
+      "displayName": "DefaultOrderProcessor # executeProcessing",
+      "startLine": 26,
+      "filePath": "module-service/src/main/java/com/example/service/DefaultOrderProcessor.java",
+      "id": "window-40"
+    },
+    {
+      "code": "    @Override\n    public void process(Order order) {\n        order.setStatus(OrderStatus.PROCESSING);\n        executeProcessing(order);\n        order.setStatus(OrderStatus.COMPLETED);\n    }",
+      "displayName": "DefaultOrderProcessor # process",
+      "startLine": 19,
+      "filePath": "module-service/src/main/java/com/example/service/DefaultOrderProcessor.java",
+      "id": "window-28"
+    },
+    {
+      "code": "    @Override\n    public void validate(Order order) {\n        if (order.getProductName() == null || order.getProductName().isBlank()) {\n            throw new IllegalArgumentException(\"Product name is required\");\n        }\n        if (order.getAmount() == null || order.getAmount().signum() <= 0) {\n            throw new IllegalArgumentException(\"Amount must be positive\");\n        }\n        order.setStatus(OrderStatus.VALIDATED);\n    }",
+      "displayName": "DefaultOrderProcessor # validate",
+      "startLine": 8,
+      "filePath": "module-service/src/main/java/com/example/service/DefaultOrderProcessor.java",
+      "id": "window-22"
+    },
+    {
+      "code": "    /**\n     * Multiple nested generic parameters\n     * This tests: Map<String, Map<Integer, List<ProductInfo>>>, List<Map<String, ProductInfo>>\n     */\n    public Map<String, Integer> aggregateInventory(\n            Map<String, Map<Integer, List<ProductInfo>>> warehouseData,\n            List<Map<String, ProductInfo>> pendingOrders,\n            String reportType) {\n        \n        Map<String, Integer> result = new HashMap<>();\n        \n        // Process warehouse data\n        int warehouseTotal = processWarehouseData(warehouseData);\n        result.put(\"warehouseTotal\", warehouseTotal);\n        \n        // Process pending orders\n        int pendingTotal = processPendingOrders(pendingOrders);\n        result.put(\"pendingTotal\", pendingTotal);\n        \n        System.out.println(\"Report type: \" + reportType);\n        return result;\n    }",
+      "displayName": "InventoryService # aggregateInventory",
+      "startLine": 75,
+      "filePath": "module-service/src/main/java/com/example/service/InventoryService.java",
+      "id": "window-14"
+    },
+    {
+      "code": "    /**\n     * Log product info\n     */\n    private void logProduct(ProductInfo product) {\n        System.out.println(\"  - \" + product);\n    }",
+      "displayName": "InventoryService # logProduct",
+      "startLine": 42,
+      "filePath": "module-service/src/main/java/com/example/service/InventoryService.java",
+      "id": "window-42"
+    },
+    {
+      "code": "    /**\n     * Process list of maps with nested generics\n     * This tests: List<Map<String, List<ProductInfo>>>\n     */\n    public void processBatchInventory(List<Map<String, List<ProductInfo>>> batches, int batchSize) {\n        for (int i = 0; i < batches.size(); i++) {\n            Map<String, List<ProductInfo>> batch = batches.get(i);\n            processSingleBatch(batch, i, batchSize);\n        }\n    }",
+      "displayName": "InventoryService # processBatchInventory",
+      "startLine": 49,
+      "filePath": "module-service/src/main/java/com/example/service/InventoryService.java",
+      "id": "window-17"
+    },
+    {
+      "code": "    /**\n     * Process nested Map with complex generics\n     * This tests: Map<Integer, Map<String, ProductInfo>>\n     */\n    public int processInventoryMap(Map<Integer, Map<String, ProductInfo>> inventoryMap, String warehouseId) {\n        int totalItems = 0;\n        for (Map.Entry<Integer, Map<String, ProductInfo>> entry : inventoryMap.entrySet()) {\n            Integer shelfId = entry.getKey();\n            Map<String, ProductInfo> products = entry.getValue();\n            totalItems += processShelf(shelfId, products, warehouseId);\n        }\n        return totalItems;\n    }",
+      "displayName": "InventoryService # processInventoryMap",
+      "startLine": 15,
+      "filePath": "module-service/src/main/java/com/example/service/InventoryService.java",
+      "id": "window-18"
+    },
+    {
+      "code": "    /**\n     * Process pending orders\n     */\n    private int processPendingOrders(List<Map<String, ProductInfo>> pendingOrders) {\n        int total = 0;\n        for (Map<String, ProductInfo> order : pendingOrders) {\n            for (ProductInfo product : order.values()) {\n                total += product.getQuantity();\n            }\n        }\n        return total;\n    }",
+      "displayName": "InventoryService # processPendingOrders",
+      "startLine": 115,
+      "filePath": "module-service/src/main/java/com/example/service/InventoryService.java",
+      "id": "window-20"
+    },
+    {
+      "code": "    /**\n     * Process a single shelf\n     */\n    private int processShelf(Integer shelfId, Map<String, ProductInfo> products, String warehouseId) {\n        System.out.println(\"Processing shelf \" + shelfId + \" in warehouse \" + warehouseId);\n        int count = 0;\n        for (ProductInfo product : products.values()) {\n            count += product.getQuantity();\n            logProduct(product);\n        }\n        return count;\n    }",
+      "displayName": "InventoryService # processShelf",
+      "startLine": 29,
+      "filePath": "module-service/src/main/java/com/example/service/InventoryService.java",
+      "id": "window-31"
+    },
+    {
+      "code": "    /**\n     * Process a single batch\n     */\n    private void processSingleBatch(Map<String, List<ProductInfo>> batch, int batchIndex, int batchSize) {\n        System.out.println(\"Processing batch \" + batchIndex + \" (size limit: \" + batchSize + \")\");\n        for (Map.Entry<String, List<ProductInfo>> entry : batch.entrySet()) {\n            String category = entry.getKey();\n            List<ProductInfo> products = entry.getValue();\n            System.out.println(\"  Category: \" + category + \", products: \" + products.size());\n            for (ProductInfo product : products) {\n                logProduct(product);\n            }\n        }\n    }",
+      "displayName": "InventoryService # processSingleBatch",
+      "startLine": 60,
+      "filePath": "module-service/src/main/java/com/example/service/InventoryService.java",
+      "id": "window-30"
+    },
+    {
+      "code": "    /**\n     * Process warehouse data\n     */\n    private int processWarehouseData(Map<String, Map<Integer, List<ProductInfo>>> warehouseData) {\n        int total = 0;\n        for (Map.Entry<String, Map<Integer, List<ProductInfo>>> warehouse : warehouseData.entrySet()) {\n            String warehouseId = warehouse.getKey();\n            System.out.println(\"Warehouse: \" + warehouseId);\n            for (Map.Entry<Integer, List<ProductInfo>> shelf : warehouse.getValue().entrySet()) {\n                for (ProductInfo product : shelf.getValue()) {\n                    total += product.getQuantity();\n                }\n            }\n        }\n        return total;\n    }",
+      "displayName": "InventoryService # processWarehouseData",
+      "startLine": 98,
+      "filePath": "module-service/src/main/java/com/example/service/InventoryService.java",
+      "id": "window-19"
+    },
+    {
+      "code": "    public Order(Long id, String productName, BigDecimal amount) {\n        this.id = id;\n        this.productName = productName;\n        this.amount = amount;\n        this.status = OrderStatus.PENDING;\n    }",
+      "displayName": "Order # Order",
+      "startLine": 15,
+      "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+      "id": "window-15"
+    },
+    {
+      "code": "    public BigDecimal getAmount() { return amount; }",
+      "displayName": "Order # getAmount",
+      "startLine": 26,
+      "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+      "id": "window-34"
+    },
+    {
+      "code": "    public Long getId() { return id; }",
+      "displayName": "Order # getId",
+      "startLine": 22,
+      "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+      "id": "window-41"
+    },
+    {
+      "code": "    public String getProductName() { return productName; }",
+      "displayName": "Order # getProductName",
+      "startLine": 24,
+      "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+      "id": "window-33"
+    },
+    {
+      "code": "    public void setStatus(OrderStatus status) { this.status = status; }",
+      "displayName": "Order # setStatus",
+      "startLine": 29,
+      "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+      "id": "window-25"
+    },
+    {
+      "code": "    public OrderController() {\n        this.orderService = new OrderService(\n                new DefaultOrderProcessor(),\n                new PaymentService());\n        this.inventoryService = new InventoryService();\n    }",
+      "displayName": "OrderController # OrderController",
+      "startLine": 19,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    public OrderController(OrderService orderService, InventoryService inventoryService) {\n        this.orderService = orderService;\n        this.inventoryService = inventoryService;\n    }",
+      "displayName": "OrderController # OrderController",
+      "startLine": 26,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    /**\n     * Aggregate inventory - test case for multiple complex generics\n     */\n    public Map<String, Integer> aggregateInventory(\n            Map<String, Map<Integer, List<ProductInfo>>> warehouseData,\n            List<Map<String, ProductInfo>> pendingOrders,\n            String reportType) {\n        return inventoryService.aggregateInventory(warehouseData, pendingOrders, reportType);\n    }",
+      "displayName": "OrderController # aggregateInventory",
+      "startLine": 56,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    private Order createOrder(String productName, String amount) {\n        return new Order(null, productName, new BigDecimal(amount));\n    }",
+      "displayName": "OrderController # createOrder",
+      "startLine": 66,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    /**\n     * Reproduction case for \"Analyze Next Level\" from a multi-line method call.\n     */\n    public Order handleMultilineServiceCall(String productName, String amount, String paymentMethod) {\n        return orderService.createAndProcessOrder(\n                createOrder(productName, amount),\n                paymentMethod);\n    }",
+      "displayName": "OrderController # handleMultilineServiceCall",
+      "startLine": 78,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    /**\n     * Test case for multiple method calls on a single line\n     */\n    public Order handleMultipleCallsOnSingleLine(String productName, String amount, String paymentMethod) {\n        // Multiple calls on one line: createOrder and createAndProcessOrder\n        return orderService.createAndProcessOrder(createOrder(productName, amount), paymentMethod);\n    }",
+      "displayName": "OrderController # handleMultipleCallsOnSingleLine",
+      "startLine": 70,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-6"
+    },
+    {
+      "code": "    public Order handleNewOrder(String productName, String amount, String paymentMethod) {\n        Order order = createOrder(productName, amount);\n        return orderService.createAndProcessOrder(order, paymentMethod);\n    }",
+      "displayName": "OrderController # handleNewOrder",
+      "startLine": 31,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-7"
+    },
+    {
+      "code": "    public Order handleNewOrderWithId(Long id, String productName, String amount, String paymentMethod) {\n        Order order = new Order(id, productName, new BigDecimal(amount));\n        return orderService.createAndProcessOrder(order, paymentMethod);\n    }",
+      "displayName": "OrderController # handleNewOrderWithId",
+      "startLine": 36,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-8"
+    },
+    {
+      "code": "    /**\n     * Sample for CallCanvas Viewer verification:\n     * uses both a field constant and a constant class.\n     */\n    public Order handleOrderWithConstants(String amount) {\n        Order order = createOrder(DEFAULT_PRODUCT_NAME, amount);\n        return orderService.createAndProcessOrder(order, OrderSampleConstants.DEFAULT_PAYMENT_METHOD);\n    }",
+      "displayName": "OrderController # handleOrderWithConstants",
+      "startLine": 87,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-9"
+    },
+    {
+      "code": "    /**\n     * Process batch inventory - test case for List<Map<String, List<ProductInfo>>>\n     */\n    public void processBatchInventory(List<Map<String, List<ProductInfo>>> batches, int batchSize) {\n        inventoryService.processBatchInventory(batches, batchSize);\n    }",
+      "displayName": "OrderController # processBatchInventory",
+      "startLine": 49,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-10"
+    },
+    {
+      "code": "    /**\n     * Process inventory with nested generics - test case for Map<Integer,\n     * Map<String, ProductInfo>>\n     */\n    public int processInventory(Map<Integer, Map<String, ProductInfo>> inventoryData, String warehouseId) {\n        return inventoryService.processInventoryMap(inventoryData, warehouseId);\n    }",
+      "displayName": "OrderController # processInventory",
+      "startLine": 41,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-11"
+    },
+    {
+      "code": "    /**\n     * CallCanvas Viewer repro: same window as {@link #handleNewOrder} callers \u2014 contains\n     * {@code createAndProcessOrder} (single line) and a <em>different<\/em> multiline call.\n     * <p>\n     * Manual check: export from {@code OrderService#createAndProcessOrder}, root-analyze, open\n     * {@code OrderController} window, put cursor on the {@code processInventoryMap} lines\n     * (not the {@code createAndProcessOrder} line), then {@code jumpToCallTargetKey}.\n     */\n    public int reproJumpMultilineNonOrderCall(\n            String productName,\n            String amount,\n            String paymentMethod,\n            Map<Integer, Map<String, ProductInfo>> inventoryData,\n            String warehouseId) {\n        orderService.createAndProcessOrder(createOrder(productName, amount), paymentMethod);\n        return inventoryService.processInventoryMap(\n                inventoryData,\n                warehouseId);\n    }",
+      "displayName": "OrderController # reproJumpMultilineNonOrderCall",
+      "startLine": 96,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-12"
+    },
+    {
+      "code": "    /**\n     * Entry point for order creation from external systems (e.g. REST API).\n     * Delegates to handleNewOrder for actual processing.\n     * Used by golden file test to verify Javadoc inclusion in CallCanvas export.\n     */\n    public Order submitOrderFromApi(String productName, String amount, String paymentMethod) {\n        return handleNewOrder(productName, amount, paymentMethod);\n    }",
+      "displayName": "OrderController # submitOrderFromApi",
+      "startLine": 116,
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-13"
+    },
+    {
+      "code": "    void process(Order order);",
+      "displayName": "OrderProcessor # process",
+      "startLine": 7,
+      "filePath": "module-service/src/main/java/com/example/service/OrderProcessor.java",
+      "id": "window-27"
+    },
+    {
+      "code": "    void validate(Order order);",
+      "displayName": "OrderProcessor # validate",
+      "startLine": 6,
+      "filePath": "module-service/src/main/java/com/example/service/OrderProcessor.java",
+      "id": "window-21"
+    },
+    {
+      "code": "    /**\n     * Validates the order, processes payment, runs order processing, then notifies completion.\n     * Used by golden file test to verify Javadoc on callee methods.\n     */\n    public Order createAndProcessOrder(Order order, String paymentMethod) {\n        // Validate\n        orderProcessor.validate(order);\n\n        // Process payment\n        PaymentResult paymentResult = paymentService.processPayment(order, paymentMethod);\n        if (!paymentResult.isSuccess()) {\n            order.setStatus(OrderStatus.FAILED);\n            throw new RuntimeException(\"Payment failed: \" + paymentResult.getMessage());\n        }\n\n        // Process order\n        orderProcessor.process(order);\n\n        notifyCompletion(order);\n        return order;\n    }",
+      "displayName": "OrderService # createAndProcessOrder",
+      "startLine": 16,
+      "filePath": "module-service/src/main/java/com/example/service/OrderService.java",
+      "id": "window-16"
+    },
+    {
+      "code": "    private void notifyCompletion(Order order) {\n        System.out.println(\"Order \" + order.getId() + \" completed\");\n    }",
+      "displayName": "OrderService # notifyCompletion",
+      "startLine": 38,
+      "filePath": "module-service/src/main/java/com/example/service/OrderService.java",
+      "id": "window-29"
+    },
+    {
+      "code": "    private PaymentResult(boolean success, String message) {\n        this.success = success;\n        this.message = message;\n    }",
+      "displayName": "PaymentResult # PaymentResult",
+      "startLine": 7,
+      "filePath": "module-domain/src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-43"
+    },
+    {
+      "code": "    public static PaymentResult failure(String reason) {\n        return new PaymentResult(false, reason);\n    }",
+      "displayName": "PaymentResult # failure",
+      "startLine": 16,
+      "filePath": "module-domain/src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-36"
+    },
+    {
+      "code": "    public String getMessage() { return message; }",
+      "displayName": "PaymentResult # getMessage",
+      "startLine": 21,
+      "filePath": "module-domain/src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-26"
+    },
+    {
+      "code": "    public boolean isSuccess() { return success; }",
+      "displayName": "PaymentResult # isSuccess",
+      "startLine": 20,
+      "filePath": "module-domain/src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-24"
+    },
+    {
+      "code": "    public static PaymentResult success() {\n        return new PaymentResult(true, \"Payment processed successfully\");\n    }",
+      "displayName": "PaymentResult # success",
+      "startLine": 12,
+      "filePath": "module-domain/src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-39"
+    },
+    {
+      "code": "    private boolean checkFunds(BigDecimal amount) {\n        return amount.compareTo(new BigDecimal(\"10000\")) <= 0;\n    }",
+      "displayName": "PaymentService # checkFunds",
+      "startLine": 26,
+      "filePath": "module-service/src/main/java/com/example/service/PaymentService.java",
+      "id": "window-37"
+    },
+    {
+      "code": "    private void executePayment(Order order, String method) {\n        System.out.println(\"Payment executed for order \" + order.getId() + \" via \" + method);\n    }",
+      "displayName": "PaymentService # executePayment",
+      "startLine": 30,
+      "filePath": "module-service/src/main/java/com/example/service/PaymentService.java",
+      "id": "window-38"
+    },
+    {
+      "code": "    public PaymentResult processPayment(Order order, String paymentMethod) {\n        if (!validatePaymentMethod(paymentMethod)) {\n            return PaymentResult.failure(\"Invalid payment method\");\n        }\n\n        if (!checkFunds(order.getAmount())) {\n            return PaymentResult.failure(\"Insufficient funds\");\n        }\n\n        executePayment(order, paymentMethod);\n        return PaymentResult.success();\n    }",
+      "displayName": "PaymentService # processPayment",
+      "startLine": 9,
+      "filePath": "module-service/src/main/java/com/example/service/PaymentService.java",
+      "id": "window-23"
+    },
+    {
+      "code": "    private boolean validatePaymentMethod(String method) {\n        return method != null && !method.isBlank();\n    }",
+      "displayName": "PaymentService # validatePaymentMethod",
+      "startLine": 22,
+      "filePath": "module-service/src/main/java/com/example/service/PaymentService.java",
+      "id": "window-35"
+    },
+    {
+      "code": "    public int getQuantity() {\n        return quantity;\n    }",
+      "displayName": "ProductInfo # getQuantity",
+      "startLine": 21,
+      "filePath": "module-domain/src/main/java/com/example/domain/ProductInfo.java",
+      "id": "window-32"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 53,
+      "from": "window-10",
+      "callEndLine": 53,
+      "to": "window-17"
+    },
+    {
+      "callLine": 46,
+      "from": "window-11",
+      "callEndLine": 46,
+      "to": "window-18"
+    },
+    {
+      "callLine": 110,
+      "from": "window-12",
+      "callEndLine": 110,
+      "to": "window-16"
+    },
+    {
+      "callLine": 111,
+      "from": "window-12",
+      "callEndLine": 113,
+      "to": "window-18"
+    },
+    {
+      "callLine": 110,
+      "from": "window-12",
+      "callEndLine": 110,
+      "to": "window-4"
+    },
+    {
+      "callLine": 122,
+      "from": "window-13",
+      "callEndLine": 122,
+      "to": "window-7"
+    },
+    {
+      "callLine": 87,
+      "from": "window-14",
+      "callEndLine": 87,
+      "to": "window-19"
+    },
+    {
+      "callLine": 91,
+      "from": "window-14",
+      "callEndLine": 91,
+      "to": "window-20"
+    },
+    {
+      "callLine": 22,
+      "from": "window-16",
+      "callEndLine": 22,
+      "to": "window-21"
+    },
+    {
+      "callLine": 25,
+      "from": "window-16",
+      "callEndLine": 25,
+      "to": "window-23"
+    },
+    {
+      "callLine": 26,
+      "from": "window-16",
+      "callEndLine": 26,
+      "to": "window-24"
+    },
+    {
+      "callLine": 27,
+      "from": "window-16",
+      "callEndLine": 27,
+      "to": "window-25"
+    },
+    {
+      "callLine": 28,
+      "from": "window-16",
+      "callEndLine": 28,
+      "to": "window-26"
+    },
+    {
+      "callLine": 32,
+      "from": "window-16",
+      "callEndLine": 32,
+      "to": "window-27"
+    },
+    {
+      "callLine": 34,
+      "from": "window-16",
+      "callEndLine": 34,
+      "to": "window-29"
+    },
+    {
+      "callLine": 56,
+      "from": "window-17",
+      "callEndLine": 56,
+      "to": "window-30"
+    },
+    {
+      "callLine": 24,
+      "from": "window-18",
+      "callEndLine": 24,
+      "to": "window-31"
+    },
+    {
+      "callLine": 108,
+      "from": "window-19",
+      "callEndLine": 108,
+      "to": "window-32"
+    },
+    {
+      "callLine": 122,
+      "from": "window-20",
+      "callEndLine": 122,
+      "to": "window-32"
+    },
+    {
+      "callLine": 6,
+      "from": "window-21",
+      "callEndLine": 6,
+      "to": "window-22"
+    },
+    {
+      "callLine": 16,
+      "from": "window-22",
+      "callEndLine": 16,
+      "to": "window-25"
+    },
+    {
+      "callLine": 10,
+      "from": "window-22",
+      "callEndLine": 10,
+      "to": "window-33"
+    },
+    {
+      "callLine": 13,
+      "from": "window-22",
+      "callEndLine": 13,
+      "to": "window-34"
+    },
+    {
+      "callLine": 14,
+      "from": "window-23",
+      "callEndLine": 14,
+      "to": "window-34"
+    },
+    {
+      "callLine": 10,
+      "from": "window-23",
+      "callEndLine": 10,
+      "to": "window-35"
+    },
+    {
+      "callLine": 11,
+      "from": "window-23",
+      "callEndLine": 11,
+      "to": "window-36"
+    },
+    {
+      "callLine": 15,
+      "from": "window-23",
+      "callEndLine": 15,
+      "to": "window-36"
+    },
+    {
+      "callLine": 14,
+      "from": "window-23",
+      "callEndLine": 14,
+      "to": "window-37"
+    },
+    {
+      "callLine": 18,
+      "from": "window-23",
+      "callEndLine": 18,
+      "to": "window-38"
+    },
+    {
+      "callLine": 19,
+      "from": "window-23",
+      "callEndLine": 19,
+      "to": "window-39"
+    },
+    {
+      "callLine": 7,
+      "from": "window-27",
+      "callEndLine": 7,
+      "to": "window-28"
+    },
+    {
+      "callLine": 21,
+      "from": "window-28",
+      "callEndLine": 21,
+      "to": "window-25"
+    },
+    {
+      "callLine": 23,
+      "from": "window-28",
+      "callEndLine": 23,
+      "to": "window-25"
+    },
+    {
+      "callLine": 22,
+      "from": "window-28",
+      "callEndLine": 22,
+      "to": "window-40"
+    },
+    {
+      "callLine": 39,
+      "from": "window-29",
+      "callEndLine": 39,
+      "to": "window-41"
+    },
+    {
+      "callLine": 63,
+      "from": "window-3",
+      "callEndLine": 63,
+      "to": "window-14"
+    },
+    {
+      "callLine": 70,
+      "from": "window-30",
+      "callEndLine": 70,
+      "to": "window-42"
+    },
+    {
+      "callLine": 36,
+      "from": "window-31",
+      "callEndLine": 36,
+      "to": "window-32"
+    },
+    {
+      "callLine": 37,
+      "from": "window-31",
+      "callEndLine": 37,
+      "to": "window-42"
+    },
+    {
+      "callLine": 17,
+      "from": "window-36",
+      "callEndLine": 17,
+      "to": "window-43"
+    },
+    {
+      "callLine": 31,
+      "from": "window-38",
+      "callEndLine": 31,
+      "to": "window-41"
+    },
+    {
+      "callLine": 13,
+      "from": "window-39",
+      "callEndLine": 13,
+      "to": "window-43"
+    },
+    {
+      "callLine": 67,
+      "from": "window-4",
+      "callEndLine": 67,
+      "to": "window-15"
+    },
+    {
+      "callLine": 27,
+      "from": "window-40",
+      "callEndLine": 27,
+      "to": "window-41"
+    },
+    {
+      "callLine": 82,
+      "from": "window-5",
+      "callEndLine": 84,
+      "to": "window-16"
+    },
+    {
+      "callLine": 83,
+      "from": "window-5",
+      "callEndLine": 83,
+      "to": "window-4"
+    },
+    {
+      "callLine": 75,
+      "from": "window-6",
+      "callEndLine": 75,
+      "to": "window-16"
+    },
+    {
+      "callLine": 75,
+      "from": "window-6",
+      "callEndLine": 75,
+      "to": "window-4"
+    },
+    {
+      "callLine": 33,
+      "from": "window-7",
+      "callEndLine": 33,
+      "to": "window-16"
+    },
+    {
+      "callLine": 32,
+      "from": "window-7",
+      "callEndLine": 32,
+      "to": "window-4"
+    },
+    {
+      "callLine": 37,
+      "from": "window-8",
+      "callEndLine": 37,
+      "to": "window-15"
+    },
+    {
+      "callLine": 38,
+      "from": "window-8",
+      "callEndLine": 38,
+      "to": "window-16"
+    },
+    {
+      "callLine": 93,
+      "from": "window-9",
+      "callEndLine": 93,
+      "to": "window-16"
+    },
+    {
+      "callLine": 92,
+      "from": "window-9",
+      "callEndLine": 92,
+      "to": "window-4"
+    }
+  ],
+  "autoLayout": true
+}

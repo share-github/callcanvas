@@ -1,0 +1,68 @@
+plugins {
+  id 'java'
+  id 'application'
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'tools.depquery'
+version = '0.8.0'
+archivesBaseName = 'java-call-hierarchy-analyzer'
+
+repositories { mavenCentral() }
+
+dependencies {
+  implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.26.3'
+  implementation 'org.json:json:20240303'
+  implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+  testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0' // 任意（規約テスト）
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
+  testImplementation 'org.json:json:20240303' // GoldenFileTest用
+}
+
+application {
+  // 実行時に -PmainClass=... 指定可（デフォはこれ）
+  mainClass = 'tools.depquery.DepQueryCli'
+}
+
+// 依存込みの実行可能JARを生成（shadowJar）
+shadowJar {
+  archiveBaseName.set('java-call-hierarchy-analyzer')
+  archiveVersion.set(version)
+  archiveClassifier.set('')  // 'all' を削除してシンプルに
+  manifest {
+    attributes 'Main-Class': 'tools.depquery.DepQueryCli'
+  }
+}
+
+tasks.withType(Test).configureEach {
+  useJUnitPlatform()
+  // テスト実行前にJARをビルド
+  dependsOn shadowJar
+}
+
+// ゴールデンファイル（期待値JSON）を更新するタスク
+tasks.register('updateGoldenFiles', JavaExec) {
+  description = 'Update golden files (expected.json) for snapshot tests'
+  group = 'verification'
+  
+  dependsOn shadowJar
+  
+  mainClass = 'tools.depquery.GoldenFileUpdater'
+  classpath = sourceSets.test.runtimeClasspath
+  
+  // 実行時引数で更新対象を指定可能
+  // ./gradlew updateGoldenFiles --args='sample-app-animal'
+}
+
+java {
+  toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+// application プラグインの不要なタスクを無効化（shadowJarのみ使用）
+tasks.named('distZip') { enabled = false }
+tasks.named('distTar') { enabled = false }
+tasks.named('startScripts') { enabled = false }
+tasks.named('shadowDistZip') { enabled = false }
+tasks.named('shadowDistTar') { enabled = false }
+tasks.named('startShadowScripts') { enabled = false }

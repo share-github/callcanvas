@@ -1,0 +1,25 @@
+{
+  "nodes": [
+    "footer.html",
+    "header.html",
+    "index.html",
+    "nav.html"
+  ],
+  "edges": [
+    {
+      "from": "header.html",
+      "to": "nav.html",
+      "line": 2
+    },
+    {
+      "from": "index.html",
+      "to": "footer.html",
+      "line": 3
+    },
+    {
+      "from": "index.html",
+      "to": "header.html",
+      "line": 2
+    }
+  ]
+}

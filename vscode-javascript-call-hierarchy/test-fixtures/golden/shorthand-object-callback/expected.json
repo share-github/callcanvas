@@ -1,0 +1,23 @@
+{
+  "rootFunction": "startProcess",
+  "functions": [
+    "handleComplete",
+    "logResult",
+    "runWithOptions",
+    "startProcess"
+  ],
+  "calls": [
+    {
+      "from": "handleComplete",
+      "to": "logResult"
+    },
+    {
+      "from": "startProcess",
+      "to": "handleComplete"
+    },
+    {
+      "from": "startProcess",
+      "to": "runWithOptions"
+    }
+  ]
+}

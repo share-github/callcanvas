@@ -1,0 +1,8 @@
+{
+  "windows": [
+    { "id": "A", "code": [{"line":1,"content":"a"}], "position": {"top":100,"left":200,"width":600,"height":80} },
+    { "id": "B", "code": [{"line":1,"content":"b"}], "position": {"top":300,"left":400,"width":600,"height":80} }
+  ],
+  "connections": [{ "from": "A", "to": "B" }],
+  "autoLayout": false
+}

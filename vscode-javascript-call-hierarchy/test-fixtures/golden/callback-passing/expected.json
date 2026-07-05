@@ -1,0 +1,38 @@
+{
+  "rootFunction": "orchestrate",
+  "functions": [
+    "formatOutput",
+    "handleEvent",
+    "onClick",
+    "orchestrate",
+    "processItems",
+    "registerHandler",
+    "transformItem"
+  ],
+  "calls": [
+    {
+      "from": "onClick",
+      "to": "handleEvent"
+    },
+    {
+      "from": "orchestrate",
+      "to": "onClick"
+    },
+    {
+      "from": "orchestrate",
+      "to": "processItems"
+    },
+    {
+      "from": "orchestrate",
+      "to": "registerHandler"
+    },
+    {
+      "from": "orchestrate",
+      "to": "transformItem"
+    },
+    {
+      "from": "transformItem",
+      "to": "formatOutput"
+    }
+  ]
+}

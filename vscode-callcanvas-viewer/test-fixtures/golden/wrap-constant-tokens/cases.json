@@ -1,0 +1,34 @@
+[
+  {
+    "label": "literal_and_enum_member",
+    "input": {
+      "htmlContent": "return MAX_RETRY + Status.Active",
+      "symbolIndex": {
+        "MAX_RETRY": {
+          "value": "3",
+          "qualifier": "lib/constants.ts",
+          "type": "3"
+        },
+        "Status.Active": {
+          "value": "\"ACTIVE\"",
+          "qualifier": "lib/constants.ts",
+          "type": "enum"
+        }
+      }
+    },
+    "expected": "return <span class=\"constant-token\" data-tip=\"MAX_RETRY%20%3D%203%20%20(lib%2Fconstants.ts)\">MAX_RETRY</span> + <span class=\"constant-token\" data-tip=\"Status.Active%20%3D%20%22ACTIVE%22%20%20(lib%2Fconstants.ts)\">Status.Active</span>"
+  },
+  {
+    "label": "type_fallback_when_no_value",
+    "input": {
+      "htmlContent": "let x = Foo",
+      "symbolIndex": {
+        "Foo": {
+          "qualifier": "lib/types.ts",
+          "type": "SomeType"
+        }
+      }
+    },
+    "expected": "let x = <span class=\"constant-token\" data-tip=\"Foo%20%3A%20SomeType%20%20(lib%2Ftypes.ts)\">Foo</span>"
+  }
+]

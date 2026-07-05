@@ -1,0 +1,10 @@
+{
+  "description": "sample-maven-multi-module: Mavenマルチモジュールプロジェクトの解析テスト（インデックス使用）",
+  "projectPath": "sample-project/sample-maven-multi-module",
+  "src": "module-app/src/main/java,module-service/src/main/java,module-domain/src/main/java",
+  "classes": "module-app/target/classes,module-service/target/classes,module-domain/target/classes",
+  "cp": "module-app/target/module-app-1.0.0.jar,module-service/target/module-service-1.0.0.jar,module-domain/target/module-domain-1.0.0.jar",
+  "root": "OrderController#handleNewOrder(String,String,String)",
+  "depth": 5,
+  "buildIndex": true
+}

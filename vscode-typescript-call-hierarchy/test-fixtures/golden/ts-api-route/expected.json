@@ -1,0 +1,18 @@
+{
+  "rootFunction": "GET",
+  "functions": [
+    "GET",
+    "buildApiSummary",
+    "buildGreeting"
+  ],
+  "calls": [
+    {
+      "from": "buildApiSummary",
+      "to": "buildGreeting"
+    },
+    {
+      "from": "GET",
+      "to": "buildApiSummary"
+    }
+  ]
+}

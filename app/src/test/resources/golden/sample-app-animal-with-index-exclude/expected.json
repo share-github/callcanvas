@@ -1,0 +1,92 @@
+{
+  "windows": [
+    {
+      "code": "    /**\n     * 動物が鳴く（各サブクラスで実装）\n     */\n    public abstract String makeSound();",
+      "displayName": "Animal # makeSound",
+      "startLine": 20,
+      "filePath": "src/main/java/com/example/animal/domain/animal/Animal.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    /**\n     * すべての動物に鳴かせる\n     */\n    @GetMapping(\"/sounds\")\n    public List<String> getAllSounds() {\n        return animalService.makeAllAnimalsSound();\n    }",
+      "displayName": "AnimalController # getAllSounds",
+      "startLine": 25,
+      "filePath": "src/main/java/com/example/animal/controller/AnimalController.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    /**\n     * すべての動物に鳴かせる（ポリモーフィズム）\n     */\n    public List<String> makeAllAnimalsSound() {\n        return animals.stream()\n                .map(Animal::makeSound)\n                .collect(Collectors.toList());\n    }",
+      "displayName": "AnimalService # makeAllAnimalsSound",
+      "startLine": 32,
+      "filePath": "src/main/java/com/example/animal/service/AnimalService.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" meows: Meow! Meow!\";\n    }",
+      "displayName": "Cat # makeSound",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/animal/domain/animal/Cat.java",
+      "id": "window-6"
+    },
+    {
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" barks: Woof! Woof!\";\n    }",
+      "displayName": "Dog # makeSound",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/animal/domain/animal/Dog.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" barks happily: Woof! Woof! (Golden Retriever style)\";\n    }",
+      "displayName": "GoldenRetriever # makeSound",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/animal/domain/animal/GoldenRetriever.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" meows elegantly: Meow! (Persian style)\";\n    }",
+      "displayName": "PersianCat # makeSound",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/animal/domain/animal/PersianCat.java",
+      "id": "window-7"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 30,
+      "from": "window-1",
+      "callEndLine": 30,
+      "to": "window-2"
+    },
+    {
+      "callLine": 37,
+      "from": "window-2",
+      "callEndLine": 37,
+      "to": "window-3"
+    },
+    {
+      "callLine": 23,
+      "from": "window-3",
+      "callEndLine": 23,
+      "to": "window-4"
+    },
+    {
+      "callLine": 23,
+      "from": "window-3",
+      "callEndLine": 23,
+      "to": "window-5"
+    },
+    {
+      "callLine": 23,
+      "from": "window-3",
+      "callEndLine": 23,
+      "to": "window-6"
+    },
+    {
+      "callLine": 23,
+      "from": "window-3",
+      "callEndLine": 23,
+      "to": "window-7"
+    }
+  ],
+  "autoLayout": true
+}

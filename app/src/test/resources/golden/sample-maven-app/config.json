@@ -1,0 +1,11 @@
+{
+  "description": "sample-maven-app: Mavenプロジェクトの解析テスト",
+  "projectPath": "sample-project/sample-maven-app",
+  "src": "src/main/java",
+  "classes": "target/classes",
+  "cp": "target/sample-maven-app-1.0.0.jar",
+  "root": "UserController#createUser(String,String)",
+  "depth": 5
+}
+
+

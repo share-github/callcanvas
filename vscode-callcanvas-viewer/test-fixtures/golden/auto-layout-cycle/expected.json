@@ -1,0 +1,99 @@
+{
+  "windows": [
+    {
+      "id": "A",
+      "code": [
+        {
+          "line": 1,
+          "content": "a"
+        }
+      ],
+      "position": {
+        "top": 80,
+        "left": 40,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 0
+    },
+    {
+      "id": "B",
+      "code": [
+        {
+          "line": 1,
+          "content": "b"
+        }
+      ],
+      "position": {
+        "top": 80,
+        "left": 740,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 0
+    },
+    {
+      "id": "C",
+      "code": [
+        {
+          "line": 1,
+          "content": "c"
+        }
+      ],
+      "position": {
+        "top": 80,
+        "left": 1440,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 0
+    },
+    {
+      "id": "D",
+      "code": [
+        {
+          "line": 1,
+          "content": "d"
+        }
+      ],
+      "position": {
+        "top": 197,
+        "left": 40,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 1
+    }
+  ],
+  "connections": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "A"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    }
+  ],
+  "autoLayout": true
+}

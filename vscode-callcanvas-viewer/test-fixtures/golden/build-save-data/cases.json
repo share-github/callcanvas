@@ -1,0 +1,454 @@
+[
+  {
+    "label": "Standard save with highlight and comment",
+    "input": {
+      "autoLayout": true,
+      "windows": [
+        {
+          "id": "w1",
+          "displayName": "Foo # bar",
+          "filePath": "Foo.java",
+          "startLine": 10,
+          "position": {
+            "top": 80,
+            "left": 40,
+            "width": 600,
+            "height": 200
+          },
+          "collapsed": false,
+          "visible": true,
+          "fullHeight": false,
+          "code": [
+            {
+              "line": 10,
+              "content": "public void bar() {",
+              "highlight": true,
+              "comment": "entry point"
+            },
+            {
+              "line": 11,
+              "content": "    baz();",
+              "highlight": false
+            },
+            {
+              "line": 12,
+              "content": "}",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w2"
+        }
+      ]
+    },
+    "expected": {
+      "autoLayout": true,
+      "windows": [
+        {
+          "highlightLines": [
+            10
+          ],
+          "code": "public void bar() {\n    baz();\n}",
+          "displayName": "Foo # bar",
+          "filePath": "Foo.java",
+          "startLine": 10,
+          "id": "w1",
+          "position": {
+            "top": 80,
+            "left": 40,
+            "width": 600,
+            "height": 200
+          },
+          "collapsed": false,
+          "visible": true,
+          "fullHeight": false,
+          "lineComments": {
+            "10": "entry point"
+          }
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w2"
+        }
+      ]
+    }
+  },
+  {
+    "label": "No highlights - empty highlightLines",
+    "input": {
+      "windows": [
+        {
+          "id": "w1",
+          "displayName": "X",
+          "filePath": "X.java",
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 80
+          },
+          "code": [
+            {
+              "line": 1,
+              "content": "code",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "expected": {
+      "autoLayout": false,
+      "windows": [
+        {
+          "highlightLines": [],
+          "code": "code",
+          "displayName": "X",
+          "filePath": "X.java",
+          "startLine": 1,
+          "id": "w1",
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 80
+          },
+          "collapsed": false,
+          "visible": true,
+          "fullHeight": false
+        }
+      ],
+      "connections": []
+    }
+  },
+  {
+    "label": "No lineComments - omitted from output",
+    "input": {
+      "windows": [
+        {
+          "id": "w1",
+          "displayName": "X",
+          "filePath": "X.java",
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 80
+          },
+          "code": [
+            {
+              "line": 1,
+              "content": "code",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "expected": {
+      "autoLayout": false,
+      "windows": [
+        {
+          "highlightLines": [],
+          "code": "code",
+          "displayName": "X",
+          "filePath": "X.java",
+          "startLine": 1,
+          "id": "w1",
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 80
+          },
+          "collapsed": false,
+          "visible": true,
+          "fullHeight": false
+        }
+      ],
+      "connections": []
+    }
+  },
+  {
+    "label": "visible false preserved",
+    "input": {
+      "windows": [
+        {
+          "id": "w1",
+          "displayName": "X",
+          "filePath": "X.java",
+          "visible": false,
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 80
+          },
+          "code": [
+            {
+              "line": 1,
+              "content": "code",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "expected": {
+      "autoLayout": false,
+      "windows": [
+        {
+          "highlightLines": [],
+          "code": "code",
+          "displayName": "X",
+          "filePath": "X.java",
+          "startLine": 1,
+          "id": "w1",
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 80
+          },
+          "collapsed": false,
+          "visible": false,
+          "fullHeight": false
+        }
+      ],
+      "connections": []
+    }
+  },
+  {
+    "label": "fullHeight true preserved",
+    "input": {
+      "windows": [
+        {
+          "id": "w1",
+          "displayName": "X",
+          "filePath": "X.java",
+          "fullHeight": true,
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 80
+          },
+          "code": [
+            {
+              "line": 1,
+              "content": "code",
+              "highlight": false
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "expected": {
+      "autoLayout": false,
+      "windows": [
+        {
+          "highlightLines": [],
+          "code": "code",
+          "displayName": "X",
+          "filePath": "X.java",
+          "startLine": 1,
+          "id": "w1",
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 80
+          },
+          "collapsed": false,
+          "visible": true,
+          "fullHeight": true
+        }
+      ],
+      "connections": []
+    }
+  },
+  {
+    "label": "warningLines not preserved in save output (session-only data)",
+    "input": {
+      "windows": [
+        {
+          "id": "w1",
+          "displayName": "Warn",
+          "filePath": "Warn.java",
+          "warningLines": [
+            2,
+            3
+          ],
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 97
+          },
+          "code": [
+            {
+              "line": 1,
+              "content": "line1",
+              "highlight": false,
+              "hasWarning": false
+            },
+            {
+              "line": 2,
+              "content": "line2",
+              "highlight": false,
+              "hasWarning": true
+            },
+            {
+              "line": 3,
+              "content": "line3",
+              "highlight": true,
+              "hasWarning": true
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "expected": {
+      "autoLayout": false,
+      "windows": [
+        {
+          "highlightLines": [
+            3
+          ],
+          "code": "line1\nline2\nline3",
+          "displayName": "Warn",
+          "filePath": "Warn.java",
+          "startLine": 1,
+          "id": "w1",
+          "position": {
+            "top": 0,
+            "left": 0,
+            "width": 600,
+            "height": 97
+          },
+          "collapsed": false,
+          "visible": true,
+          "fullHeight": false
+        }
+      ],
+      "connections": []
+    }
+  },
+  {
+    "label": "Null input returns null",
+    "input": null,
+    "expected": null
+  },
+  {
+    "label": "Empty windows array",
+    "input": {
+      "windows": [],
+      "connections": []
+    },
+    "expected": {
+      "autoLayout": false,
+      "windows": [],
+      "connections": []
+    }
+  },
+  {
+    "label": "Diff overlay active: removed virtual lines excluded from saved code",
+    "input": {
+      "autoLayout": false,
+      "windows": [
+        {
+          "id": "w1",
+          "displayName": "Foo # bar",
+          "filePath": "Foo.java",
+          "startLine": 10,
+          "position": {
+            "top": 40,
+            "left": 40,
+            "width": 600,
+            "height": 200
+          },
+          "collapsed": false,
+          "visible": true,
+          "fullHeight": false,
+          "_hasDiffOverlay": true,
+          "_originalCode": [
+            {
+              "line": 10,
+              "content": "    if (x) {",
+              "highlight": false,
+              "hasWarning": false,
+              "isComment": false
+            },
+            {
+              "line": 11,
+              "content": "    }",
+              "highlight": false,
+              "hasWarning": false,
+              "isComment": false
+            }
+          ],
+          "code": [
+            {
+              "line": 9,
+              "content": "    if (old) {",
+              "highlight": false,
+              "hasWarning": false,
+              "isComment": false,
+              "diffType": "removed"
+            },
+            {
+              "line": 10,
+              "content": "    if (x) {",
+              "highlight": false,
+              "hasWarning": false,
+              "isComment": false,
+              "diffType": "added"
+            },
+            {
+              "line": 11,
+              "content": "    }",
+              "highlight": false,
+              "hasWarning": false,
+              "isComment": false
+            }
+          ]
+        }
+      ],
+      "connections": []
+    },
+    "expected": {
+      "autoLayout": false,
+      "windows": [
+        {
+          "highlightLines": [],
+          "code": "    if (x) {\n    }",
+          "displayName": "Foo # bar",
+          "filePath": "Foo.java",
+          "startLine": 10,
+          "id": "w1",
+          "position": {
+            "top": 40,
+            "left": 40,
+            "width": 600,
+            "height": 200
+          },
+          "collapsed": false,
+          "visible": true,
+          "fullHeight": false
+        }
+      ],
+      "connections": []
+    }
+  }
+]

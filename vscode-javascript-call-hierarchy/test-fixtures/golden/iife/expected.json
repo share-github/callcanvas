@@ -1,0 +1,13 @@
+{
+  "rootFunction": "IIFE",
+  "functions": [
+    "IIFE",
+    "bootstrapApp"
+  ],
+  "calls": [
+    {
+      "from": "IIFE",
+      "to": "bootstrapApp"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "rootFunction": "buildUserSummary",
+  "functions": [
+    "buildGreeting",
+    "buildUserSummary",
+    "getDisplayName"
+  ],
+  "calls": [
+    {
+      "from": "buildUserSummary",
+      "to": "buildGreeting"
+    },
+    {
+      "from": "buildUserSummary",
+      "to": "getDisplayName"
+    }
+  ]
+}

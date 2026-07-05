@@ -1,0 +1,53 @@
+{
+  "windows": [
+    {
+      "code": "    public void sendMail() {\n        sendMailDetail();\n    }",
+      "displayName": "BaseMailService # sendMail",
+      "startLine": 5,
+      "filePath": "src/main/java/com/example/animal/issue11/BaseMailService.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    protected void sendMailDetail() {\n    }",
+      "displayName": "BaseMailService # sendMailDetail",
+      "startLine": 9,
+      "filePath": "src/main/java/com/example/animal/issue11/BaseMailService.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    /**\n     * issue11: インターフェース経由の呼び出し\n     * MailServiceInterface#sendMail() → BaseMailService#sendMail() への解決を検証\n     */\n    public void execute() {\n        mailService.sendMail();\n    }",
+      "displayName": "MailAction # execute",
+      "startLine": 7,
+      "filePath": "src/main/java/com/example/animal/issue11/MailAction.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    void sendMail();",
+      "displayName": "MailServiceInterface # sendMail",
+      "startLine": 4,
+      "filePath": "src/main/java/com/example/animal/issue11/MailServiceInterface.java",
+      "id": "window-2"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 12,
+      "from": "window-1",
+      "callEndLine": 12,
+      "to": "window-2"
+    },
+    {
+      "callLine": 4,
+      "from": "window-2",
+      "callEndLine": 4,
+      "to": "window-3"
+    },
+    {
+      "callLine": 6,
+      "from": "window-3",
+      "callEndLine": 6,
+      "to": "window-4"
+    }
+  ],
+  "autoLayout": true
+}

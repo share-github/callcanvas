@@ -1,0 +1,204 @@
+[
+  {
+    "label": "Exact callLine match",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 10
+          }
+        ]
+      },
+      "windowId": "w1",
+      "lineNumber": 10
+    },
+    "expected": [
+      {
+        "from": "w1",
+        "to": "w2",
+        "callLine": 10
+      }
+    ]
+  },
+  {
+    "label": "Within callLine-callEndLine range",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 10,
+            "callEndLine": 15
+          }
+        ]
+      },
+      "windowId": "w1",
+      "lineNumber": 12
+    },
+    "expected": [
+      {
+        "from": "w1",
+        "to": "w2",
+        "callLine": 10,
+        "callEndLine": 15
+      }
+    ]
+  },
+  {
+    "label": "At callEndLine boundary",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 10,
+            "callEndLine": 15
+          }
+        ]
+      },
+      "windowId": "w1",
+      "lineNumber": 15
+    },
+    "expected": [
+      {
+        "from": "w1",
+        "to": "w2",
+        "callLine": 10,
+        "callEndLine": 15
+      }
+    ]
+  },
+  {
+    "label": "Outside range",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 10,
+            "callEndLine": 15
+          }
+        ]
+      },
+      "windowId": "w1",
+      "lineNumber": 16
+    },
+    "expected": []
+  },
+  {
+    "label": "Wrong windowId",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 10
+          }
+        ]
+      },
+      "windowId": "w3",
+      "lineNumber": 10
+    },
+    "expected": []
+  },
+  {
+    "label": "Empty connections",
+    "input": {
+      "currentData": {
+        "connections": []
+      },
+      "windowId": "w1",
+      "lineNumber": 10
+    },
+    "expected": []
+  },
+  {
+    "label": "Null currentData",
+    "input": {
+      "currentData": null,
+      "windowId": "w1",
+      "lineNumber": 10
+    },
+    "expected": []
+  },
+  {
+    "label": "Multiple connections on same line",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 10
+          },
+          {
+            "from": "w1",
+            "to": "w3",
+            "callLine": 10
+          }
+        ]
+      },
+      "windowId": "w1",
+      "lineNumber": 10
+    },
+    "expected": [
+      {
+        "from": "w1",
+        "to": "w2",
+        "callLine": 10
+      },
+      {
+        "from": "w1",
+        "to": "w3",
+        "callLine": 10
+      }
+    ]
+  },
+  {
+    "label": "Nested-omit card: call on hidden inner line matches card row range",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 214
+          }
+        ]
+      },
+      "windowId": "w1",
+      "lineNumber": 207,
+      "omitEndLine": 221
+    },
+    "expected": [
+      {
+        "from": "w1",
+        "to": "w2",
+        "callLine": 214
+      }
+    ]
+  },
+  {
+    "label": "Nested-omit card: no omitEndLine keeps point match (call not on card start)",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 214
+          }
+        ]
+      },
+      "windowId": "w1",
+      "lineNumber": 207
+    },
+    "expected": []
+  }
+]

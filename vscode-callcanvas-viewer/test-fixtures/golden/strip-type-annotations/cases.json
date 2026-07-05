@@ -1,0 +1,62 @@
+[
+  {
+    "label": "Simple return type removal",
+    "input": "function foo(a, b): string | null {",
+    "expected": "function foo(a, b) {"
+  },
+  {
+    "label": "Parameter type annotations",
+    "input": "function bar(name: string, age: number) {",
+    "expected": "function bar(name, age) {"
+  },
+  {
+    "label": "Return type + parameter types",
+    "input": "function baz(x: number, y: string): boolean {",
+    "expected": "function baz(x, y) {"
+  },
+  {
+    "label": "Optional parameter",
+    "input": "function qux(a?: string, b: number) {",
+    "expected": "function qux(a, b) {"
+  },
+  {
+    "label": "Generic parameter type",
+    "input": "function test(items: Map<string, number>, flag: boolean) {",
+    "expected": "function test(items, flag) {"
+  },
+  {
+    "label": "const with type annotation",
+    "input": "const patterns: { [key: string]: RegExp[] } = {",
+    "expected": "const patterns = {"
+  },
+  {
+    "label": "let with type annotation",
+    "input": "let count: number = 0;",
+    "expected": "let count = 0;"
+  },
+  {
+    "label": "as cast removal",
+    "input": "const x = value as string;",
+    "expected": "const x = value ;"
+  },
+  {
+    "label": "as cast with complex type",
+    "input": "const x = value as Map<string, number>;",
+    "expected": "const x = value ;"
+  },
+  {
+    "label": "No annotations - passthrough",
+    "input": "function simple(a, b) { return a + b; }",
+    "expected": "function simple(a, b) { return a + b; }"
+  },
+  {
+    "label": "var with type annotation",
+    "input": "var result: string[] = [];",
+    "expected": "var result = [];"
+  },
+  {
+    "label": "Complex return type with union",
+    "input": "function find(id: string): Promise<User | null> {",
+    "expected": "function find(id) {"
+  }
+]

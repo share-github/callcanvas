@@ -1,0 +1,11 @@
+{
+  "description": "sample-app-animal: AnimalControllerの解析テスト（ポリモーフィズムのテスト）",
+  "projectPath": "sample-project/sample-app-animal",
+  "src": "src/main/java",
+  "classes": "build/classes/java/main",
+  "cp": "build/libs/animal-app-1.0.0.jar",
+  "root": "AnimalController#getAllSounds()",
+  "depth": 5
+}
+
+

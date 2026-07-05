@@ -1,0 +1,50 @@
+[
+  {
+    "label": "1 line - returns minWindowHeight",
+    "input": {
+      "lineCount": 1,
+      "applyMaxLimit": true
+    },
+    "expected": 97
+  },
+  {
+    "label": "10 lines with max limit",
+    "input": {
+      "lineCount": 10,
+      "applyMaxLimit": true
+    },
+    "expected": 277
+  },
+  {
+    "label": "100 lines with max limit - capped at maxWindowHeight",
+    "input": {
+      "lineCount": 100,
+      "applyMaxLimit": true
+    },
+    "expected": 600
+  },
+  {
+    "label": "100 lines without max limit - uncapped",
+    "input": {
+      "lineCount": 100,
+      "applyMaxLimit": false
+    },
+    "expected": 2077
+  },
+  {
+    "label": "0 lines - returns minWindowHeight",
+    "input": {
+      "lineCount": 0,
+      "applyMaxLimit": true
+    },
+    "expected": 80
+  },
+  {
+    "label": "25 lines with max limit - within range",
+    "input": {
+      "lineCount": 25,
+      "applyMaxLimit": true
+    },
+    "expected": 577
+  }
+]

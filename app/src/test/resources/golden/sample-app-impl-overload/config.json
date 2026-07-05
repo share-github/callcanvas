@@ -1,0 +1,7 @@
+{
+  "description": "service-overload フィクスチャ: --cpdir なしで facade.solve() が失敗しフォールバックに入る場合の CHA / オーバーロード出力を検証。フィクスチャは sample-project/sample-maven-service-overload。",
+  "projectPath": "sample-project/sample-maven-service-overload",
+  "src": "src/main/java",
+  "root": "CallerImpl#doProcess(String,Map)",
+  "depth": 3
+}

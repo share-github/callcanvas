@@ -1,0 +1,40 @@
+{
+  "windows": [
+    {
+      "code": "    /**\n     * すべての動物に鳴かせる\n     */\n    @GetMapping(\"/sounds\")\n    public List<String> getAllSounds() {\n        return animalService.makeAllAnimalsSound();\n    }",
+      "displayName": "AnimalController # getAllSounds",
+      "startLine": 25,
+      "filePath": "src/main/java/com/example/animal/controller/AnimalController.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    /**\n     * すべての動物に鳴かせる（ポリモーフィズム）\n     */\n    public List<String> makeAllAnimalsSound() {\n        return animals.stream()\n                .map(Animal::makeSound)\n                .collect(Collectors.toList());\n    }",
+      "displayName": "AnimalService # makeAllAnimalsSound",
+      "startLine": 32,
+      "filePath": "src/main/java/com/example/animal/service/AnimalService.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    /**\n     * 複雑なメソッド: すべての動物タイプの行動を実行\n     */\n    public String performComplexActions() {\n        StringBuilder result = new StringBuilder();\n        result.append(\"=== All Animals Sound ===\\n\");\n        makeAllAnimalsSound().forEach(sound -> result.append(sound).append(\"\\n\"));\n\n        result.append(\"\\n=== Mammal Actions ===\\n\");\n        performMammalActions().forEach(action -> result.append(action).append(\"\\n\"));\n\n        result.append(\"\\n=== Dog Actions ===\\n\");\n        performDogActions().forEach(action -> result.append(action).append(\"\\n\"));\n\n        result.append(\"\\n=== Golden Retriever Actions ===\\n\");\n        performGoldenRetrieverActions().forEach(action -> result.append(action).append(\"\\n\"));\n\n        result.append(\"\\n=== Cat Actions ===\\n\");\n        performCatActions().forEach(action -> result.append(action).append(\"\\n\"));\n\n        result.append(\"\\n=== Persian Cat Actions ===\\n\");\n        performPersianCatActions().forEach(action -> result.append(action).append(\"\\n\"));\n\n        result.append(\"\\n=== Bird Actions ===\\n\");\n        performBirdActions().forEach(action -> result.append(action).append(\"\\n\"));\n\n        result.append(\"\\n=== Sparrow Actions ===\\n\");\n        performSparrowActions().forEach(action -> result.append(action).append(\"\\n\"));\n\n        return result.toString();\n    }",
+      "displayName": "AnimalService # performComplexActions",
+      "startLine": 174,
+      "filePath": "src/main/java/com/example/animal/service/AnimalService.java",
+      "id": "window-3"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 30,
+      "from": "window-2",
+      "callEndLine": 30,
+      "to": "window-1"
+    },
+    {
+      "callLine": 180,
+      "from": "window-3",
+      "callEndLine": 180,
+      "to": "window-1"
+    }
+  ],
+  "autoLayout": true
+}

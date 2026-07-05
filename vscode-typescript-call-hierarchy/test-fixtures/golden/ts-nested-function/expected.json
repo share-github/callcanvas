@@ -1,0 +1,23 @@
+{
+  "rootFunction": "outer",
+  "functions": [
+    "onSubmit",
+    "outer",
+    "saveNote",
+    "takeCallback"
+  ],
+  "calls": [
+    {
+      "from": "onSubmit",
+      "to": "saveNote"
+    },
+    {
+      "from": "outer",
+      "to": "onSubmit"
+    },
+    {
+      "from": "outer",
+      "to": "takeCallback"
+    }
+  ]
+}

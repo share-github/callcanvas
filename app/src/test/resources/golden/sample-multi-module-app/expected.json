@@ -1,0 +1,526 @@
+{
+  "windows": [
+    {
+      "code": "    private String generateTransactionId() {\n        return \"BT-\" + UUID.randomUUID().toString().substring(0, 8);\n    }",
+      "displayName": "BankTransferPaymentProcessor # generateTransactionId",
+      "startLine": 36,
+      "filePath": "src/main/java/com/example/service/payment/BankTransferPaymentProcessor.java",
+      "id": "window-33"
+    },
+    {
+      "code": "    private void initiateTransfer(Order order) {\n        System.out.println(\"Initiating bank transfer of \" + order.getAmount());\n    }",
+      "displayName": "BankTransferPaymentProcessor # initiateTransfer",
+      "startLine": 32,
+      "filePath": "src/main/java/com/example/service/payment/BankTransferPaymentProcessor.java",
+      "id": "window-32"
+    },
+    {
+      "code": "    @Override\n    public PaymentResult process(Order order) {\n        System.out.println(\"Processing bank transfer for order: \" + order.getId());\n        initiateTransfer(order);\n        return PaymentResult.success(generateTransactionId());\n    }",
+      "displayName": "BankTransferPaymentProcessor # process",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/service/payment/BankTransferPaymentProcessor.java",
+      "id": "window-31"
+    },
+    {
+      "code": "    private void chargeCard(Order order) {\n        // カード課金ロジック\n        System.out.println(\"Charging \" + order.getAmount() + \" to credit card\");\n    }",
+      "displayName": "CreditCardPaymentProcessor # chargeCard",
+      "startLine": 39,
+      "filePath": "src/main/java/com/example/service/payment/CreditCardPaymentProcessor.java",
+      "id": "window-24"
+    },
+    {
+      "code": "    private String generateTransactionId() {\n        return \"CC-\" + UUID.randomUUID().toString().substring(0, 8);\n    }",
+      "displayName": "CreditCardPaymentProcessor # generateTransactionId",
+      "startLine": 44,
+      "filePath": "src/main/java/com/example/service/payment/CreditCardPaymentProcessor.java",
+      "id": "window-26"
+    },
+    {
+      "code": "    @Override\n    public PaymentResult process(Order order) {\n        // クレジットカード決済処理をシミュレート\n        System.out.println(\"Processing credit card payment for order: \" + order.getId());\n        validateCard();\n        chargeCard(order);\n        return PaymentResult.success(generateTransactionId());\n    }",
+      "displayName": "CreditCardPaymentProcessor # process",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/service/payment/CreditCardPaymentProcessor.java",
+      "id": "window-22"
+    },
+    {
+      "code": "    private void validateCard() {\n        // カード検証ロジック\n        System.out.println(\"Validating credit card...\");\n    }",
+      "displayName": "CreditCardPaymentProcessor # validateCard",
+      "startLine": 34,
+      "filePath": "src/main/java/com/example/service/payment/CreditCardPaymentProcessor.java",
+      "id": "window-23"
+    },
+    {
+      "code": "    @Override\n    public void cancelOrder(Order order) {\n        System.out.println(\"Cancelling order: \" + order.getId());\n        order.setStatus(OrderStatus.CANCELLED);\n        releaseInventory(order);\n    }",
+      "displayName": "DefaultOrderProcessor # cancelOrder",
+      "startLine": 28,
+      "filePath": "src/main/java/com/example/service/order/DefaultOrderProcessor.java",
+      "id": "window-18"
+    },
+    {
+      "code": "    private void notifyWarehouse(Order order) {\n        System.out.println(\"Notifying warehouse for order: \" + order.getId());\n    }",
+      "displayName": "DefaultOrderProcessor # notifyWarehouse",
+      "startLine": 47,
+      "filePath": "src/main/java/com/example/service/order/DefaultOrderProcessor.java",
+      "id": "window-16"
+    },
+    {
+      "code": "    @Override\n    public void processOrder(Order order) {\n        System.out.println(\"Processing order: \" + order.getId());\n        order.setStatus(OrderStatus.PROCESSING);\n        reserveInventory(order);\n        notifyWarehouse(order);\n    }",
+      "displayName": "DefaultOrderProcessor # processOrder",
+      "startLine": 20,
+      "filePath": "src/main/java/com/example/service/order/DefaultOrderProcessor.java",
+      "id": "window-14"
+    },
+    {
+      "code": "    private void releaseInventory(Order order) {\n        System.out.println(\"Releasing inventory for order: \" + order.getId());\n    }",
+      "displayName": "DefaultOrderProcessor # releaseInventory",
+      "startLine": 51,
+      "filePath": "src/main/java/com/example/service/order/DefaultOrderProcessor.java",
+      "id": "window-19"
+    },
+    {
+      "code": "    private void reserveInventory(Order order) {\n        System.out.println(\"Reserving inventory for order: \" + order.getId());\n    }",
+      "displayName": "DefaultOrderProcessor # reserveInventory",
+      "startLine": 43,
+      "filePath": "src/main/java/com/example/service/order/DefaultOrderProcessor.java",
+      "id": "window-15"
+    },
+    {
+      "code": "    @Override\n    public boolean validate(Order order) {\n        System.out.println(\"Validating order: \" + order.getId());\n        return validateAmount(order) && validateCustomer(order);\n    }",
+      "displayName": "DefaultOrderProcessor # validate",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/service/order/DefaultOrderProcessor.java",
+      "id": "window-10"
+    },
+    {
+      "code": "    private boolean validateAmount(Order order) {\n        return order.getAmount().compareTo(BigDecimal.ZERO) > 0;\n    }",
+      "displayName": "DefaultOrderProcessor # validateAmount",
+      "startLine": 35,
+      "filePath": "src/main/java/com/example/service/order/DefaultOrderProcessor.java",
+      "id": "window-12"
+    },
+    {
+      "code": "    private boolean validateCustomer(Order order) {\n        return order.getCustomerId() != null && !order.getCustomerId().isEmpty();\n    }",
+      "displayName": "DefaultOrderProcessor # validateCustomer",
+      "startLine": 39,
+      "filePath": "src/main/java/com/example/service/order/DefaultOrderProcessor.java",
+      "id": "window-13"
+    },
+    {
+      "code": "    public BigDecimal getAmount() {\n        return amount;\n    }",
+      "displayName": "Order # getAmount",
+      "startLine": 26,
+      "filePath": "src/main/java/com/example/api/domain/Order.java",
+      "id": "window-20"
+    },
+    {
+      "code": "    public String getCustomerId() {\n        return customerId;\n    }",
+      "displayName": "Order # getCustomerId",
+      "startLine": 22,
+      "filePath": "src/main/java/com/example/api/domain/Order.java",
+      "id": "window-21"
+    },
+    {
+      "code": "    public String getId() {\n        return id;\n    }",
+      "displayName": "Order # getId",
+      "startLine": 18,
+      "filePath": "src/main/java/com/example/api/domain/Order.java",
+      "id": "window-11"
+    },
+    {
+      "code": "    public void setStatus(OrderStatus status) {\n        this.status = status;\n    }",
+      "displayName": "Order # setStatus",
+      "startLine": 34,
+      "filePath": "src/main/java/com/example/api/domain/Order.java",
+      "id": "window-8"
+    },
+    {
+      "code": "    /**\n     * 新規注文を処理\n     * このメソッドから module-api のインターフェース経由で\n     * module-service の実装が呼び出される\n     */\n    public PaymentResult handleNewOrder(String orderId, String customerId,\n            BigDecimal amount, String paymentMethod) {\n        Order order = new Order(orderId, customerId, amount);\n        return orderService.createAndProcessOrder(order, paymentMethod);\n    }",
+      "displayName": "OrderController # handleNewOrder",
+      "startLine": 41,
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    /**\n     * 注文をキャンセルする\n     */\n    void cancelOrder(Order order);",
+      "displayName": "OrderProcessor # cancelOrder",
+      "startLine": 21,
+      "filePath": "src/main/java/com/example/api/processor/OrderProcessor.java",
+      "id": "window-9"
+    },
+    {
+      "code": "    /**\n     * 注文を処理する\n     */\n    void processOrder(Order order);",
+      "displayName": "OrderProcessor # processOrder",
+      "startLine": 16,
+      "filePath": "src/main/java/com/example/api/processor/OrderProcessor.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    /**\n     * 注文を検証する\n     */\n    boolean validate(Order order);",
+      "displayName": "OrderProcessor # validate",
+      "startLine": 11,
+      "filePath": "src/main/java/com/example/api/processor/OrderProcessor.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    /**\n     * 注文を作成して処理する\n     */\n    public PaymentResult createAndProcessOrder(Order order, String paymentMethod) {\n        // 注文を検証\n        if (!orderProcessor.validate(order)) {\n            return PaymentResult.failure(\"Order validation failed\");\n        }\n\n        // 注文を処理\n        orderProcessor.processOrder(order);\n\n        // 支払いを処理\n        PaymentResult result = paymentService.processPayment(order, paymentMethod);\n        \n        if (result.isSuccess()) {\n            order.setStatus(OrderStatus.PAID);\n        } else {\n            orderProcessor.cancelOrder(order);\n        }\n\n        return result;\n    }",
+      "displayName": "OrderService # createAndProcessOrder",
+      "startLine": 22,
+      "filePath": "src/main/java/com/example/service/order/OrderService.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    private void authenticatePayPal() {\n        // PayPal認証ロジック\n        System.out.println(\"Authenticating with PayPal...\");\n    }",
+      "displayName": "PayPalPaymentProcessor # authenticatePayPal",
+      "startLine": 34,
+      "filePath": "src/main/java/com/example/service/payment/PayPalPaymentProcessor.java",
+      "id": "window-28"
+    },
+    {
+      "code": "    private void executePayment(Order order) {\n        // PayPal支払い実行ロジック\n        System.out.println(\"Executing PayPal payment of \" + order.getAmount());\n    }",
+      "displayName": "PayPalPaymentProcessor # executePayment",
+      "startLine": 39,
+      "filePath": "src/main/java/com/example/service/payment/PayPalPaymentProcessor.java",
+      "id": "window-29"
+    },
+    {
+      "code": "    private String generateTransactionId() {\n        return \"PP-\" + UUID.randomUUID().toString().substring(0, 8);\n    }",
+      "displayName": "PayPalPaymentProcessor # generateTransactionId",
+      "startLine": 44,
+      "filePath": "src/main/java/com/example/service/payment/PayPalPaymentProcessor.java",
+      "id": "window-30"
+    },
+    {
+      "code": "    @Override\n    public PaymentResult process(Order order) {\n        // PayPal決済処理をシミュレート\n        System.out.println(\"Processing PayPal payment for order: \" + order.getId());\n        authenticatePayPal();\n        executePayment(order);\n        return PaymentResult.success(generateTransactionId());\n    }",
+      "displayName": "PayPalPaymentProcessor # process",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/service/payment/PayPalPaymentProcessor.java",
+      "id": "window-27"
+    },
+    {
+      "code": "    /**\n     * 支払いを処理する\n     * @param order 注文\n     * @return 処理結果\n     */\n    PaymentResult process(Order order);",
+      "displayName": "PaymentProcessor # process",
+      "startLine": 11,
+      "filePath": "src/main/java/com/example/api/processor/PaymentProcessor.java",
+      "id": "window-17"
+    },
+    {
+      "code": "    public static PaymentResult failure(String message) {\n        return new PaymentResult(false, null, message);\n    }",
+      "displayName": "PaymentResult # failure",
+      "startLine": 18,
+      "filePath": "src/main/java/com/example/api/processor/PaymentResult.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    public boolean isSuccess() {\n        return success;\n    }",
+      "displayName": "PaymentResult # isSuccess",
+      "startLine": 22,
+      "filePath": "src/main/java/com/example/api/processor/PaymentResult.java",
+      "id": "window-7"
+    },
+    {
+      "code": "    public static PaymentResult success(String transactionId) {\n        return new PaymentResult(true, transactionId, \"Payment successful\");\n    }",
+      "displayName": "PaymentResult # success",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/api/processor/PaymentResult.java",
+      "id": "window-25"
+    },
+    {
+      "code": "    /**\n     * 指定された支払い方法で注文を処理\n     */\n    public PaymentResult processPayment(Order order, String paymentMethod) {\n        PaymentProcessor processor = processors.get(paymentMethod);\n        if (processor == null) {\n            return PaymentResult.failure(\"Unsupported payment method: \" + paymentMethod);\n        }\n        return processor.process(order);\n    }",
+      "displayName": "PaymentService # processPayment",
+      "startLine": 24,
+      "filePath": "src/main/java/com/example/service/payment/PaymentService.java",
+      "id": "window-6"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 49,
+      "from": "window-1",
+      "callEndLine": 49,
+      "to": "window-2"
+    },
+    {
+      "callLine": 16,
+      "from": "window-10",
+      "callEndLine": 16,
+      "to": "window-11"
+    },
+    {
+      "callLine": 17,
+      "from": "window-10",
+      "callEndLine": 17,
+      "to": "window-12"
+    },
+    {
+      "callLine": 17,
+      "from": "window-10",
+      "callEndLine": 17,
+      "to": "window-13"
+    },
+    {
+      "callLine": 36,
+      "from": "window-12",
+      "callEndLine": 36,
+      "to": "window-20"
+    },
+    {
+      "callLine": 40,
+      "from": "window-13",
+      "callEndLine": 40,
+      "to": "window-21"
+    },
+    {
+      "callLine": 22,
+      "from": "window-14",
+      "callEndLine": 22,
+      "to": "window-11"
+    },
+    {
+      "callLine": 24,
+      "from": "window-14",
+      "callEndLine": 24,
+      "to": "window-15"
+    },
+    {
+      "callLine": 25,
+      "from": "window-14",
+      "callEndLine": 25,
+      "to": "window-16"
+    },
+    {
+      "callLine": 23,
+      "from": "window-14",
+      "callEndLine": 23,
+      "to": "window-8"
+    },
+    {
+      "callLine": 44,
+      "from": "window-15",
+      "callEndLine": 44,
+      "to": "window-11"
+    },
+    {
+      "callLine": 48,
+      "from": "window-16",
+      "callEndLine": 48,
+      "to": "window-11"
+    },
+    {
+      "callLine": 16,
+      "from": "window-17",
+      "callEndLine": 16,
+      "to": "window-22"
+    },
+    {
+      "callLine": 16,
+      "from": "window-17",
+      "callEndLine": 16,
+      "to": "window-27"
+    },
+    {
+      "callLine": 16,
+      "from": "window-17",
+      "callEndLine": 16,
+      "to": "window-31"
+    },
+    {
+      "callLine": 30,
+      "from": "window-18",
+      "callEndLine": 30,
+      "to": "window-11"
+    },
+    {
+      "callLine": 32,
+      "from": "window-18",
+      "callEndLine": 32,
+      "to": "window-19"
+    },
+    {
+      "callLine": 31,
+      "from": "window-18",
+      "callEndLine": 31,
+      "to": "window-8"
+    },
+    {
+      "callLine": 52,
+      "from": "window-19",
+      "callEndLine": 52,
+      "to": "window-11"
+    },
+    {
+      "callLine": 27,
+      "from": "window-2",
+      "callEndLine": 27,
+      "to": "window-3"
+    },
+    {
+      "callLine": 28,
+      "from": "window-2",
+      "callEndLine": 28,
+      "to": "window-4"
+    },
+    {
+      "callLine": 32,
+      "from": "window-2",
+      "callEndLine": 32,
+      "to": "window-5"
+    },
+    {
+      "callLine": 35,
+      "from": "window-2",
+      "callEndLine": 35,
+      "to": "window-6"
+    },
+    {
+      "callLine": 37,
+      "from": "window-2",
+      "callEndLine": 37,
+      "to": "window-7"
+    },
+    {
+      "callLine": 38,
+      "from": "window-2",
+      "callEndLine": 38,
+      "to": "window-8"
+    },
+    {
+      "callLine": 40,
+      "from": "window-2",
+      "callEndLine": 40,
+      "to": "window-9"
+    },
+    {
+      "callLine": 17,
+      "from": "window-22",
+      "callEndLine": 17,
+      "to": "window-11"
+    },
+    {
+      "callLine": 18,
+      "from": "window-22",
+      "callEndLine": 18,
+      "to": "window-23"
+    },
+    {
+      "callLine": 19,
+      "from": "window-22",
+      "callEndLine": 19,
+      "to": "window-24"
+    },
+    {
+      "callLine": 20,
+      "from": "window-22",
+      "callEndLine": 20,
+      "to": "window-25"
+    },
+    {
+      "callLine": 20,
+      "from": "window-22",
+      "callEndLine": 20,
+      "to": "window-26"
+    },
+    {
+      "callLine": 41,
+      "from": "window-24",
+      "callEndLine": 41,
+      "to": "window-20"
+    },
+    {
+      "callLine": 17,
+      "from": "window-27",
+      "callEndLine": 17,
+      "to": "window-11"
+    },
+    {
+      "callLine": 20,
+      "from": "window-27",
+      "callEndLine": 20,
+      "to": "window-25"
+    },
+    {
+      "callLine": 18,
+      "from": "window-27",
+      "callEndLine": 18,
+      "to": "window-28"
+    },
+    {
+      "callLine": 19,
+      "from": "window-27",
+      "callEndLine": 19,
+      "to": "window-29"
+    },
+    {
+      "callLine": 20,
+      "from": "window-27",
+      "callEndLine": 20,
+      "to": "window-30"
+    },
+    {
+      "callLine": 41,
+      "from": "window-29",
+      "callEndLine": 41,
+      "to": "window-20"
+    },
+    {
+      "callLine": 14,
+      "from": "window-3",
+      "callEndLine": 14,
+      "to": "window-10"
+    },
+    {
+      "callLine": 16,
+      "from": "window-31",
+      "callEndLine": 16,
+      "to": "window-11"
+    },
+    {
+      "callLine": 18,
+      "from": "window-31",
+      "callEndLine": 18,
+      "to": "window-25"
+    },
+    {
+      "callLine": 17,
+      "from": "window-31",
+      "callEndLine": 17,
+      "to": "window-32"
+    },
+    {
+      "callLine": 18,
+      "from": "window-31",
+      "callEndLine": 18,
+      "to": "window-33"
+    },
+    {
+      "callLine": 33,
+      "from": "window-32",
+      "callEndLine": 33,
+      "to": "window-20"
+    },
+    {
+      "callLine": 19,
+      "from": "window-5",
+      "callEndLine": 19,
+      "to": "window-14"
+    },
+    {
+      "callLine": 32,
+      "from": "window-6",
+      "callEndLine": 32,
+      "to": "window-17"
+    },
+    {
+      "callLine": 30,
+      "from": "window-6",
+      "callEndLine": 30,
+      "to": "window-4"
+    },
+    {
+      "callLine": 24,
+      "from": "window-9",
+      "callEndLine": 24,
+      "to": "window-18"
+    }
+  ],
+  "autoLayout": true
+}

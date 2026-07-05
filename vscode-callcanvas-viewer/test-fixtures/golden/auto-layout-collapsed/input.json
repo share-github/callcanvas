@@ -1,0 +1,25 @@
+{
+  "windows": [
+    {
+      "id": "A",
+      "code": [{ "line": 1, "content": "code A" }],
+      "position": { "width": 600, "height": 80 }
+    },
+    {
+      "id": "B",
+      "collapsed": true,
+      "code": [{ "line": 1, "content": "code B line1" }, { "line": 2, "content": "code B line2" }, { "line": 3, "content": "code B line3" }],
+      "position": { "width": 600, "height": 80 }
+    },
+    {
+      "id": "C",
+      "code": [{ "line": 1, "content": "code C" }],
+      "position": { "width": 600, "height": 80 }
+    }
+  ],
+  "connections": [
+    { "from": "A", "to": "B" },
+    { "from": "A", "to": "C" }
+  ],
+  "autoLayout": true
+}

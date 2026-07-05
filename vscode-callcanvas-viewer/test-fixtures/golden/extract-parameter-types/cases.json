@@ -1,0 +1,58 @@
+[
+  {
+    "label": "Simple single param",
+    "input": {
+      "code": "public void save(User user) {",
+      "methodName": "save"
+    },
+    "expected": "User"
+  },
+  {
+    "label": "Multiple params",
+    "input": {
+      "code": "public String search(String keyword, Boolean completed) {",
+      "methodName": "search"
+    },
+    "expected": "String,Boolean"
+  },
+  {
+    "label": "No params",
+    "input": {
+      "code": "public void doWork() {",
+      "methodName": "doWork"
+    },
+    "expected": ""
+  },
+  {
+    "label": "Generics param",
+    "input": {
+      "code": "public void process(Map<Integer, Map<String, Hoge>> hogeMap) {",
+      "methodName": "process"
+    },
+    "expected": "Map"
+  },
+  {
+    "label": "Annotated param",
+    "input": {
+      "code": "public void create(@RequestBody OrderRequest request) {",
+      "methodName": "create"
+    },
+    "expected": "OrderRequest"
+  },
+  {
+    "label": "Primitive params",
+    "input": {
+      "code": "public void calc(int count, boolean flag) {",
+      "methodName": "calc"
+    },
+    "expected": "int,boolean"
+  },
+  {
+    "label": "Method not found in code",
+    "input": {
+      "code": "public void other() {",
+      "methodName": "notFound"
+    },
+    "expected": ""
+  }
+]

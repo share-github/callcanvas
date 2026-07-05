@@ -1,0 +1,175 @@
+{
+  "symbolIndex": {"SUCCESS": {
+    "qualifier": "com.example.core.component.ExternalApiComponent",
+    "type": "String",
+    "value": "\"0000\""
+  }},
+  "windows": [
+    {
+      "code": "    /**\n     * 結果コードが成功かどうかを判定する\n     *\n     * @param resultCode 結果コード\n     * @return true:成功 false:失敗\n     */\n    public boolean checkResultCode(String resultCode) {\n        return SUCCESS.equals(resultCode);\n    }",
+      "displayName": "ExternalApiComponent # checkResultCode",
+      "startLine": 31,
+      "filePath": "module-core/src/main/java/com/example/core/component/ExternalApiComponent.java",
+      "id": "window-6"
+    },
+    {
+      "code": "    /**\n     * 注文を外部APIに送信する\n     *\n     * @param request 注文リクエスト\n     * @return 注文結果\n     */\n    public OrderResult submitOrder(OrderRequest request) {\n        // 外部APIへのHTTPリクエスト処理\n        OrderResult result = new OrderResult();\n        result.setResultCode(SUCCESS);\n        result.setReceptionNo(\"REC-\" + System.currentTimeMillis());\n        result.setMessage(\"注文受付完了\");\n        return result;\n    }",
+      "displayName": "ExternalApiComponent # submitOrder",
+      "startLine": 16,
+      "filePath": "module-core/src/main/java/com/example/core/component/ExternalApiComponent.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    /**\n     * 注文処理を実行する\n     *\n     * ★ このメソッドを \"CallCanvas: Open Viewer with File\" で解析すると、\n     *   ExternalApiComponent#submitOrder() が解析されない（不具合）\n     *\n     * @param form      注文フォーム\n     * @param customerId 顧客ID\n     * @return 受付番号\n     */\n    public String processOrder(OrderFormDto form, String customerId) {\n        // リクエスト組み立て\n        OrderRequest request = new OrderRequest();\n        request.setCustomerId(customerId);\n        request.setItemCode(form.getItemCode());\n\n        // ★ ここで ExternalApiComponent#submitOrder() を呼び出す\n        // call-index.json には \"ExternalApiComponent#submitOrder(...)\" と不完全FQNで記録される\n        OrderResult result = externalApiComponent.submitOrder(request);\n\n        // 結果コードチェック\n        // call-index.json には \"ExternalApiComponent#checkResultCode(...)\" と不完全FQNで記録される\n        if (!externalApiComponent.checkResultCode(result.getResultCode())) {\n            throw new RuntimeException(\"API error: \" + result.getMessage());\n        }\n\n        // 後続処理\n        String receptionNo = result.getReceptionNo();\n        sendConfirmationMail(customerId, receptionNo);\n\n        return receptionNo;\n    }",
+      "displayName": "FrontService # processOrder",
+      "startLine": 20,
+      "filePath": "module-front/src/main/java/com/example/front/service/FrontService.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    /**\n     * 確認メールを送信する\n     *\n     * @param customerId  顧客ID\n     * @param receptionNo 受付番号\n     */\n    private void sendConfirmationMail(String customerId, String receptionNo) {\n        // メール送信処理（省略）\n        System.out.println(\"Mail sent to: \" + customerId + \", receptionNo: \" + receptionNo);\n    }",
+      "displayName": "FrontService # sendConfirmationMail",
+      "startLine": 53,
+      "filePath": "module-front/src/main/java/com/example/front/service/FrontService.java",
+      "id": "window-10"
+    },
+    {
+      "code": "    public String getItemCode() { return itemCode; }",
+      "displayName": "OrderFormDto # getItemCode",
+      "startLine": 11,
+      "filePath": "module-front/src/main/java/com/example/front/dto/OrderFormDto.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    public void setCustomerId(String customerId) { this.customerId = customerId; }",
+      "displayName": "OrderRequest # setCustomerId",
+      "startLine": 15,
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderRequest.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    public void setItemCode(String itemCode) { this.itemCode = itemCode; }",
+      "displayName": "OrderRequest # setItemCode",
+      "startLine": 18,
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderRequest.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    public String getMessage() { return message; }",
+      "displayName": "OrderResult # getMessage",
+      "startLine": 17,
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "id": "window-8"
+    },
+    {
+      "code": "    public String getReceptionNo() { return receptionNo; }",
+      "displayName": "OrderResult # getReceptionNo",
+      "startLine": 14,
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "id": "window-9"
+    },
+    {
+      "code": "    public String getResultCode() { return resultCode; }",
+      "displayName": "OrderResult # getResultCode",
+      "startLine": 11,
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "id": "window-7"
+    },
+    {
+      "code": "    public void setMessage(String message) { this.message = message; }",
+      "displayName": "OrderResult # setMessage",
+      "startLine": 18,
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "id": "window-13"
+    },
+    {
+      "code": "    public void setReceptionNo(String receptionNo) { this.receptionNo = receptionNo; }",
+      "displayName": "OrderResult # setReceptionNo",
+      "startLine": 15,
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "id": "window-12"
+    },
+    {
+      "code": "    public void setResultCode(String resultCode) { this.resultCode = resultCode; }",
+      "displayName": "OrderResult # setResultCode",
+      "startLine": 12,
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "id": "window-11"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 48,
+      "from": "window-1",
+      "callEndLine": 48,
+      "to": "window-10"
+    },
+    {
+      "callLine": 33,
+      "from": "window-1",
+      "callEndLine": 33,
+      "to": "window-2"
+    },
+    {
+      "callLine": 34,
+      "from": "window-1",
+      "callEndLine": 34,
+      "to": "window-3"
+    },
+    {
+      "callLine": 34,
+      "from": "window-1",
+      "callEndLine": 34,
+      "to": "window-4"
+    },
+    {
+      "callLine": 38,
+      "from": "window-1",
+      "callEndLine": 38,
+      "to": "window-5"
+    },
+    {
+      "callLine": 42,
+      "from": "window-1",
+      "callEndLine": 42,
+      "to": "window-6"
+    },
+    {
+      "callLine": 42,
+      "from": "window-1",
+      "callEndLine": 42,
+      "to": "window-7"
+    },
+    {
+      "callLine": 43,
+      "from": "window-1",
+      "callEndLine": 43,
+      "to": "window-8"
+    },
+    {
+      "callLine": 47,
+      "from": "window-1",
+      "callEndLine": 47,
+      "to": "window-9"
+    },
+    {
+      "callLine": 25,
+      "from": "window-5",
+      "callEndLine": 25,
+      "to": "window-11"
+    },
+    {
+      "callLine": 26,
+      "from": "window-5",
+      "callEndLine": 26,
+      "to": "window-12"
+    },
+    {
+      "callLine": 27,
+      "from": "window-5",
+      "callEndLine": 27,
+      "to": "window-13"
+    }
+  ],
+  "autoLayout": true
+}

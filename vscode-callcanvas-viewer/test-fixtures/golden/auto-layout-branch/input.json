@@ -1,0 +1,24 @@
+{
+  "windows": [
+    {
+      "id": "A",
+      "code": [{ "line": 1, "content": "code A" }],
+      "position": { "width": 600, "height": 80 }
+    },
+    {
+      "id": "B",
+      "code": [{ "line": 1, "content": "code B" }],
+      "position": { "width": 600, "height": 80 }
+    },
+    {
+      "id": "C",
+      "code": [{ "line": 1, "content": "code C" }],
+      "position": { "width": 600, "height": 80 }
+    }
+  ],
+  "connections": [
+    { "from": "A", "to": "B" },
+    { "from": "A", "to": "C" }
+  ],
+  "autoLayout": true
+}

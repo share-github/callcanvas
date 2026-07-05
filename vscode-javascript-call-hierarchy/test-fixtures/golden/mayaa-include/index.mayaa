@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<m:mayaa xmlns:m="http://mayaa.seasar.org"
+    m:extends="layout">
+    <m:insert m:id="content" path="layout" />
+</m:mayaa>

@@ -1,0 +1,11 @@
+{
+  "windows": [
+    {
+      "id": "A",
+      "code": [{ "line": 1, "content": "code A" }],
+      "position": { "width": 600, "height": 80 }
+    }
+  ],
+  "connections": [],
+  "autoLayout": true
+}

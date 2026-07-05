@@ -1,0 +1,55 @@
+{
+  "windows": [
+    {
+      "id": "A",
+      "code": [
+        {
+          "line": 1,
+          "content": "a"
+        }
+      ],
+      "position": {
+        "top": 80,
+        "left": 40,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 0
+    },
+    {
+      "id": "B",
+      "code": [
+        {
+          "line": 1,
+          "content": "b"
+        }
+      ],
+      "position": {
+        "top": 80,
+        "left": 740,
+        "width": 600,
+        "height": 97
+      },
+      "language": null,
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "_layoutOrderWithinLevel": 0
+    }
+  ],
+  "connections": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "A"
+    }
+  ],
+  "autoLayout": true
+}

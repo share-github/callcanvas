@@ -1,0 +1,23 @@
+{
+  "rootFunction": "$_callback",
+  "functions": [
+    "$_callback",
+    "doSetup",
+    "initModule",
+    "loadData"
+  ],
+  "calls": [
+    {
+      "from": "$_callback",
+      "to": "doSetup"
+    },
+    {
+      "from": "$_callback",
+      "to": "loadData"
+    },
+    {
+      "from": "doSetup",
+      "to": "initModule"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+[
+  {
+    "label": "Array code - 3 lines",
+    "input": {
+      "windowData": {
+        "code": [
+          {
+            "line": 1,
+            "content": "a"
+          },
+          {
+            "line": 2,
+            "content": "b"
+          },
+          {
+            "line": 3,
+            "content": "c"
+          }
+        ]
+      }
+    },
+    "expected": 3
+  },
+  {
+    "label": "Array code - single line",
+    "input": {
+      "windowData": {
+        "code": [
+          {
+            "line": 1,
+            "content": "only"
+          }
+        ]
+      }
+    },
+    "expected": 1
+  },
+  {
+    "label": "Array code - empty array",
+    "input": {
+      "windowData": {
+        "code": []
+      }
+    },
+    "expected": 0
+  },
+  {
+    "label": "String code - 3 lines",
+    "input": {
+      "windowData": {
+        "code": "line1\nline2\nline3"
+      }
+    },
+    "expected": 3
+  },
+  {
+    "label": "String code - single line",
+    "input": {
+      "windowData": {
+        "code": "only"
+      }
+    },
+    "expected": 1
+  },
+  {
+    "label": "String code - empty string",
+    "input": {
+      "windowData": {
+        "code": ""
+      }
+    },
+    "expected": 1
+  },
+  {
+    "label": "Null code - falls back to empty string",
+    "input": {
+      "windowData": {
+        "code": null
+      }
+    },
+    "expected": 1
+  },
+  {
+    "label": "Undefined code - falls back to empty string",
+    "input": {
+      "windowData": {}
+    },
+    "expected": 1
+  }
+]

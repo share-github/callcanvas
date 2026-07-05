@@ -1,0 +1,23 @@
+{
+  "rootFunction": "ParentWithDestructure",
+  "functions": [
+    "Modal",
+    "ParentWithDestructure",
+    "leaf",
+    "usePair"
+  ],
+  "calls": [
+    {
+      "from": "ParentWithDestructure",
+      "to": "leaf"
+    },
+    {
+      "from": "ParentWithDestructure",
+      "to": "Modal"
+    },
+    {
+      "from": "ParentWithDestructure",
+      "to": "usePair"
+    }
+  ]
+}

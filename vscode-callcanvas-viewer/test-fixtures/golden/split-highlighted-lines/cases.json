@@ -1,0 +1,73 @@
+[
+  {
+    "label": "No spans - plain text",
+    "input": {
+      "html": "line1\nline2\nline3"
+    },
+    "expected": [
+      "line1",
+      "line2",
+      "line3"
+    ]
+  },
+  {
+    "label": "Span within single line",
+    "input": {
+      "html": "<span class=\"kw\">if</span> (x) {\nreturn;"
+    },
+    "expected": [
+      "<span class=\"kw\">if</span> (x) {",
+      "return;"
+    ]
+  },
+  {
+    "label": "Span crossing lines - comment block",
+    "input": {
+      "html": "<span class=\"comment\">// line1\n// line2</span>"
+    },
+    "expected": [
+      "<span class=\"comment\">// line1</span>",
+      "<span class=\"comment\">// line2</span>"
+    ]
+  },
+  {
+    "label": "Nested spans crossing lines",
+    "input": {
+      "html": "<span class=\"a\"><span class=\"b\">text1\ntext2</span></span>"
+    },
+    "expected": [
+      "<span class=\"a\"><span class=\"b\">text1</span></span>",
+      "<span class=\"a\"><span class=\"b\">text2</span></span>"
+    ]
+  },
+  {
+    "label": "Single line - no newline",
+    "input": {
+      "html": "<span>hello</span>"
+    },
+    "expected": [
+      "<span>hello</span>"
+    ]
+  },
+  {
+    "label": "Empty lines between content",
+    "input": {
+      "html": "line1\n\nline3"
+    },
+    "expected": [
+      "line1",
+      "",
+      "line3"
+    ]
+  },
+  {
+    "label": "Span opens and closes on same line, then new line",
+    "input": {
+      "html": "<span class=\"hljs-comment\">// Validate</span>\nnextLine"
+    },
+    "expected": [
+      "<span class=\"hljs-comment\">// Validate</span>",
+      "nextLine"
+    ]
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "label": "Plain text - single match",
+    "input": {
+      "html": "hello world",
+      "query": "world"
+    },
+    "expected": "hello <mark class=\"search-text-highlight\">world</mark>"
+  },
+  {
+    "label": "Plain text - multiple matches",
+    "input": {
+      "html": "foo bar foo baz foo",
+      "query": "foo"
+    },
+    "expected": "<mark class=\"search-text-highlight\">foo</mark> bar <mark class=\"search-text-highlight\">foo</mark> baz <mark class=\"search-text-highlight\">foo</mark>"
+  },
+  {
+    "label": "Case insensitive match",
+    "input": {
+      "html": "Hello HELLO hello",
+      "query": "hello"
+    },
+    "expected": "<mark class=\"search-text-highlight\">Hello</mark> <mark class=\"search-text-highlight\">HELLO</mark> <mark class=\"search-text-highlight\">hello</mark>"
+  },
+  {
+    "label": "Tag attribute not highlighted - query matches tag attribute",
+    "input": {
+      "html": "<span class=\"test\">test content</span>",
+      "query": "test"
+    },
+    "expected": "<span class=\"test\"><mark class=\"search-text-highlight\">test</mark> content</span>"
+  },
+  {
+    "label": "Text between tags highlighted, tags preserved",
+    "input": {
+      "html": "<b>bold</b> and <i>italic</i>",
+      "query": "and"
+    },
+    "expected": "<b>bold</b> <mark class=\"search-text-highlight\">and</mark> <i>italic</i>"
+  },
+  {
+    "label": "No match returns unchanged HTML",
+    "input": {
+      "html": "<div>hello world</div>",
+      "query": "xyz"
+    },
+    "expected": "<div>hello world</div>"
+  },
+  {
+    "label": "Match inside nested tags",
+    "input": {
+      "html": "<div><span>find me</span></div>",
+      "query": "find"
+    },
+    "expected": "<div><span><mark class=\"search-text-highlight\">find</mark> me</span></div>"
+  },
+  {
+    "label": "HTML with no tags",
+    "input": {
+      "html": "just plain text here",
+      "query": "plain"
+    },
+    "expected": "just <mark class=\"search-text-highlight\">plain</mark> text here"
+  },
+  {
+    "label": "Empty HTML",
+    "input": {
+      "html": "",
+      "query": "test"
+    },
+    "expected": ""
+  },
+  {
+    "label": "Tag name contains query - not highlighted",
+    "input": {
+      "html": "<span>content</span>",
+      "query": "span"
+    },
+    "expected": "<span>content</span>"
+  },
+  {
+    "label": "Query with regex special chars - dot",
+    "input": {
+      "html": "list.add(item)",
+      "query": "list.add("
+    },
+    "expected": "<mark class=\"search-text-highlight\">list.add(</mark>item)"
+  },
+  {
+    "label": "Query with regex special chars - parentheses and asterisk",
+    "input": {
+      "html": "foo(*bar) and baz",
+      "query": "(*bar)"
+    },
+    "expected": "foo<mark class=\"search-text-highlight\">(*bar)</mark> and baz"
+  },
+  {
+    "label": "Query with brackets",
+    "input": {
+      "html": "arr[0] = val",
+      "query": "[0]"
+    },
+    "expected": "arr<mark class=\"search-text-highlight\">[0]</mark> = val"
+  },
+  {
+    "label": "Query with special chars inside HTML tags",
+    "input": {
+      "html": "<span class=\"a.b\">a.b test</span>",
+      "query": "a.b"
+    },
+    "expected": "<span class=\"a.b\"><mark class=\"search-text-highlight\">a.b</mark> test</span>"
+  },
+  {
+    "label": "Match spans multiple span tags (hljs-like split)",
+    "input": {
+      "html": "<span class=\"hljs-string\">(\"hoge\",</span><span class=\"hljs-string\">\"foo\")</span>",
+      "query": "(\"hoge\",\"foo\")"
+    },
+    "expected": "<span class=\"hljs-string\"><mark class=\"search-text-highlight\">(\"hoge\",</mark></span><span class=\"hljs-string\"><mark class=\"search-text-highlight\">\"foo\")</mark></span>"
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "rootFunction": "renderTitle",
+  "functions": [
+    "escapeHtml",
+    "renderTitle",
+    "truncate"
+  ],
+  "calls": [
+    {
+      "from": "renderTitle",
+      "to": "escapeHtml"
+    },
+    {
+      "from": "renderTitle",
+      "to": "truncate"
+    }
+  ]
+}

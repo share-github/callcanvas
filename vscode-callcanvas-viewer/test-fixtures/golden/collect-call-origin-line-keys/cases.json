@@ -1,0 +1,115 @@
+[
+  {
+    "label": "empty connections",
+    "input": {
+      "currentData": {
+        "connections": []
+      }
+    },
+    "expected": []
+  },
+  {
+    "label": "single callLine",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 10
+          }
+        ]
+      }
+    },
+    "expected": [
+      "w1\u001f10"
+    ]
+  },
+  {
+    "label": "callLine to callEndLine range",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 10,
+            "callEndLine": 12
+          }
+        ]
+      }
+    },
+    "expected": [
+      "w1\u001f10",
+      "w1\u001f11",
+      "w1\u001f12"
+    ]
+  },
+  {
+    "label": "skip connection without callLine",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2"
+          }
+        ]
+      }
+    },
+    "expected": []
+  },
+  {
+    "label": "two edges same line deduped in Set",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 5
+          },
+          {
+            "from": "w1",
+            "to": "w3",
+            "callLine": 5
+          }
+        ]
+      }
+    },
+    "expected": [
+      "w1\u001f5"
+    ]
+  },
+  {
+    "label": "nested-omit card maps hidden call line to visible card start line",
+    "input": {
+      "currentData": {
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2",
+            "callLine": 214
+          }
+        ],
+        "windows": [
+          {
+            "id": "w1",
+            "code": [
+              {
+                "line": 207,
+                "content": "const sendMessage = (...) => {...",
+                "nestedOmitCard": true,
+                "omitEndLine": 221
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "expected": [
+      "w1\u001f207",
+      "w1\u001f214"
+    ]
+  }
+]

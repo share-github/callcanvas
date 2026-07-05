@@ -1,0 +1,13 @@
+{
+  "rootFunction": "HomePage",
+  "functions": [
+    "HomePage",
+    "helperFn"
+  ],
+  "calls": [
+    {
+      "from": "HomePage",
+      "to": "helperFn"
+    }
+  ]
+}

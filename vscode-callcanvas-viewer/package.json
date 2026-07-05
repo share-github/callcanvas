@@ -1,0 +1,166 @@
+{
+    "name": "callcanvas-viewer",
+    "displayName": "CallCanvas Code Navigation Viewer",
+    "description": "Visualize call hierarchies and navigate code with CallCanvas viewer",
+    "version": "0.2.0",
+    "publisher": "share-github",
+    "license": "MIT",
+    "author": "share-github",
+    "engines": {
+        "vscode": "^1.80.0"
+    },
+    "categories": [
+        "Visualization",
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:callcanvas.openViewer",
+        "onCommand:callcanvas.openViewerWithFile",
+        "onCommand:callcanvas.createNewViewer",
+        "onCommand:callcanvas.addMethodToViewer",
+        "onCommand:callcanvas.analyzeNextLevel",
+        "onCommand:callcanvas.exportToHtml",
+        "onCommand:callcanvas.loadCoverageReport",
+        "onCommand:callcanvas.clearCoverage",
+        "onCommand:callcanvas.reloadFromJson"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "callcanvas.openViewer",
+                "title": "CallCanvas: Open Viewer"
+            },
+            {
+                "command": "callcanvas.openViewerWithFile",
+                "title": "CallCanvas: Open Viewer with File"
+            },
+            {
+                "command": "callcanvas.createNewViewer",
+                "title": "CallCanvas: Create New Viewer"
+            },
+            {
+                "command": "callcanvas.addMethodToViewer",
+                "title": "CallCanvas: Add to Viewer"
+            },
+            {
+                "command": "callcanvas.analyzeNextLevel",
+                "title": "CallCanvas: Analyze Next Level"
+            },
+            {
+                "command": "callcanvas.jumpBack",
+                "title": "CallCanvas: Jump Back"
+            },
+            {
+                "command": "callcanvas.exportToHtml",
+                "title": "CallCanvas: Export to HTML"
+            },
+            {
+                "command": "callcanvas.loadCoverageReport",
+                "title": "CallCanvas: カバレッジレポート読込 (JaCoCo XML)"
+            },
+            {
+                "command": "callcanvas.clearCoverage",
+                "title": "CallCanvas: カバレッジハイライトをクリア"
+            },
+            {
+                "command": "callcanvas.reloadFromJson",
+                "title": "CallCanvas: JSONから再読み込み"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "callcanvas.jumpBack",
+                "key": "alt+left",
+                "when": "activeWebviewPanelId == 'callcanvasViewer'"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "when": "resourceExtname == .json",
+                    "command": "callcanvas.openViewerWithFile",
+                    "group": "navigation"
+                }
+            ],
+            "editor/title": [
+                {
+                    "when": "resourceExtname == .json",
+                    "command": "callcanvas.openViewer",
+                    "group": "navigation"
+                }
+            ],
+            "editor/title/context": [
+                {
+                    "when": "resourceExtname == .json",
+                    "command": "callcanvas.openViewerWithFile",
+                    "group": "navigation"
+                }
+            ],
+            "editor/context": [
+                {
+                    "when": "resourceExtname == .json",
+                    "command": "callcanvas.openViewerWithFile",
+                    "group": "navigation"
+                },
+                {
+                    "when": "editorHasSelection",
+                    "command": "callcanvas.addMethodToViewer",
+                    "group": "callcanvas"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "CallCanvas Viewer",
+            "properties": {
+                "callcanvas.windowWidth": {
+                    "type": "number",
+                    "default": 600,
+                    "description": "Window width in pixels"
+                },
+                "callcanvas.minWindowHeight": {
+                    "type": "number",
+                    "default": 80,
+                    "description": "Minimum window height in pixels"
+                },
+                "callcanvas.maxWindowHeight": {
+                    "type": "number",
+                    "default": 600,
+                    "description": "Maximum window height in pixels"
+                },
+                "callcanvas.debug": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable debug output in the CallCanvas Analyzer output channel"
+                },
+                "callcanvas.performanceLog": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable performance logging (timing only, no sensitive info). Safe to share with developers."
+                },
+                "callcanvas.jumpToCallTargetKey": {
+                    "type": "string",
+                    "default": "f12",
+                    "description": "Call 先へジャンプするキー（例: f12, ctrl+b）"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run build-hljs && npm run compile",
+        "build-hljs": "node build-hljs.mjs",
+        "compile": "tsc -p ./ && node --check media/viewer.js",
+        "watch": "tsc -watch -p ./",
+        "test": "node test-fixtures/golden/run-test.js",
+        "pretest": "npm run compile",
+        "package": "npx @vscode/vsce package --no-yarn",
+        "deploy": "npm run package && cp callcanvas-viewer-*.vsix ../callcanvas-viewer.vsix && cp callcanvas-viewer-*.vsix ../.devcontainer/vscode-extension/callcanvas-viewer/callcanvas-viewer.vsix && echo 'Deployed to root and .devcontainer/vscode-extension/callcanvas-viewer/'"
+    },
+    "devDependencies": {
+        "@types/node": "^18.0.0",
+        "@types/vscode": "^1.80.0",
+        "esbuild": "^0.27.3",
+        "highlight.js": "^11.11.1",
+        "typescript": "^5.0.0"
+    }
+}

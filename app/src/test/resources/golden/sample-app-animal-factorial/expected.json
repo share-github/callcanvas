@@ -1,0 +1,16 @@
+{
+  "windows": [{
+    "code": "    /**\n     * 自己参照パターン2: 階乗計算（典型的な再帰）\n     */\n    public int factorial(int n) {\n        if (n <= 1) {\n            return 1;\n        }\n        // 再帰呼び出し: 自分自身を呼び出す\n        return n * factorial(n - 1);\n    }",
+    "displayName": "MailAction # factorial",
+    "startLine": 30,
+    "filePath": "src/main/java/com/example/animal/issue11/MailAction.java",
+    "id": "window-1"
+  }],
+  "connections": [{
+    "callLine": 38,
+    "from": "window-1",
+    "callEndLine": 38,
+    "to": "window-1"
+  }],
+  "autoLayout": true
+}

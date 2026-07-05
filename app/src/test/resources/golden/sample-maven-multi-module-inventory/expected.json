@@ -1,0 +1,66 @@
+{
+  "windows": [
+    {
+      "code": "    /**\n     * Log product info\n     */\n    private void logProduct(ProductInfo product) {\n        System.out.println(\"  - \" + product);\n    }",
+      "displayName": "InventoryService # logProduct",
+      "startLine": 42,
+      "filePath": "src/main/java/com/example/service/InventoryService.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    /**\n     * Process nested Map with complex generics\n     * This tests: Map<Integer, Map<String, ProductInfo>>\n     */\n    public int processInventoryMap(Map<Integer, Map<String, ProductInfo>> inventoryMap, String warehouseId) {\n        int totalItems = 0;\n        for (Map.Entry<Integer, Map<String, ProductInfo>> entry : inventoryMap.entrySet()) {\n            Integer shelfId = entry.getKey();\n            Map<String, ProductInfo> products = entry.getValue();\n            totalItems += processShelf(shelfId, products, warehouseId);\n        }\n        return totalItems;\n    }",
+      "displayName": "InventoryService # processInventoryMap",
+      "startLine": 15,
+      "filePath": "src/main/java/com/example/service/InventoryService.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    /**\n     * Process a single shelf\n     */\n    private int processShelf(Integer shelfId, Map<String, ProductInfo> products, String warehouseId) {\n        System.out.println(\"Processing shelf \" + shelfId + \" in warehouse \" + warehouseId);\n        int count = 0;\n        for (ProductInfo product : products.values()) {\n            count += product.getQuantity();\n            logProduct(product);\n        }\n        return count;\n    }",
+      "displayName": "InventoryService # processShelf",
+      "startLine": 29,
+      "filePath": "src/main/java/com/example/service/InventoryService.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    /**\n     * Process inventory with nested generics - test case for Map<Integer,\n     * Map<String, ProductInfo>>\n     */\n    public int processInventory(Map<Integer, Map<String, ProductInfo>> inventoryData, String warehouseId) {\n        return inventoryService.processInventoryMap(inventoryData, warehouseId);\n    }",
+      "displayName": "OrderController # processInventory",
+      "startLine": 41,
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    public int getQuantity() {\n        return quantity;\n    }",
+      "displayName": "ProductInfo # getQuantity",
+      "startLine": 21,
+      "filePath": "src/main/java/com/example/domain/ProductInfo.java",
+      "id": "window-4"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 46,
+      "from": "window-1",
+      "callEndLine": 46,
+      "to": "window-2"
+    },
+    {
+      "callLine": 24,
+      "from": "window-2",
+      "callEndLine": 24,
+      "to": "window-3"
+    },
+    {
+      "callLine": 36,
+      "from": "window-3",
+      "callEndLine": 36,
+      "to": "window-4"
+    },
+    {
+      "callLine": 37,
+      "from": "window-3",
+      "callEndLine": 37,
+      "to": "window-5"
+    }
+  ],
+  "autoLayout": true
+}

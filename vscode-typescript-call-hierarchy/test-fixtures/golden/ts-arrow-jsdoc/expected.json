@@ -1,0 +1,17 @@
+{
+  "rootFunction": "createAdapter",
+  "functions": [
+    "createAdapter",
+    "helper"
+  ],
+  "calls": [
+    {
+      "from": "createAdapter",
+      "to": "helper"
+    }
+  ],
+  "rootCodeChecks": {
+    "notPrefix": "\n\n",
+    "prefix": "/**"
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "windows": [
+    {
+      "code": "    /**\n     * 重要: このメソッドは子クラスから呼び出されるが、\n     * 外部ライブラリ型（RequestContext, ResponseContext）をパラメータに持つため、\n     * 型解決に失敗しやすい。\n     */\n    protected void helperMethod(RequestContext request, ResponseContext model) {\n        // 48行の複雑なビジネスロジックを模倣\n        String method = request.getMethod();\n        String path = request.getPath();\n        \n        model.addAttribute(\"requestMethod\", method);\n        model.addAttribute(\"requestPath\", path);\n        model.addAttribute(\"timestamp\", System.currentTimeMillis());\n        \n        // 追加のビジネスロジック...\n        processAuthentication(request);\n        processAuthorization(request);\n        logAccess(request);\n    }",
+      "displayName": "BaseController # helperMethod",
+      "startLine": 8,
+      "filePath": "src/main/java/com/example/animal/issue12/BaseController.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    private void logAccess(RequestContext request) {\n        // アクセスログ記録\n    }",
+      "displayName": "BaseController # logAccess",
+      "startLine": 36,
+      "filePath": "src/main/java/com/example/animal/issue12/BaseController.java",
+      "id": "window-9"
+    },
+    {
+      "code": "    private void processAuthentication(RequestContext request) {\n        // 認証処理\n    }",
+      "displayName": "BaseController # processAuthentication",
+      "startLine": 28,
+      "filePath": "src/main/java/com/example/animal/issue12/BaseController.java",
+      "id": "window-7"
+    },
+    {
+      "code": "    private void processAuthorization(RequestContext request) {\n        // 認可処理\n    }",
+      "displayName": "BaseController # processAuthorization",
+      "startLine": 32,
+      "filePath": "src/main/java/com/example/animal/issue12/BaseController.java",
+      "id": "window-8"
+    },
+    {
+      "code": "    public String handleRequest(String param) {\n        RequestContext request = new RequestContext(\"GET\", \"/endpoint/\" + param);\n        ResponseContext model = new ResponseContext();\n        \n        // ← L15: このメソッド呼び出しが検出されない\n        helperMethod(request, model);\n        \n        // ← L16: このメソッド呼び出しは検出される\n        return render(\"view/template\");\n    }",
+      "displayName": "ChildController # handleRequest",
+      "startLine": 12,
+      "filePath": "src/main/java/com/example/animal/issue12/ChildController.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    public String render(String viewName) {\n        return \"prefix:\" + viewName + \":suffix\";\n    }",
+      "displayName": "CoreController # render",
+      "startLine": 8,
+      "filePath": "src/main/java/com/example/animal/issue12/CoreController.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    public String getMethod() {\n        return method;\n    }",
+      "displayName": "RequestContext # getMethod",
+      "startLine": 15,
+      "filePath": "src/main/java/com/example/animal/issue12/RequestContext.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    public String getPath() {\n        return path;\n    }",
+      "displayName": "RequestContext # getPath",
+      "startLine": 19,
+      "filePath": "src/main/java/com/example/animal/issue12/RequestContext.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    public void addAttribute(String key, Object value) {\n        attributes.put(key, value);\n    }",
+      "displayName": "ResponseContext # addAttribute",
+      "startLine": 12,
+      "filePath": "src/main/java/com/example/animal/issue12/ResponseContext.java",
+      "id": "window-6"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 17,
+      "from": "window-1",
+      "callEndLine": 17,
+      "to": "window-2"
+    },
+    {
+      "callLine": 20,
+      "from": "window-1",
+      "callEndLine": 20,
+      "to": "window-3"
+    },
+    {
+      "callLine": 15,
+      "from": "window-2",
+      "callEndLine": 15,
+      "to": "window-4"
+    },
+    {
+      "callLine": 16,
+      "from": "window-2",
+      "callEndLine": 16,
+      "to": "window-5"
+    },
+    {
+      "callLine": 18,
+      "from": "window-2",
+      "callEndLine": 18,
+      "to": "window-6"
+    },
+    {
+      "callLine": 19,
+      "from": "window-2",
+      "callEndLine": 19,
+      "to": "window-6"
+    },
+    {
+      "callLine": 20,
+      "from": "window-2",
+      "callEndLine": 20,
+      "to": "window-6"
+    },
+    {
+      "callLine": 23,
+      "from": "window-2",
+      "callEndLine": 23,
+      "to": "window-7"
+    },
+    {
+      "callLine": 24,
+      "from": "window-2",
+      "callEndLine": 24,
+      "to": "window-8"
+    },
+    {
+      "callLine": 25,
+      "from": "window-2",
+      "callEndLine": 25,
+      "to": "window-9"
+    }
+  ],
+  "autoLayout": true
+}

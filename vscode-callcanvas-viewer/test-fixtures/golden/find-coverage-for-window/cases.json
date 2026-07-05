@@ -1,0 +1,148 @@
+[
+  {
+    "label": "suffix match: filePath ends with JaCoCo key",
+    "input": {
+      "currentCoverage": {
+        "com/example/app/controller/OrderController.java": {
+          "10": {
+            "mi": 0,
+            "ci": 3,
+            "mb": 0,
+            "cb": 0
+          },
+          "11": {
+            "mi": 2,
+            "ci": 0,
+            "mb": 0,
+            "cb": 0
+          }
+        }
+      },
+      "windowData": {
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java"
+      }
+    },
+    "expected": {
+      "10": {
+        "mi": 0,
+        "ci": 3,
+        "mb": 0,
+        "cb": 0
+      },
+      "11": {
+        "mi": 2,
+        "ci": 0,
+        "mb": 0,
+        "cb": 0
+      }
+    }
+  },
+  {
+    "label": "no match: filePath does not end with any coverage key",
+    "input": {
+      "currentCoverage": {
+        "com/example/app/controller/OrderController.java": {
+          "10": {
+            "mi": 0,
+            "ci": 3,
+            "mb": 0,
+            "cb": 0
+          }
+        }
+      },
+      "windowData": {
+        "filePath": "module-app/src/main/java/com/example/app/service/SomeOther.java"
+      }
+    },
+    "expected": null
+  },
+  {
+    "label": "longest suffix wins: two keys share a filename, pick the longer match",
+    "input": {
+      "currentCoverage": {
+        "com/example/app/Foo.java": {
+          "1": {
+            "mi": 0,
+            "ci": 1,
+            "mb": 0,
+            "cb": 0
+          }
+        },
+        "com/example/other/Foo.java": {
+          "2": {
+            "mi": 1,
+            "ci": 0,
+            "mb": 0,
+            "cb": 0
+          }
+        }
+      },
+      "windowData": {
+        "filePath": "/workspace/project/src/main/java/com/example/other/Foo.java"
+      }
+    },
+    "expected": {
+      "2": {
+        "mi": 1,
+        "ci": 0,
+        "mb": 0,
+        "cb": 0
+      }
+    }
+  },
+  {
+    "label": "empty filePath returns null",
+    "input": {
+      "currentCoverage": {
+        "com/example/app/Bar.java": {
+          "5": {
+            "mi": 0,
+            "ci": 2,
+            "mb": 0,
+            "cb": 0
+          }
+        }
+      },
+      "windowData": {
+        "filePath": ""
+      }
+    },
+    "expected": null
+  },
+  {
+    "label": "null currentCoverage returns null",
+    "input": {
+      "currentCoverage": null,
+      "windowData": {
+        "filePath": "com/example/app/Baz.java"
+      }
+    },
+    "expected": null
+  },
+  {
+    "label": "Windows-style backslash path is normalized",
+    "input": {
+      "currentCoverage": {
+        "com/example/app/Win.java": {
+          "3": {
+            "mi": 0,
+            "ci": 5,
+            "mb": 0,
+            "cb": 0
+          }
+        }
+      },
+      "windowData": {
+        "filePath": "module-app\\src\\main\\java\\com\\example\\app\\Win.java"
+      }
+    },
+    "expected": {
+      "3": {
+        "mi": 0,
+        "ci": 5,
+        "mb": 0,
+        "cb": 0
+      }
+    }
+  }
+]

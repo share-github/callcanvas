@@ -1,0 +1,65 @@
+[
+  {
+    "label": "Java file",
+    "input": {
+      "filePath": "com/example/Foo.java"
+    },
+    "expected": "java"
+  },
+  {
+    "label": "JavaScript file",
+    "input": {
+      "filePath": "src/app.js"
+    },
+    "expected": "javascript"
+  },
+  {
+    "label": "TypeScript file",
+    "input": {
+      "filePath": "src/app.ts"
+    },
+    "expected": "typescript"
+  },
+  {
+    "label": "TSX file",
+    "input": {
+      "filePath": "src/Component.tsx"
+    },
+    "expected": "typescript"
+  },
+  {
+    "label": "JSX file",
+    "input": {
+      "filePath": "src/Component.jsx"
+    },
+    "expected": "javascript"
+  },
+  {
+    "label": "MJS file",
+    "input": {
+      "filePath": "src/utils.mjs"
+    },
+    "expected": "javascript"
+  },
+  {
+    "label": "CJS file",
+    "input": {
+      "filePath": "src/utils.cjs"
+    },
+    "expected": "javascript"
+  },
+  {
+    "label": "Python file - null",
+    "input": {
+      "filePath": "src/app.py"
+    },
+    "expected": null
+  },
+  {
+    "label": "Kotlin file - null",
+    "input": {
+      "filePath": "src/Foo.kt"
+    },
+    "expected": null
+  }
+]

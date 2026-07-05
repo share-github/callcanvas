@@ -1,0 +1,9 @@
+{
+  "description": "Issue 13: Scoped method call with nested argument detection (Java 8 Maven)",
+  "projectPath": "sample-project/sample-maven-app",
+  "src": "src/main/java",
+  "classes": "target/classes",
+  "root": "com.example.demo.issue13.ControllerWithService#targetMethod(RequestData,String,String)",
+  "depth": 1,
+  "langLevel": "JAVA_8"
+}

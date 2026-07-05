@@ -1,0 +1,44 @@
+[
+  {
+    "label": "スペースあり区切り",
+    "input": {
+      "displayName": "OrderService # save"
+    },
+    "expected": "save"
+  },
+  {
+    "label": "既に正規化済み",
+    "input": {
+      "displayName": "OrderService#save"
+    },
+    "expected": "save"
+  },
+  {
+    "label": "複数の # (#以降すべて)",
+    "input": {
+      "displayName": "Foo # bar # baz"
+    },
+    "expected": "bar#baz"
+  },
+  {
+    "label": "#なし",
+    "input": {
+      "displayName": "NoHashMethod"
+    },
+    "expected": ""
+  },
+  {
+    "label": "空文字列",
+    "input": {
+      "displayName": ""
+    },
+    "expected": ""
+  },
+  {
+    "label": "null",
+    "input": {
+      "displayName": null
+    },
+    "expected": ""
+  }
+]

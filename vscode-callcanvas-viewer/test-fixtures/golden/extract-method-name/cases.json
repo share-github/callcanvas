@@ -1,0 +1,122 @@
+[
+  {
+    "label": "Java public void method",
+    "input": {
+      "code": "public void save(User user) {",
+      "languageId": "java"
+    },
+    "expected": "save"
+  },
+  {
+    "label": "Java private static method",
+    "input": {
+      "code": "private static String format(int a) {",
+      "languageId": "java"
+    },
+    "expected": "format"
+  },
+  {
+    "label": "Java protected method with generics",
+    "input": {
+      "code": "protected List<String> findAll(Map<Integer, String> map) {",
+      "languageId": "java"
+    },
+    "expected": "findAll"
+  },
+  {
+    "label": "TypeScript function declaration",
+    "input": {
+      "code": "function handleClick(event: Event) {",
+      "languageId": "typescript"
+    },
+    "expected": "handleClick"
+  },
+  {
+    "label": "TypeScript async function",
+    "input": {
+      "code": "async function getData() {",
+      "languageId": "typescript"
+    },
+    "expected": "getData"
+  },
+  {
+    "label": "JavaScript function declaration",
+    "input": {
+      "code": "function render(props) {",
+      "languageId": "javascript"
+    },
+    "expected": "render"
+  },
+  {
+    "label": "JavaScript const arrow",
+    "input": {
+      "code": "const render = (props) => {",
+      "languageId": "javascript"
+    },
+    "expected": "render"
+  },
+  {
+    "label": "Python def",
+    "input": {
+      "code": "def process_data(self):",
+      "languageId": "python"
+    },
+    "expected": "process_data"
+  },
+  {
+    "label": "Kotlin fun",
+    "input": {
+      "code": "fun validate(input: String): Boolean {",
+      "languageId": "kotlin"
+    },
+    "expected": "validate"
+  },
+  {
+    "label": "Go func with receiver",
+    "input": {
+      "code": "func (s *Server) Start() error {",
+      "languageId": "go"
+    },
+    "expected": "Start"
+  },
+  {
+    "label": "Rust pub fn",
+    "input": {
+      "code": "pub fn new(config: Config) -> Self {",
+      "languageId": "rust"
+    },
+    "expected": "new"
+  },
+  {
+    "label": "C# public method",
+    "input": {
+      "code": "public async Task<IActionResult> GetUsers() {",
+      "languageId": "csharp"
+    },
+    "expected": "GetUsers"
+  },
+  {
+    "label": "Comment only - no match",
+    "input": {
+      "code": "// this is a comment",
+      "languageId": "java"
+    },
+    "expected": null
+  },
+  {
+    "label": "Empty string",
+    "input": {
+      "code": "",
+      "languageId": "java"
+    },
+    "expected": null
+  },
+  {
+    "label": "Unknown language fallback with function keyword",
+    "input": {
+      "code": "function doSomething() {",
+      "languageId": "unknown"
+    },
+    "expected": "doSomething"
+  }
+]

@@ -1,0 +1,169 @@
+{
+  "windows": [
+    {
+      "code": "    public String getEmail() { return email; }",
+      "displayName": "User # getEmail",
+      "startLine": 20,
+      "filePath": "src/main/java/com/example/demo/domain/User.java",
+      "id": "window-9"
+    },
+    {
+      "code": "    public Long getId() { return id; }",
+      "displayName": "User # getId",
+      "startLine": 16,
+      "filePath": "src/main/java/com/example/demo/domain/User.java",
+      "id": "window-10"
+    },
+    {
+      "code": "    public String getName() { return name; }",
+      "displayName": "User # getName",
+      "startLine": 18,
+      "filePath": "src/main/java/com/example/demo/domain/User.java",
+      "id": "window-7"
+    },
+    {
+      "code": "    public void setId(Long id) { this.id = id; }",
+      "displayName": "User # setId",
+      "startLine": 17,
+      "filePath": "src/main/java/com/example/demo/domain/User.java",
+      "id": "window-11"
+    },
+    {
+      "code": "    public User createUser(String name, String email) {\n        return userService.createUser(name, email);\n    }",
+      "displayName": "UserController # createUser",
+      "startLine": 14,
+      "filePath": "src/main/java/com/example/demo/controller/UserController.java",
+      "id": "window-1"
+    },
+    {
+      "code": "    private void logSave(User user) {\n        System.out.println(\"Saved user: \" + user.getName());\n    }",
+      "displayName": "UserRepository # logSave",
+      "startLine": 35,
+      "filePath": "src/main/java/com/example/demo/repository/UserRepository.java",
+      "id": "window-12"
+    },
+    {
+      "code": "    public User save(User user) {\n        if (user.getId() == null) {\n            user.setId(nextId++);\n        }\n        users.add(user);\n        logSave(user);\n        return user;\n    }",
+      "displayName": "UserRepository # save",
+      "startLine": 12,
+      "filePath": "src/main/java/com/example/demo/repository/UserRepository.java",
+      "id": "window-4"
+    },
+    {
+      "code": "    public User createUser(String name, String email) {\n        User user = new User(null, name, email);\n        validator.validate(user);\n        User saved = userRepository.save(user);\n        notifyCreation(saved);\n        return saved;\n    }",
+      "displayName": "UserService # createUser",
+      "startLine": 17,
+      "filePath": "src/main/java/com/example/demo/service/UserService.java",
+      "id": "window-2"
+    },
+    {
+      "code": "    private void notifyCreation(User user) {\n        System.out.println(\"User created: \" + user.getEmail());\n    }",
+      "displayName": "UserService # notifyCreation",
+      "startLine": 37,
+      "filePath": "src/main/java/com/example/demo/service/UserService.java",
+      "id": "window-5"
+    },
+    {
+      "code": "    public void validate(User user) {\n        validateName(user.getName());\n        validateEmail(user.getEmail());\n    }",
+      "displayName": "UserValidator # validate",
+      "startLine": 7,
+      "filePath": "src/main/java/com/example/demo/service/UserValidator.java",
+      "id": "window-3"
+    },
+    {
+      "code": "    private void validateEmail(String email) {\n        if (email == null || !email.contains(\"@\")) {\n            throw new IllegalArgumentException(\"Invalid email format\");\n        }\n    }",
+      "displayName": "UserValidator # validateEmail",
+      "startLine": 18,
+      "filePath": "src/main/java/com/example/demo/service/UserValidator.java",
+      "id": "window-8"
+    },
+    {
+      "code": "    private void validateName(String name) {\n        if (name == null || name.isBlank()) {\n            throw new IllegalArgumentException(\"Name cannot be empty\");\n        }\n    }",
+      "displayName": "UserValidator # validateName",
+      "startLine": 12,
+      "filePath": "src/main/java/com/example/demo/service/UserValidator.java",
+      "id": "window-6"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 15,
+      "from": "window-1",
+      "callEndLine": 15,
+      "to": "window-2"
+    },
+    {
+      "callLine": 36,
+      "from": "window-12",
+      "callEndLine": 36,
+      "to": "window-7"
+    },
+    {
+      "callLine": 19,
+      "from": "window-2",
+      "callEndLine": 19,
+      "to": "window-3"
+    },
+    {
+      "callLine": 20,
+      "from": "window-2",
+      "callEndLine": 20,
+      "to": "window-4"
+    },
+    {
+      "callLine": 21,
+      "from": "window-2",
+      "callEndLine": 21,
+      "to": "window-5"
+    },
+    {
+      "callLine": 8,
+      "from": "window-3",
+      "callEndLine": 8,
+      "to": "window-6"
+    },
+    {
+      "callLine": 8,
+      "from": "window-3",
+      "callEndLine": 8,
+      "to": "window-7"
+    },
+    {
+      "callLine": 9,
+      "from": "window-3",
+      "callEndLine": 9,
+      "to": "window-8"
+    },
+    {
+      "callLine": 9,
+      "from": "window-3",
+      "callEndLine": 9,
+      "to": "window-9"
+    },
+    {
+      "callLine": 13,
+      "from": "window-4",
+      "callEndLine": 13,
+      "to": "window-10"
+    },
+    {
+      "callLine": 14,
+      "from": "window-4",
+      "callEndLine": 14,
+      "to": "window-11"
+    },
+    {
+      "callLine": 17,
+      "from": "window-4",
+      "callEndLine": 17,
+      "to": "window-12"
+    },
+    {
+      "callLine": 38,
+      "from": "window-5",
+      "callEndLine": 38,
+      "to": "window-9"
+    }
+  ],
+  "autoLayout": true
+}

@@ -1,0 +1,17 @@
+{
+  "rootFunction": "rootWithDoc",
+  "functions": [
+    "dummy",
+    "rootWithDoc"
+  ],
+  "calls": [
+    {
+      "from": "rootWithDoc",
+      "to": "dummy"
+    }
+  ],
+  "rootCodeChecks": {
+    "notPrefix": "\n\n",
+    "prefix": "/**"
+  }
+}

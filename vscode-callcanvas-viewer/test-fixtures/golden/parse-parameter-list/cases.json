@@ -1,0 +1,58 @@
+[
+  {
+    "label": "Simple types",
+    "input": {
+      "paramList": "String name, int count"
+    },
+    "expected": "String,int"
+  },
+  {
+    "label": "Generics with nested types",
+    "input": {
+      "paramList": "Map<Integer, Map<String, Hoge>> hogeMap, String name"
+    },
+    "expected": "Map,String"
+  },
+  {
+    "label": "Empty string",
+    "input": {
+      "paramList": ""
+    },
+    "expected": ""
+  },
+  {
+    "label": "Whitespace only",
+    "input": {
+      "paramList": "   "
+    },
+    "expected": ""
+  },
+  {
+    "label": "Single param no name",
+    "input": {
+      "paramList": "String"
+    },
+    "expected": "String"
+  },
+  {
+    "label": "Annotated parameter",
+    "input": {
+      "paramList": "@RequestBody OrderRequest request"
+    },
+    "expected": "OrderRequest"
+  },
+  {
+    "label": "Array type",
+    "input": {
+      "paramList": "String[] args"
+    },
+    "expected": "String[]"
+  },
+  {
+    "label": "Fully qualified type",
+    "input": {
+      "paramList": "java.time.LocalDate dueDateFrom, java.time.LocalDate dueDateTo"
+    },
+    "expected": "java.time.LocalDate,java.time.LocalDate"
+  }
+]

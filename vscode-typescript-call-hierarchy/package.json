@@ -1,0 +1,79 @@
+{
+  "name": "typescript-call-hierarchy",
+  "displayName": "TypeScript Call Hierarchy Analyzer",
+  "description": "Analyze and visualize TypeScript/TSX function call hierarchies",
+  "version": "0.2.0",
+  "publisher": "share-github",
+  "license": "MIT",
+  "author": "share-github",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tsCallHierarchy.openCallCanvasViewer",
+        "title": "CallCanvas: Open Viewer with File (TypeScript)",
+        "category": "TS Call Hierarchy"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "tsCallHierarchy.openCallCanvasViewer",
+          "when": "editorLangId =~ /^(typescript|typescriptreact)$/",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "TS Call Hierarchy",
+      "properties": {
+        "tsCallHierarchy.depth": {
+          "type": "number",
+          "default": 5,
+          "description": "Maximum depth of call hierarchy analysis"
+        },
+        "tsCallHierarchy.nestedLocalWindows": {
+          "type": "boolean",
+          "default": true,
+          "description": "Split named local arrow/function expressions and nested function declarations into separate CallCanvas windows with parent→child connections"
+        },
+        "tsCallHierarchy.parentNestedOmitDisplay": {
+          "type": "boolean",
+          "default": true,
+          "description": "In parent CallCanvas windows, emit nestedOmissions so the Viewer shows gray rounded one-line previews instead of full nested bodies (requires CallCanvas Viewer support)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "npx vsce package --allow-missing-repository",
+    "test": "npm run compile && node test-fixtures/golden/run-test.js",
+    "test:update": "npm run compile && node test-fixtures/golden/run-test.js --update"
+  },
+  "dependencies": {
+    "typescript": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "@vscode/vsce": "^3.7.1",
+    "eslint": "^8.54.0"
+  }
+}

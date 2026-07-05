@@ -1,0 +1,14 @@
+{
+  "windows": [
+    { "id": "A", "code": [{"line":1,"content":"a"}], "position": {"width":600,"height":80} },
+    { "id": "B", "code": [{"line":1,"content":"b"}], "position": {"width":600,"height":80} },
+    { "id": "C", "code": [{"line":1,"content":"c"}], "position": {"width":600,"height":80} },
+    { "id": "D", "code": [{"line":1,"content":"d"}], "position": {"width":600,"height":80} }
+  ],
+  "connections": [
+    { "from": "A", "to": "B" },
+    { "from": "B", "to": "A" },
+    { "from": "B", "to": "C" }
+  ],
+  "autoLayout": true
+}

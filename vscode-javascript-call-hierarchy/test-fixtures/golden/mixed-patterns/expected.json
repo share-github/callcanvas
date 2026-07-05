@@ -1,0 +1,28 @@
+{
+  "rootFunction": "$_callback",
+  "functions": [
+    "$_callback",
+    "initialize",
+    "onReady",
+    "renderApp",
+    "setupConfig"
+  ],
+  "calls": [
+    {
+      "from": "$_callback",
+      "to": "initialize"
+    },
+    {
+      "from": "$_callback",
+      "to": "onReady"
+    },
+    {
+      "from": "initialize",
+      "to": "setupConfig"
+    },
+    {
+      "from": "onReady",
+      "to": "renderApp"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+[
+  {
+    "label": "Array code format",
+    "input": {
+      "windowData": {
+        "displayName": "Foo # bar",
+        "filePath": "Foo.java",
+        "code": [
+          {
+            "content": "public void bar() {"
+          },
+          {
+            "content": "    baz();"
+          },
+          {
+            "content": "}"
+          }
+        ]
+      }
+    },
+    "expected": "foo # bar foo.java public void bar() {     baz(); }"
+  },
+  {
+    "label": "String code format",
+    "input": {
+      "windowData": {
+        "displayName": "Foo # bar",
+        "filePath": "Foo.java",
+        "code": "public void bar() {\n    baz();\n}"
+      }
+    },
+    "expected": "foo # bar foo.java public void bar() {\n    baz();\n}"
+  },
+  {
+    "label": "Null input",
+    "input": {
+      "windowData": null
+    },
+    "expected": ""
+  },
+  {
+    "label": "No displayName",
+    "input": {
+      "windowData": {
+        "filePath": "Test.java",
+        "code": [
+          {
+            "content": "code"
+          }
+        ]
+      }
+    },
+    "expected": "test.java code"
+  },
+  {
+    "label": "No filePath",
+    "input": {
+      "windowData": {
+        "displayName": "Test",
+        "code": [
+          {
+            "content": "code"
+          }
+        ]
+      }
+    },
+    "expected": "test code"
+  },
+  {
+    "label": "No code",
+    "input": {
+      "windowData": {
+        "displayName": "Test",
+        "filePath": "Test.java"
+      }
+    },
+    "expected": "test test.java "
+  },
+  {
+    "label": "Uppercase preserved as lowercase",
+    "input": {
+      "windowData": {
+        "displayName": "MyClass # MyMethod",
+        "filePath": "MyClass.java",
+        "code": [
+          {
+            "content": "PUBLIC VOID"
+          }
+        ]
+      }
+    },
+    "expected": "myclass # mymethod myclass.java public void"
+  }
+]

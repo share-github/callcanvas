@@ -1,0 +1,33 @@
+{
+  "rootFunction": "startApp",
+  "functions": [
+    "doRequest",
+    "onError",
+    "onSuccess",
+    "renderResult",
+    "showError",
+    "startApp"
+  ],
+  "calls": [
+    {
+      "from": "onError",
+      "to": "showError"
+    },
+    {
+      "from": "onSuccess",
+      "to": "renderResult"
+    },
+    {
+      "from": "startApp",
+      "to": "doRequest"
+    },
+    {
+      "from": "startApp",
+      "to": "onError"
+    },
+    {
+      "from": "startApp",
+      "to": "onSuccess"
+    }
+  ]
+}

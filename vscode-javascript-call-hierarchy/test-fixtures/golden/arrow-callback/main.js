@@ -1,0 +1,4 @@
+ready(() => {
+    renderPage();
+    attachListeners();
+});

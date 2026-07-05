@@ -1,0 +1,11 @@
+{
+  "description": "sample-app-animal: AnimalService#makeAllAnimalsSound()の呼び出し元解析テスト（incoming calls）",
+  "projectPath": "sample-project/sample-app-animal",
+  "src": "src/main/java",
+  "classes": "build/classes/java/main",
+  "cp": "build/libs/animal-app-1.0.0.jar",
+  "root": "AnimalService#makeAllAnimalsSound()",
+  "depth": 1,
+  "direction": "incoming"
+}
+

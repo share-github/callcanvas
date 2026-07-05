@@ -1,0 +1,260 @@
+[
+  {
+    "label": "Empty input returns empty array",
+    "input": {
+      "stdout": ""
+    },
+    "expected": []
+  },
+  {
+    "label": "Pure addition (no removed lines)",
+    "input": {
+      "stdout": "diff --git a/Foo.java b/Foo.java\nindex abc..def 100644\n--- a/Foo.java\n+++ b/Foo.java\n@@ -5,0 +6,3 @@\n+    public void newMethod() {\n+        return;\n+    }\n"
+    },
+    "expected": [
+      {
+        "filePath": "Foo.java",
+        "hunks": [
+          {
+            "oldStart": 5,
+            "oldCount": 0,
+            "newStart": 6,
+            "newCount": 3,
+            "lines": [
+              {
+                "type": "add",
+                "content": "    public void newMethod() {"
+              },
+              {
+                "type": "add",
+                "content": "        return;"
+              },
+              {
+                "type": "add",
+                "content": "    }"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Pure deletion (no added lines)",
+    "input": {
+      "stdout": "diff --git a/Foo.java b/Foo.java\nindex abc..def 100644\n--- a/Foo.java\n+++ b/Foo.java\n@@ -6,3 +5,0 @@\n-    public void oldMethod() {\n-        return;\n-    }\n"
+    },
+    "expected": [
+      {
+        "filePath": "Foo.java",
+        "hunks": [
+          {
+            "oldStart": 6,
+            "oldCount": 3,
+            "newStart": 5,
+            "newCount": 0,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "    public void oldMethod() {"
+              },
+              {
+                "type": "remove",
+                "content": "        return;"
+              },
+              {
+                "type": "remove",
+                "content": "    }"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Modification (removed + added lines)",
+    "input": {
+      "stdout": "diff --git a/Foo.java b/Foo.java\nindex abc..def 100644\n--- a/Foo.java\n+++ b/Foo.java\n@@ -10,3 +10,5 @@\n-    if (order.getName() == null) {\n-        throw new Exception(\"name\");\n-    }\n+    if (order.getProductName() == null || order.getProductName().isBlank()) {\n+        throw new IllegalArgumentException(\"Product name is required\");\n+    }\n+    if (order.getAmount() == null) {\n+        throw new IllegalArgumentException(\"Amount required\");\n+    }\n"
+    },
+    "expected": [
+      {
+        "filePath": "Foo.java",
+        "hunks": [
+          {
+            "oldStart": 10,
+            "oldCount": 3,
+            "newStart": 10,
+            "newCount": 5,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "    if (order.getName() == null) {"
+              },
+              {
+                "type": "remove",
+                "content": "        throw new Exception(\"name\");"
+              },
+              {
+                "type": "remove",
+                "content": "    }"
+              },
+              {
+                "type": "add",
+                "content": "    if (order.getProductName() == null || order.getProductName().isBlank()) {"
+              },
+              {
+                "type": "add",
+                "content": "        throw new IllegalArgumentException(\"Product name is required\");"
+              },
+              {
+                "type": "add",
+                "content": "    }"
+              },
+              {
+                "type": "add",
+                "content": "    if (order.getAmount() == null) {"
+              },
+              {
+                "type": "add",
+                "content": "        throw new IllegalArgumentException(\"Amount required\");"
+              },
+              {
+                "type": "add",
+                "content": "    }"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Multiple hunks in one file",
+    "input": {
+      "stdout": "diff --git a/Foo.java b/Foo.java\nindex abc..def 100644\n--- a/Foo.java\n+++ b/Foo.java\n@@ -5,1 +5,1 @@\n-    int x = 1;\n+    int x = 2;\n@@ -20,2 +20,1 @@\n-    doSomething();\n-    doMore();\n+    doEverything();\n"
+    },
+    "expected": [
+      {
+        "filePath": "Foo.java",
+        "hunks": [
+          {
+            "oldStart": 5,
+            "oldCount": 1,
+            "newStart": 5,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "    int x = 1;"
+              },
+              {
+                "type": "add",
+                "content": "    int x = 2;"
+              }
+            ]
+          },
+          {
+            "oldStart": 20,
+            "oldCount": 2,
+            "newStart": 20,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "    doSomething();"
+              },
+              {
+                "type": "remove",
+                "content": "    doMore();"
+              },
+              {
+                "type": "add",
+                "content": "    doEverything();"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Multiple files",
+    "input": {
+      "stdout": "diff --git a/Foo.java b/Foo.java\nindex abc..def 100644\n--- a/Foo.java\n+++ b/Foo.java\n@@ -1,1 +1,1 @@\n-old foo\n+new foo\ndiff --git a/Bar.java b/Bar.java\nindex abc..def 100644\n--- a/Bar.java\n+++ b/Bar.java\n@@ -3,1 +3,1 @@\n-old bar\n+new bar\n"
+    },
+    "expected": [
+      {
+        "filePath": "Foo.java",
+        "hunks": [
+          {
+            "oldStart": 1,
+            "oldCount": 1,
+            "newStart": 1,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "old foo"
+              },
+              {
+                "type": "add",
+                "content": "new foo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "filePath": "Bar.java",
+        "hunks": [
+          {
+            "oldStart": 3,
+            "oldCount": 1,
+            "newStart": 3,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "old bar"
+              },
+              {
+                "type": "add",
+                "content": "new bar"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Hunk with count=1 (no comma in @@ header)",
+    "input": {
+      "stdout": "diff --git a/Foo.java b/Foo.java\nindex abc..def 100644\n--- a/Foo.java\n+++ b/Foo.java\n@@ -5 +5 @@\n-old line\n+new line\n"
+    },
+    "expected": [
+      {
+        "filePath": "Foo.java",
+        "hunks": [
+          {
+            "oldStart": 5,
+            "oldCount": 1,
+            "newStart": 5,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "old line"
+              },
+              {
+                "type": "add",
+                "content": "new line"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

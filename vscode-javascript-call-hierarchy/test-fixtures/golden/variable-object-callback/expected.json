@@ -1,0 +1,23 @@
+{
+  "rootFunction": "verifyAuth",
+  "functions": [
+    "handleAuthVerificationResponse",
+    "logResult",
+    "processOptions",
+    "verifyAuth"
+  ],
+  "calls": [
+    {
+      "from": "handleAuthVerificationResponse",
+      "to": "logResult"
+    },
+    {
+      "from": "verifyAuth",
+      "to": "handleAuthVerificationResponse"
+    },
+    {
+      "from": "verifyAuth",
+      "to": "processOptions"
+    }
+  ]
+}

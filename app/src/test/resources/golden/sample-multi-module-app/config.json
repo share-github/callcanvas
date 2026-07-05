@@ -1,0 +1,10 @@
+{
+  "description": "sample-multi-module-app: Gradleマルチモジュールプロジェクトの解析テスト",
+  "projectPath": "sample-project/sample-multi-module-app",
+  "src": "module-app/src/main/java,module-service/src/main/java,module-api/src/main/java",
+  "classes": "module-app/build/classes/java/main,module-service/build/classes/java/main,module-api/build/classes/java/main",
+  "cp": "build/libs/sample-multi-module-app-1.0.0.jar,module-app/build/libs/module-app-1.0.0.jar,module-service/build/libs/module-service-1.0.0.jar,module-api/build/libs/module-api-1.0.0.jar",
+  "root": "OrderController#handleNewOrder(String,String,BigDecimal,String)",
+  "depth": 5
+}
+

@@ -1,0 +1,10 @@
+{
+  "description": "sample-app: Spring Boot TodoControllerの解析テスト",
+  "projectPath": "sample-app",
+  "src": "src/main/java",
+  "classes": "build/classes/java/main",
+  "cp": "build/libs/demo-1.0.0.jar",
+  "root": "TodoController#index(TodoSearchForm,BindingResult,Model)",
+  "depth": 5
+}
+

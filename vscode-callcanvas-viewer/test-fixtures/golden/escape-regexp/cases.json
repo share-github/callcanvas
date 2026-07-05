@@ -1,0 +1,65 @@
+[
+  {
+    "label": "Plain text - no change",
+    "input": {
+      "string": "hello"
+    },
+    "expected": "hello"
+  },
+  {
+    "label": "Dots and asterisks",
+    "input": {
+      "string": "a.b*c"
+    },
+    "expected": "a\\.b\\*c"
+  },
+  {
+    "label": "Plus and question mark",
+    "input": {
+      "string": "a+b?c"
+    },
+    "expected": "a\\+b\\?c"
+  },
+  {
+    "label": "Caret and dollar",
+    "input": {
+      "string": "^start$end"
+    },
+    "expected": "\\^start\\$end"
+  },
+  {
+    "label": "Braces and parentheses",
+    "input": {
+      "string": "{a}(b)"
+    },
+    "expected": "\\{a\\}\\(b\\)"
+  },
+  {
+    "label": "Pipe and brackets",
+    "input": {
+      "string": "a|b[c]"
+    },
+    "expected": "a\\|b\\[c\\]"
+  },
+  {
+    "label": "Backslash",
+    "input": {
+      "string": "a\\b"
+    },
+    "expected": "a\\\\b"
+  },
+  {
+    "label": "All special chars combined",
+    "input": {
+      "string": "\\.*+?^${}()|[]"
+    },
+    "expected": "\\\\\\.\\*\\+\\?\\^\\$\\{\\}\\(\\)\\|\\[\\]"
+  },
+  {
+    "label": "Empty string",
+    "input": {
+      "string": ""
+    },
+    "expected": ""
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "rootFunction": "rootCaller",
+  "functions": [
+    "constCallee",
+    "leaf",
+    "rootCaller"
+  ],
+  "calls": [
+    {
+      "from": "constCallee",
+      "to": "leaf"
+    },
+    {
+      "from": "rootCaller",
+      "to": "constCallee"
+    }
+  ],
+  "calleeCodeChecks": [
+    {
+      "name": "constCallee",
+      "notPrefix": "\n\n",
+      "prefix": "/**"
+    }
+  ]
+}

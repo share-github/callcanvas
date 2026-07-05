@@ -1,0 +1,29 @@
+{
+  "rootFunction": "describeApp",
+  "functions": [
+    "describeApp"
+  ],
+  "calls": [],
+  "symbolIndex": {
+    "FLAG": {
+      "value": "true",
+      "qualifier": "lib/constants.ts",
+      "type": "true"
+    },
+    "MAX_RETRY": {
+      "value": "3",
+      "qualifier": "lib/constants.ts",
+      "type": "3"
+    },
+    "Status.Active": {
+      "value": "\"ACTIVE\"",
+      "qualifier": "lib/constants.ts",
+      "type": "enum"
+    },
+    "Status.Inactive": {
+      "value": "\"INACTIVE\"",
+      "qualifier": "lib/constants.ts",
+      "type": "enum"
+    }
+  }
+}

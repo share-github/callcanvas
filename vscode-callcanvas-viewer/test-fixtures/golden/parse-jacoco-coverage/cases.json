@@ -1,0 +1,97 @@
+[
+  {
+    "label": "single-module report: one package, one sourcefile",
+    "input": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><!DOCTYPE report PUBLIC \"-//JACOCO//DTD Report 1.1//EN\" \"report.dtd\"><report name=\"module-app\"><package name=\"com/example/app\"><sourcefile name=\"Foo.java\"><line nr=\"10\" mi=\"0\" ci=\"3\" mb=\"0\" cb=\"0\"/><line nr=\"11\" mi=\"2\" ci=\"0\" mb=\"0\" cb=\"0\"/><line nr=\"12\" mi=\"1\" ci=\"1\" mb=\"2\" cb=\"2\"/></sourcefile></package></report>",
+    "expected": {
+      "com/example/app/Foo.java": {
+        "10": {
+          "mi": 0,
+          "ci": 3,
+          "mb": 0,
+          "cb": 0
+        },
+        "11": {
+          "mi": 2,
+          "ci": 0,
+          "mb": 0,
+          "cb": 0
+        },
+        "12": {
+          "mi": 1,
+          "ci": 1,
+          "mb": 2,
+          "cb": 2
+        }
+      }
+    }
+  },
+  {
+    "label": "aggregate report: group wrapping packages",
+    "input": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><!DOCTYPE report PUBLIC \"-//JACOCO//DTD Report 1.1//EN\" \"report.dtd\"><report name=\"aggregate\"><group name=\"module-domain\"><package name=\"com/example/domain\"><sourcefile name=\"Order.java\"><line nr=\"5\" mi=\"0\" ci=\"4\" mb=\"0\" cb=\"0\"/></sourcefile></package></group><group name=\"module-service\"><package name=\"com/example/service\"><sourcefile name=\"DefaultOrderProcessor.java\"><line nr=\"20\" mi=\"3\" ci=\"0\" mb=\"0\" cb=\"0\"/><line nr=\"21\" mi=\"0\" ci=\"2\" mb=\"0\" cb=\"0\"/></sourcefile></package></group></report>",
+    "expected": {
+      "com/example/domain/Order.java": {
+        "5": {
+          "mi": 0,
+          "ci": 4,
+          "mb": 0,
+          "cb": 0
+        }
+      },
+      "com/example/service/DefaultOrderProcessor.java": {
+        "20": {
+          "mi": 3,
+          "ci": 0,
+          "mb": 0,
+          "cb": 0
+        },
+        "21": {
+          "mi": 0,
+          "ci": 2,
+          "mb": 0,
+          "cb": 0
+        }
+      }
+    }
+  },
+  {
+    "label": "empty report: no packages",
+    "input": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><report name=\"empty\"></report>",
+    "expected": {}
+  },
+  {
+    "label": "multiple packages in single report",
+    "input": "<?xml version=\"1.0\"?><report name=\"multi\"><package name=\"com/example/a\"><sourcefile name=\"A.java\"><line nr=\"1\" mi=\"0\" ci=\"1\" mb=\"0\" cb=\"0\"/></sourcefile></package><package name=\"com/example/b\"><sourcefile name=\"B.java\"><line nr=\"2\" mi=\"1\" ci=\"0\" mb=\"0\" cb=\"0\"/></sourcefile></package></report>",
+    "expected": {
+      "com/example/a/A.java": {
+        "1": {
+          "mi": 0,
+          "ci": 1,
+          "mb": 0,
+          "cb": 0
+        }
+      },
+      "com/example/b/B.java": {
+        "2": {
+          "mi": 1,
+          "ci": 0,
+          "mb": 0,
+          "cb": 0
+        }
+      }
+    }
+  },
+  {
+    "label": "line with branch coverage (partial)",
+    "input": "<?xml version=\"1.0\"?><report name=\"r\"><package name=\"pkg\"><sourcefile name=\"X.java\"><line nr=\"7\" mi=\"0\" ci=\"2\" mb=\"1\" cb=\"1\"/></sourcefile></package></report>",
+    "expected": {
+      "pkg/X.java": {
+        "7": {
+          "mi": 0,
+          "ci": 2,
+          "mb": 1,
+          "cb": 1
+        }
+      }
+    }
+  }
+]
