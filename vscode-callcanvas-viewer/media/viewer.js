@@ -4530,12 +4530,21 @@ function relayoutWindows() {
     const parentMap = new Map(); // windowId -> [parentWindowIds]
     const childMap = new Map(); // windowId -> [childWindowIds]
     const callOrderMap = new Map(); // parentId -> Map(childId -> order)
-    
+
+    // Break cycles the same way applyAutoLayout does. Without this, a mutual
+    // recursion cycle (e.g. a framework base-class delegation that re-dispatches
+    // back into the entry method) makes the root a "child" of a deep node, so the
+    // barycenter / _minY logic drags the entry window far down instead of pinning
+    // it at the top.
+    const backEdgeSet = detectBackEdgeSet(visibleWindows.map(w => w.id), currentData.connections);
+
     if (currentData.connections) {
         currentData.connections.forEach((conn, idx) => {
-            // Skip self-references
+            // Skip self-references and cycle-closing back edges
             if (conn.from === conn.to) return;
-            
+            if (backEdgeSet.has(conn.from + '\0' + conn.to)) return;
+
+
             if (!parentMap.has(conn.to)) {
                 parentMap.set(conn.to, []);
             }
@@ -4893,6 +4902,61 @@ function updateContainerSize(allowShift = true) {
 }
 
 /**
+ * Detect back edges (cycle-closing edges) via iterative DFS so callers can
+ * break cycles. `nodeIds` must be iterable in a stable order with the entry /
+ * root node first, so the edge flagged as a "back edge" is the one that closes
+ * the cycle onto an earlier-visited ancestor (e.g. a framework base-class
+ * delegation that re-dispatches back into the entry method), not the forward
+ * edge out of the root. Returns a Set of `${from}\0${to}` keys.
+ */
+function detectBackEdgeSet(nodeIds, connections) {
+    const adjacencyMap = new Map();
+    const nodeSet = new Set();
+    nodeIds.forEach(id => {
+        adjacencyMap.set(id, []);
+        nodeSet.add(id);
+    });
+    if (connections) {
+        connections.forEach(conn => {
+            if (conn.from === conn.to) return; // self-recursion never closes a layout cycle
+            if (!adjacencyMap.has(conn.from) || !nodeSet.has(conn.to)) return;
+            adjacencyMap.get(conn.from).push(conn.to);
+        });
+    }
+
+    const backEdgeSet = new Set();
+    const dfsVisited = new Set();
+    const dfsInStack = new Set();
+    for (const startNode of nodeSet) {
+        if (dfsVisited.has(startNode)) continue;
+        const stack = [[startNode, 0]];
+        dfsVisited.add(startNode);
+        dfsInStack.add(startNode);
+        while (stack.length > 0) {
+            const top = stack[stack.length - 1];
+            const node = top[0];
+            const idx = top[1];
+            const neighbors = adjacencyMap.get(node);
+            if (idx >= neighbors.length) {
+                stack.pop();
+                dfsInStack.delete(node);
+            } else {
+                top[1]++;
+                const neighbor = neighbors[idx];
+                if (dfsInStack.has(neighbor)) {
+                    backEdgeSet.add(node + '\0' + neighbor);
+                } else if (!dfsVisited.has(neighbor)) {
+                    dfsVisited.add(neighbor);
+                    dfsInStack.add(neighbor);
+                    stack.push([neighbor, 0]);
+                }
+            }
+        }
+    }
+    return backEdgeSet;
+}
+
+/**
  * Apply automatic layout to windows based on connections
  */
 function applyAutoLayout(data) {
@@ -4944,38 +5008,10 @@ function applyAutoLayout(data) {
         });
     }
 
-    // Detect back edges via iterative DFS to break cycles for Kahn's algorithm
-    const backEdgeSet = new Set();
-    {
-        const dfsVisited = new Set();
-        const dfsInStack = new Set();
-        for (const startNode of allNodes) {
-            if (dfsVisited.has(startNode)) continue;
-            const stack = [[startNode, 0]];
-            dfsVisited.add(startNode);
-            dfsInStack.add(startNode);
-            while (stack.length > 0) {
-                const top = stack[stack.length - 1];
-                const node = top[0];
-                const idx = top[1];
-                const neighbors = adjacencyMap.get(node);
-                if (idx >= neighbors.length) {
-                    stack.pop();
-                    dfsInStack.delete(node);
-                } else {
-                    top[1]++;
-                    const neighbor = neighbors[idx];
-                    if (dfsInStack.has(neighbor)) {
-                        backEdgeSet.add(node + '\0' + neighbor);
-                    } else if (!dfsVisited.has(neighbor)) {
-                        dfsVisited.add(neighbor);
-                        dfsInStack.add(neighbor);
-                        stack.push([neighbor, 0]);
-                    }
-                }
-            }
-        }
-    }
+    // Detect back edges via iterative DFS to break cycles for Kahn's algorithm.
+    // Node order (work.windows) puts the entry/root first so the cycle-closing
+    // edge is the one flagged, keeping the root at level 0.
+    const backEdgeSet = detectBackEdgeSet(work.windows.map(w => w.id), work.connections);
 
     // Recalculate inDegree excluding back edges
     if (backEdgeSet.size > 0) {

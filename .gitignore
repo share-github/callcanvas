@@ -1,6 +1,9 @@
 # OS
 .DS_Store
 
+# 公開スナップショット出力（scripts/build-public.sh の生成物）
+public/
+
 # Environment
 .env
 

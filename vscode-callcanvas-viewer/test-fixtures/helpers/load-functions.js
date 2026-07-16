@@ -537,6 +537,7 @@ function loadWebviewFunctions(settingsOverride) {
         'detectLanguage',
         'applyNestedOmissionsToCodeLines',
         'normalizeWindowData',
+        'detectBackEdgeSet',
         'applyAutoLayout',
         'highlightTextInHTML',
         'normalizeDisplayNameToClassMethod',
