@@ -255,6 +255,10 @@ class MethodResolver {
      */
     static Map<String, String> buildMethodIndex(List<Path> srcRoots, JavaParserFacade facade) {
         Map<String, String> index = new HashMap<>();
+        // パースに失敗したファイル数。言語レベル不一致（例: Java 25 のソースを
+        // --lang-level 21 で解析）だと全滅するので、黙って 0 件にせず警告する。
+        var parseFailures = new java.util.concurrent.atomic.AtomicInteger();
+        var firstFailure = new java.util.concurrent.atomic.AtomicReference<Path>();
 
         for (Path root : srcRoots) {
             try (var stream = Files.walk(root)) {
@@ -290,12 +294,21 @@ class MethodResolver {
                                         index.put(fullSig, fullSig);
                                     });
                                 });
-                            } catch (Throwable ignored) {
-                                // パースエラーは無視
+                            } catch (Throwable t) {
+                                // パースエラー自体は無視して走査を続ける（件数のみ記録）
+                                if (parseFailures.getAndIncrement() == 0) {
+                                    firstFailure.set(javaFile);
+                                }
                             }
                         });
             } catch (Throwable ignored) {
             }
+        }
+
+        if (parseFailures.get() > 0) {
+            info("[WARN] Failed to parse " + parseFailures.get() + " source file(s), e.g. " + firstFailure.get());
+            info("[WARN] If the project uses a newer Java syntax, set the language level"
+                    + " (--lang-level 25 / javaCallHierarchy.languageLevel).");
         }
 
         return index;

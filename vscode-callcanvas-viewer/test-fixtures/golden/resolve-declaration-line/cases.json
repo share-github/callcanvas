@@ -1,0 +1,52 @@
+[
+  {
+    "label": "string code with javadoc (startLine points at /**)",
+    "input": {
+      "windowData": {
+        "startLine": 116,
+        "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+      }
+    },
+    "expected": 121
+  },
+  {
+    "label": "array code uses the stored line number",
+    "input": {
+      "windowData": {
+        "startLine": 116,
+        "code": [
+          {
+            "line": 116,
+            "content": "    /**"
+          },
+          {
+            "line": 117,
+            "content": "     */"
+          },
+          {
+            "line": 118,
+            "content": "    public void run() {"
+          }
+        ]
+      }
+    },
+    "expected": 118
+  },
+  {
+    "label": "declaration on the first line",
+    "input": {
+      "windowData": {
+        "startLine": 31,
+        "code": "    public Order handleNewOrder() {\n    }"
+      }
+    },
+    "expected": 31
+  },
+  {
+    "label": "missing window",
+    "input": {
+      "windowData": null
+    },
+    "expected": 1
+  }
+]

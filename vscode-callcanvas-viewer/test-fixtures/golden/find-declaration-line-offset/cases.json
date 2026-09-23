@@ -1,0 +1,89 @@
+[
+  {
+    "label": "javadoc block before declaration",
+    "input": {
+      "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+    },
+    "expected": 5
+  },
+  {
+    "label": "no comment → declaration is first line",
+    "input": {
+      "code": "    public void run() {\n    }"
+    },
+    "expected": 0
+  },
+  {
+    "label": "single annotation",
+    "input": {
+      "code": "    @Override\n    public String getUsername() {\n        return name;\n    }"
+    },
+    "expected": 1
+  },
+  {
+    "label": "multi-line annotation arguments",
+    "input": {
+      "code": "    @RequestMapping(\n        value = \"/orders\",\n        method = RequestMethod.GET)\n    @ResponseBody\n    public String list() {\n    }"
+    },
+    "expected": 4
+  },
+  {
+    "label": "javadoc followed by annotation",
+    "input": {
+      "code": "    /**\n     * doc\n     */\n    @Override\n    public void run() {\n    }"
+    },
+    "expected": 4
+  },
+  {
+    "label": "consecutive line comments",
+    "input": {
+      "code": "    // note 1\n    // note 2\n    function handler() {\n    }"
+    },
+    "expected": 2
+  },
+  {
+    "label": "markdown javadoc (/// JEP 467) before declaration",
+    "input": {
+      "code": "    /// Entry point for order creation.\n    /// Delegates to [#handleNewOrder(String)].\n    /// @param productName name\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+    },
+    "expected": 3
+  },
+  {
+    "label": "markdown javadoc followed by annotation",
+    "input": {
+      "code": "    /// doc\n    @Override\n    public void run() {\n    }"
+    },
+    "expected": 2
+  },
+  {
+    "label": "array code form keeps the same offset",
+    "input": {
+      "code": [
+        {
+          "line": 116,
+          "content": "    /**"
+        },
+        {
+          "line": 117,
+          "content": "     * doc"
+        },
+        {
+          "line": 118,
+          "content": "     */"
+        },
+        {
+          "line": 119,
+          "content": "    public void run() {"
+        }
+      ]
+    },
+    "expected": 3
+  },
+  {
+    "label": "only comments → offset 0",
+    "input": {
+      "code": "    // nothing but a comment"
+    },
+    "expected": 0
+  }
+]

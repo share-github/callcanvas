@@ -1,0 +1,95 @@
+[
+  {
+    "label": "identical graphs",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m"
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "total": 1,
+      "previous": 1,
+      "added": 0,
+      "removed": 0
+    }
+  },
+  {
+    "label": "new method added, one removed",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m"
+          },
+          {
+            "filePath": "B.java",
+            "displayName": "B # gone"
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m"
+          },
+          {
+            "filePath": "C.java",
+            "displayName": "C # added"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "total": 2,
+      "previous": 2,
+      "added": 1,
+      "removed": 1
+    }
+  },
+  {
+    "label": "merged caller windows are reported as removed",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m"
+          },
+          {
+            "filePath": "Caller.java",
+            "displayName": "Caller # c"
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "total": 1,
+      "previous": 2,
+      "added": 0,
+      "removed": 1
+    }
+  }
+]

@@ -160,7 +160,7 @@ export function activate(context: vscode.ExtensionContext): void {
                     htmlPath: projectContext.htmlPath,
                 };
                 const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-                const callcanvasData = formatAsCallCanvasJSON(callGraph, params.methodSignature, metadata, workspaceRoot);
+                const callcanvasData = formatAsCallCanvasJSON(callGraph, params.methodSignature, metadata, workspaceRoot, { depth: analysisDepth });
                 if (perfEnabled) { timing.push({ phase: 'formatting', elapsedMs: Date.now() - t3, detail: `windows:${callcanvasData.windows.length}` }); }
 
                 log(`[API] analyzeMethod success: ${callcanvasData.windows.length} windows`);
@@ -356,7 +356,7 @@ async function exportCallCanvasInternal(): Promise<string | null> {
         let t3 = 0;
         if (perfEnabled) { t3 = Date.now(); }
         const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        const callcanvasData = formatAsCallCanvasJSON(callGraph, rootFunc.signature, metadata, workspaceRoot);
+        const callcanvasData = formatAsCallCanvasJSON(callGraph, rootFunc.signature, metadata, workspaceRoot, { depth: maxDepth });
         perfLog('formatting', Date.now() - t3, `windows:${callcanvasData.windows.length}`);
 
         // Save JSON

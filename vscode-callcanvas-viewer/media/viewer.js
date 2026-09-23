@@ -576,7 +576,13 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
         !Array.isArray(incomingMeta) &&
         Object.keys(incomingMeta).length > 0
     ) {
-        currentData.metadata = { ...incomingMeta };
+        // Adopt project context (rootDir/htmlPath/...) but never `analysis`: this
+        // payload describes the sub-analysis of a child window, and recording it
+        // would re-root the canvas there on the next ルート再解析.
+        const { analysis, ...contextMeta } = incomingMeta;
+        if (Object.keys(contextMeta).length > 0) {
+            currentData.metadata = { ...contextMeta };
+        }
     }
 
     const container = document.querySelector('.container');

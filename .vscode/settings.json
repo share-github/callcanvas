@@ -1,0 +1,13 @@
+{
+    "javaCallHierarchy.depth": 10,
+    "javaCallHierarchy.languageLevel": "JAVA_21",
+    "callcanvas.windowWidth": 600,
+    "javaCallHierarchy.debug": false,
+    "javaCallHierarchy.quiet": false,
+    "javaCallHierarchy.timing": false,
+    "callcanvas.performanceLog": false,
+    "callcanvas.debug": false,
+    "jsCallHierarchy.depth": 20,
+    "tsCallHierarchy.depth": 10,
+    "callcanvas.jumpToCallTargetKey": "shift+b"
+}

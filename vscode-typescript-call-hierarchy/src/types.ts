@@ -73,8 +73,23 @@ export interface CallGraph {
     symbolIndex: Record<string, SymbolEntry>;
 }
 
+/** The analysis that produced a canvas — replayed by the Viewer's ルート再解析. */
+export interface CallCanvasAnalysisRecord {
+    language: string;
+    /** Root function signature handed to the analyzer. */
+    root: string;
+    /** Root source file, same relative convention as window.filePath. */
+    rootFilePath?: string;
+    /** Window id of the root at export time. */
+    rootWindowId?: string;
+    direction: string;
+    depth?: number;
+}
+
 /** Metadata embedded in CallCanvas JSON for context re-use (e.g. Analyze Next Level) */
 export interface CallCanvasMetadata {
+    /** What produced this canvas (root/direction/depth), for exact re-analysis */
+    analysis?: CallCanvasAnalysisRecord;
     /** Absolute path of the project root directory */
     rootDir?: string;
     /** How the project scope was detected */

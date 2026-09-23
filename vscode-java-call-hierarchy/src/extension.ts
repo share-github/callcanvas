@@ -1366,7 +1366,9 @@ export function activate(context: vscode.ExtensionContext) {
         'javaCallHierarchy.analyzeMethod',
         async (params: {
             filePath: string;
-            methodSignature: string;
+            methodSignature?: string;
+            /** Class-level root (all methods of the class). Mutually exclusive with methodSignature. */
+            rootClass?: string;
             depth?: number;
             direction?: 'outgoing' | 'incoming';
         }): Promise<{ success: boolean; data?: any; error?: string }> => {
@@ -1374,7 +1376,10 @@ export function activate(context: vscode.ExtensionContext) {
                 const config = vscode.workspace.getConfiguration('javaCallHierarchy');
                 const analysisDepth =
                     params.depth ?? config.get<number>('depth', 5);
-                outputChannel.appendLine(`[API] analyzeMethod: ${params.methodSignature} (depth=${analysisDepth}, direction=${params.direction || 'outgoing'})`);
+                if (!params.methodSignature && !params.rootClass) {
+                    return { success: false, error: 'methodSignature or rootClass is required' };
+                }
+                outputChannel.appendLine(`[API] analyzeMethod: ${params.rootClass || params.methodSignature} (depth=${analysisDepth}, direction=${params.direction || 'outgoing'}, classLevel=${!!params.rootClass})`);
 
                 const callcanvasConfig = vscode.workspace.getConfiguration('callcanvas');
                 const options = {
@@ -1391,23 +1396,43 @@ export function activate(context: vscode.ExtensionContext) {
 
                 const uri = vscode.Uri.file(params.filePath);
                 const apiBoundary = getWorkspaceBoundary(params.filePath);
-                const result = await analyzeCallHierarchy(
-                    context.extensionPath,
-                    uri,
-                    params.methodSignature,
-                    options,
-                    'callcanvas',
-                    apiBoundary,
-                    true
-                );
+                const result = params.rootClass
+                    ? await analyzeCallHierarchyForClass(
+                        context.extensionPath,
+                        uri,
+                        params.rootClass,
+                        options,
+                        'callcanvas',
+                        apiBoundary,
+                        true
+                    )
+                    : await analyzeCallHierarchy(
+                        context.extensionPath,
+                        uri,
+                        params.methodSignature as string,
+                        options,
+                        'callcanvas',
+                        apiBoundary,
+                        true
+                    );
 
                 if (result.success && result.callcanvasJsonPath) {
                     // Read the generated callcanvas.json
                     const fs = await import('fs');
                     const callcanvasContent = fs.readFileSync(result.callcanvasJsonPath, 'utf8');
                     const callcanvasData = JSON.parse(callcanvasContent);
-                    
-                    outputChannel.appendLine(`[API] analyzeMethod success: ${callcanvasData.windows?.length || 0} windows`);
+
+                    // The CLI exits 0 with an empty graph when the root cannot be
+                    // resolved. Report that as a failure so callers do not replace a
+                    // working canvas with nothing.
+                    const windowCount = callcanvasData.windows?.length || 0;
+                    if (windowCount === 0) {
+                        const target = params.rootClass || params.methodSignature;
+                        outputChannel.appendLine(`[API] analyzeMethod produced no windows for: ${target}`);
+                        return { success: false, error: `Root not resolved in the analyzed sources: ${target}` };
+                    }
+
+                    outputChannel.appendLine(`[API] analyzeMethod success: ${windowCount} windows`);
                     return { success: true, data: callcanvasData };
                 } else {
                     outputChannel.appendLine(`[API] analyzeMethod failed: ${result.error}`);

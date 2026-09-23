@@ -22,7 +22,14 @@ class AnalyzerConfig {
     List<Path> cpJars = new ArrayList<>();
     List<Path> cpDirs = new ArrayList<>();
     Path workspace;
-    LanguageLevel languageLevel = LanguageLevel.JAVA_21;
+    /**
+     * 既定の言語レベル。JAVA_21 のままにしてあるのは後方互換のため
+     * （既存の解析結果・キャッシュと出力が変わらないようにする）。
+     * Java 22〜25 のソースを解析する場合は --lang-level 25 のように明示指定する。
+     */
+    static final LanguageLevel DEFAULT_LANGUAGE_LEVEL = LanguageLevel.JAVA_21;
+
+    LanguageLevel languageLevel = DEFAULT_LANGUAGE_LEVEL;
     boolean debug = false;
     boolean quiet = false;
     boolean timing = false;
@@ -80,7 +87,7 @@ class AnalyzerConfig {
                                       --cp <jars>         Additional JARs for classpath (comma-separated)
                                       --cpdir <dirs>      Directories to search for JARs (comma-separated)
                                       --workspace <path>  Workspace root for relative path calculation
-                                      --lang-level <lvl>  Java language level: JAVA_8, JAVA_11, JAVA_17, JAVA_21 (default: JAVA_21)
+                                      --lang-level <lvl>  Java language level: JAVA_8 .. JAVA_25 (e.g. JAVA_17, JAVA_21, JAVA_25) (default: JAVA_21)
                                       --width <n>         Window width for CallCanvas output (default: 600)
                                       --rebuild-cache     Force rebuild hierarchy cache (for CHA optimization)
                                       --build-index       Build call index for faster analysis (incremental update if exists)
@@ -146,10 +153,17 @@ class AnalyzerConfig {
             case "JAVA_15", "15" -> LanguageLevel.JAVA_15;
             case "JAVA_16", "16" -> LanguageLevel.JAVA_16;
             case "JAVA_17", "17" -> LanguageLevel.JAVA_17;
+            case "JAVA_18", "18" -> LanguageLevel.JAVA_18;
+            case "JAVA_19", "19" -> LanguageLevel.JAVA_19;
+            case "JAVA_20", "20" -> LanguageLevel.JAVA_20;
             case "JAVA_21", "21" -> LanguageLevel.JAVA_21;
+            case "JAVA_22", "22" -> LanguageLevel.JAVA_22;
+            case "JAVA_23", "23" -> LanguageLevel.JAVA_23;
+            case "JAVA_24", "24" -> LanguageLevel.JAVA_24;
+            case "JAVA_25", "25" -> LanguageLevel.JAVA_25;
             default -> {
-                System.err.println("[WARN] Unknown language level: " + level + ", using JAVA_21");
-                yield LanguageLevel.JAVA_21;
+                System.err.println("[WARN] Unknown language level: " + level + ", using " + DEFAULT_LANGUAGE_LEVEL);
+                yield DEFAULT_LANGUAGE_LEVEL;
             }
         };
     }

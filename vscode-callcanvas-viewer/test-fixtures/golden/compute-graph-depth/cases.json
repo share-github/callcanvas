@@ -1,0 +1,95 @@
+[
+  {
+    "label": "linear chain",
+    "input": {
+      "connections": [
+        {
+          "from": "a",
+          "to": "b"
+        },
+        {
+          "from": "b",
+          "to": "c"
+        }
+      ],
+      "rootId": "a"
+    },
+    "expected": 2
+  },
+  {
+    "label": "diamond counts longest path once",
+    "input": {
+      "connections": [
+        {
+          "from": "a",
+          "to": "b"
+        },
+        {
+          "from": "a",
+          "to": "c"
+        },
+        {
+          "from": "b",
+          "to": "d"
+        },
+        {
+          "from": "c",
+          "to": "d"
+        }
+      ],
+      "rootId": "a"
+    },
+    "expected": 2
+  },
+  {
+    "label": "cycle does not loop forever",
+    "input": {
+      "connections": [
+        {
+          "from": "a",
+          "to": "b"
+        },
+        {
+          "from": "b",
+          "to": "a"
+        }
+      ],
+      "rootId": "a"
+    },
+    "expected": 1
+  },
+  {
+    "label": "self reference ignored",
+    "input": {
+      "connections": [
+        {
+          "from": "a",
+          "to": "a"
+        }
+      ],
+      "rootId": "a"
+    },
+    "expected": 0
+  },
+  {
+    "label": "no connections",
+    "input": {
+      "connections": [],
+      "rootId": "a"
+    },
+    "expected": 0
+  },
+  {
+    "label": "root not in graph",
+    "input": {
+      "connections": [
+        {
+          "from": "x",
+          "to": "y"
+        }
+      ],
+      "rootId": "a"
+    },
+    "expected": 0
+  }
+]

@@ -131,6 +131,7 @@ export function activate(context: vscode.ExtensionContext): void {
                 const parentNestedOmit = vscode.workspace.getConfiguration('tsCallHierarchy').get<boolean>('parentNestedOmitDisplay', true);
                 const callcanvasData = formatAsCallCanvasJSON(callGraph, params.methodSignature, metadata, workspaceRoot, {
                     parentNestedOmitDisplay: parentNestedOmit,
+                    depth: analysisDepth,
                 });
                 if (perfEnabled) { timing.push({ phase: 'formatting', elapsedMs: Date.now() - t3, detail: `windows:${callcanvasData.windows.length}` }); }
 
@@ -248,6 +249,7 @@ async function exportCallCanvasInternal(): Promise<string | null> {
         const parentNestedOmit = config.get<boolean>('parentNestedOmitDisplay', true);
         const callcanvasData = formatAsCallCanvasJSON(callGraph, rootFunc.signature, metadata, workspaceRoot, {
             parentNestedOmitDisplay: parentNestedOmit,
+            depth: maxDepth,
         });
         perfLog('formatting', Date.now() - t3, `windows:${callcanvasData.windows.length}`);
 

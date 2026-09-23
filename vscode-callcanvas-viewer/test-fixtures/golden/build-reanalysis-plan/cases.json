@@ -1,0 +1,391 @@
+[
+  {
+    "label": "recorded analysis is replayed verbatim",
+    "input": {
+      "currentJson": {
+        "metadata": {
+          "analysis": {
+            "language": "java",
+            "root": "com.example.app.controller.OrderController#submitOrderFromApi(java.lang.String)",
+            "rootFilePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "rootWindowId": "w1",
+            "direction": "outgoing",
+            "depth": 8
+          }
+        },
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "OrderController # submitOrderFromApi",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 116,
+            "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+          },
+          {
+            "id": "w2",
+            "displayName": "OrderController # handleNewOrder",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 31,
+            "code": "    public Order handleNewOrder(String p) {\n    }"
+          }
+        ],
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2"
+          }
+        ]
+      },
+      "defaults": {
+        "depth": 5
+      }
+    },
+    "expected": {
+      "rootWindow": {
+        "id": "w1",
+        "displayName": "OrderController # submitOrderFromApi",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 116,
+        "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+      },
+      "methodSignature": "com.example.app.controller.OrderController#submitOrderFromApi(java.lang.String)",
+      "rootClass": null,
+      "rootFilePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "direction": "outgoing",
+      "depth": 8,
+      "declLine": 121,
+      "source": "metadata"
+    }
+  },
+  {
+    "label": "legacy canvas: root inferred, declLine skips the javadoc",
+    "input": {
+      "currentJson": {
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "OrderController # submitOrderFromApi",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 116,
+            "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+          },
+          {
+            "id": "w2",
+            "displayName": "OrderController # handleNewOrder",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 31,
+            "code": "    public Order handleNewOrder(String p) {\n    }"
+          }
+        ],
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2"
+          }
+        ]
+      },
+      "defaults": {
+        "depth": 5
+      }
+    },
+    "expected": {
+      "rootWindow": {
+        "id": "w1",
+        "displayName": "OrderController # submitOrderFromApi",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 116,
+        "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+      },
+      "methodSignature": null,
+      "rootClass": null,
+      "rootFilePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "direction": "outgoing",
+      "depth": 5,
+      "declLine": 121,
+      "source": "inferred"
+    }
+  },
+  {
+    "label": "legacy canvas deeper than config keeps the observed depth",
+    "input": {
+      "currentJson": {
+        "windows": [
+          {
+            "id": "a",
+            "displayName": "A # a",
+            "filePath": "src/main/java/A.java",
+            "startLine": 1,
+            "code": "void a() {}"
+          },
+          {
+            "id": "b",
+            "displayName": "B # b",
+            "filePath": "src/main/java/B.java",
+            "startLine": 1,
+            "code": "void b() {}"
+          },
+          {
+            "id": "c",
+            "displayName": "C # c",
+            "filePath": "src/main/java/C.java",
+            "startLine": 1,
+            "code": "void c() {}"
+          },
+          {
+            "id": "d",
+            "displayName": "D # d",
+            "filePath": "src/main/java/D.java",
+            "startLine": 1,
+            "code": "void d() {}"
+          },
+          {
+            "id": "e",
+            "displayName": "E # e",
+            "filePath": "src/main/java/E.java",
+            "startLine": 1,
+            "code": "void e() {}"
+          },
+          {
+            "id": "f",
+            "displayName": "F # f",
+            "filePath": "src/main/java/F.java",
+            "startLine": 1,
+            "code": "void f() {}"
+          },
+          {
+            "id": "g",
+            "displayName": "G # g",
+            "filePath": "src/main/java/G.java",
+            "startLine": 1,
+            "code": "void g() {}"
+          }
+        ],
+        "connections": [
+          {
+            "from": "a",
+            "to": "b"
+          },
+          {
+            "from": "b",
+            "to": "c"
+          },
+          {
+            "from": "c",
+            "to": "d"
+          },
+          {
+            "from": "d",
+            "to": "e"
+          },
+          {
+            "from": "e",
+            "to": "f"
+          },
+          {
+            "from": "f",
+            "to": "g"
+          }
+        ]
+      },
+      "defaults": {
+        "depth": 5
+      }
+    },
+    "expected": {
+      "rootWindow": {
+        "id": "a",
+        "displayName": "A # a",
+        "filePath": "src/main/java/A.java",
+        "startLine": 1,
+        "code": "void a() {}"
+      },
+      "methodSignature": null,
+      "rootClass": null,
+      "rootFilePath": "src/main/java/A.java",
+      "direction": "outgoing",
+      "depth": 6,
+      "declLine": 1,
+      "source": "inferred"
+    }
+  },
+  {
+    "label": "class-level canvas replays the class root",
+    "input": {
+      "currentJson": {
+        "metadata": {
+          "analysis": {
+            "language": "java",
+            "rootClass": "com.example.app.controller.OrderController",
+            "rootFilePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "direction": "outgoing",
+            "depth": 5
+          }
+        },
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "OrderController # submitOrderFromApi",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 116,
+            "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+          },
+          {
+            "id": "w2",
+            "displayName": "OrderController # handleNewOrder",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 31,
+            "code": "    public Order handleNewOrder(String p) {\n    }"
+          }
+        ],
+        "connections": []
+      },
+      "defaults": {
+        "depth": 5
+      }
+    },
+    "expected": {
+      "rootWindow": {
+        "id": "w1",
+        "displayName": "OrderController # submitOrderFromApi",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 116,
+        "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+      },
+      "methodSignature": null,
+      "rootClass": "com.example.app.controller.OrderController",
+      "rootFilePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "direction": "outgoing",
+      "depth": 5,
+      "declLine": 121,
+      "source": "metadata"
+    }
+  },
+  {
+    "label": "incoming direction is preserved",
+    "input": {
+      "currentJson": {
+        "metadata": {
+          "analysis": {
+            "language": "java",
+            "root": "com.example.A#m()",
+            "direction": "incoming",
+            "depth": -1
+          }
+        },
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "OrderController # submitOrderFromApi",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 116,
+            "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+          },
+          {
+            "id": "w2",
+            "displayName": "OrderController # handleNewOrder",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 31,
+            "code": "    public Order handleNewOrder(String p) {\n    }"
+          }
+        ],
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2"
+          }
+        ]
+      },
+      "defaults": {
+        "depth": 5
+      }
+    },
+    "expected": {
+      "rootWindow": {
+        "id": "w1",
+        "displayName": "OrderController # submitOrderFromApi",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 116,
+        "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+      },
+      "methodSignature": "com.example.A#m()",
+      "rootClass": null,
+      "rootFilePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "direction": "incoming",
+      "depth": -1,
+      "declLine": 121,
+      "source": "metadata"
+    }
+  },
+  {
+    "label": "callers merged in: plan roots at the top caller",
+    "input": {
+      "currentJson": {
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "OrderController # submitOrderFromApi",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 116,
+            "code": "    /**\n     * Entry point for order creation from external systems.\n     * Delegates to handleNewOrder for actual processing.\n     * @param productName name\n     */\n    public Order submitOrderFromApi(String productName) {\n        return handleNewOrder(productName);\n    }"
+          },
+          {
+            "id": "w2",
+            "displayName": "OrderController # handleNewOrder",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "startLine": 31,
+            "code": "    public Order handleNewOrder(String p) {\n    }"
+          },
+          {
+            "id": "caller",
+            "displayName": "Api # post",
+            "filePath": "src/main/java/Api.java",
+            "startLine": 10,
+            "code": "    void post() {\n    }"
+          }
+        ],
+        "connections": [
+          {
+            "from": "w1",
+            "to": "w2"
+          },
+          {
+            "from": "caller",
+            "to": "w1"
+          }
+        ]
+      },
+      "defaults": {
+        "depth": 5
+      }
+    },
+    "expected": {
+      "rootWindow": {
+        "id": "caller",
+        "displayName": "Api # post",
+        "filePath": "src/main/java/Api.java",
+        "startLine": 10,
+        "code": "    void post() {\n    }"
+      },
+      "methodSignature": null,
+      "rootClass": null,
+      "rootFilePath": "src/main/java/Api.java",
+      "direction": "outgoing",
+      "depth": 5,
+      "declLine": 10,
+      "source": "inferred"
+    }
+  },
+  {
+    "label": "empty canvas → no plan",
+    "input": {
+      "currentJson": {
+        "windows": [],
+        "connections": []
+      },
+      "defaults": {
+        "depth": 5
+      }
+    },
+    "expected": null
+  }
+]

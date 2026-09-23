@@ -2,7 +2,7 @@
   "name": "java-call-hierarchy",
   "displayName": "Java Call Hierarchy Analyzer",
   "description": "Analyze and visualize Java method call hierarchies",
-  "version": "0.14.0",
+  "version": "0.14.2",
   "publisher": "share-github",
   "license": "MIT",
   "author": "share-github",
@@ -84,9 +84,23 @@
             "JAVA_8",
             "JAVA_11",
             "JAVA_17",
-            "JAVA_21"
+            "JAVA_21",
+            "JAVA_22",
+            "JAVA_23",
+            "JAVA_24",
+            "JAVA_25"
           ],
-          "description": "Java language level for parsing source files"
+          "enumDescriptions": [
+            "Java 8",
+            "Java 11",
+            "Java 17",
+            "Java 21 (default)",
+            "Java 22",
+            "Java 23 (/// Markdown Javadoc)",
+            "Java 24",
+            "Java 25 (module import declarations, flexible constructor bodies)"
+          ],
+          "description": "Java language level of the project being analyzed (not the Java used to run the analyzer)"
         },
         "javaCallHierarchy.debug": {
           "type": "boolean",

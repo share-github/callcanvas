@@ -59,6 +59,20 @@ function findMethodAtPosition(
         return currentLineResult;
     }
 
+    // Skip the documentation / annotation block that precedes a declaration and
+    // test the first real line below it. CallCanvas windows start at the Javadoc
+    // (OutputGenerator#findCommentStartLine) and JavaParser reports annotations as
+    // part of the declaration, so the declaration is often far below the line we
+    // were handed — a fixed 3-line lookahead missed it and the caller fell back to
+    // a regex guess (or to no signature at all).
+    const declLine = skipDocAndAnnotationBlock(document, position.line);
+    if (declLine !== position.line) {
+        const blockResult = parseMethodFromLine(document, declLine);
+        if (blockResult) {
+            return blockResult;
+        }
+    }
+
     // Search outward from current position, prioritizing closer lines
     // Search downward first (method body is usually below the signature)
     for (let offset = 1; offset <= 3; offset++) {
@@ -83,6 +97,73 @@ function findMethodAtPosition(
     }
 
     return null;
+}
+
+/**
+ * From `startLine`, skip blank lines, comment blocks and annotations (including
+ * multi-line annotation argument lists) and return the first line that can hold
+ * a declaration. Returns `startLine` itself when that line is already code.
+ */
+function skipDocAndAnnotationBlock(document: vscode.TextDocument, startLine: number): number {
+    const MAX_BLOCK_LINES = 80;
+    let line = startLine;
+    let inBlockComment = false;
+    let annotationDepth = 0;
+    const limit = Math.min(document.lineCount - 1, startLine + MAX_BLOCK_LINES);
+
+    while (line <= limit) {
+        const text = document.lineAt(line).text.trim();
+
+        if (inBlockComment) {
+            if (text.includes('*/')) {
+                inBlockComment = false;
+                const after = text.substring(text.lastIndexOf('*/') + 2).trim();
+                if (after.length > 0 && after.charAt(0) !== '@') {
+                    return line;
+                }
+            }
+            line++;
+            continue;
+        }
+
+        if (annotationDepth > 0) {
+            annotationDepth += countParenDelta(text);
+            line++;
+            continue;
+        }
+
+        if (text.length === 0 || text.startsWith('//')) {
+            line++;
+            continue;
+        }
+        if (text.startsWith('/*')) {
+            if (!text.includes('*/')) {
+                inBlockComment = true;
+            }
+            line++;
+            continue;
+        }
+        if (text.startsWith('@')) {
+            const delta = countParenDelta(text);
+            annotationDepth = delta > 0 ? delta : 0;
+            line++;
+            continue;
+        }
+        return line;
+    }
+    return startLine;
+}
+
+function countParenDelta(text: string): number {
+    let delta = 0;
+    for (const ch of text) {
+        if (ch === '(') {
+            delta++;
+        } else if (ch === ')') {
+            delta--;
+        }
+    }
+    return delta;
 }
 
 /**

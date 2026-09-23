@@ -5,11 +5,14 @@ import {
     CallCanvasWindow,
     CallCanvasConnection,
     CallCanvasMetadata,
+    CallCanvasAnalysisRecord,
     SymbolEntry,
 } from './types';
 import { computeNestedOmissionsByParentSignature } from './parentNestedOmit';
 
 export interface FormatCallCanvasOptions {
+    /** Analysis depth, recorded in metadata.analysis so ルート再解析 can replay it. */
+    depth?: number;
     /** When true (default), parent windows include `nestedOmissions` for Viewer to render gray cards. */
     parentNestedOmitDisplay?: boolean;
 }
@@ -82,8 +85,9 @@ export function formatAsCallCanvasJSON(
         windows,
         connections,
     };
-    if (metadata) {
-        result.metadata = metadata;
+    const analysis = buildAnalysisRecord(callGraph, rootSignature, workspaceRoot, windows, options);
+    if (metadata || analysis) {
+        result.metadata = Object.assign({}, metadata || {}, analysis ? { analysis } : {});
     }
     const sym = callGraph.symbolIndex;
     if (sym && Object.keys(sym).length > 0) {
@@ -105,4 +109,39 @@ function detectLanguage(filePath: string): string {
         return 'typescript';
     }
     return 'typescript';
+}
+
+/**
+ * Record the analysis that produced this canvas. The Viewer replays it verbatim
+ * for "ルート再解析" instead of guessing the root from window order and re-resolving
+ * the signature from a line number that may point at the JSDoc block.
+ */
+function buildAnalysisRecord(
+    callGraph: CallGraph,
+    rootSignature: string,
+    workspaceRoot: string | undefined,
+    windows: CallCanvasWindow[],
+    options?: FormatCallCanvasOptions
+): CallCanvasAnalysisRecord | undefined {
+    if (!rootSignature) {
+        return undefined;
+    }
+    const rootInfo = callGraph.functions.get(rootSignature);
+    const record: CallCanvasAnalysisRecord = {
+        language: 'typescript',
+        root: rootSignature,
+        direction: 'outgoing',
+    };
+    if (rootInfo) {
+        record.rootFilePath = workspaceRoot
+            ? path.relative(workspaceRoot, rootInfo.absolutePath)
+            : rootInfo.filePath;
+    }
+    if (windows.length > 0) {
+        record.rootWindowId = windows[0].id;
+    }
+    if (options && typeof options.depth === 'number') {
+        record.depth = options.depth;
+    }
+    return record;
 }

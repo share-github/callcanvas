@@ -16,6 +16,7 @@ const SOURCE_FILES = [
     path.resolve(__dirname, '../../src/extension.ts'),
     path.resolve(__dirname, '../../src/gitUtils.ts'),
     path.resolve(__dirname, '../../src/methodExtractor.ts'),
+    path.resolve(__dirname, '../../src/reanalysis.ts'),
 ];
 
 const COVERAGE_PARSER_FILE = path.resolve(__dirname, '../../src/coverageParser.ts');
@@ -392,6 +393,21 @@ function loadExtensionHostFunctions() {
         'detectAnalysisLanguage',
         'extractMethodSignatureJS',
         'parseGitDiffDetailed',
+        // Root re-analysis planning (src/reanalysis.ts)
+        'readAnalysisRecord',
+        'pickRootWindow',
+        'computeGraphDepth',
+        'toCodeLines',
+        'codeToString',
+        'windowKey',
+        'windowLineRange',
+        'countParenDelta',
+        'findDeclarationLineOffset',
+        'resolveDeclarationLine',
+        'buildReanalysisPlan',
+        'preserveLineComments',
+        'withAnalysisMetadata',
+        'summarizeReanalysis',
     ];
 
     const fns = {};

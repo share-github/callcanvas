@@ -76,9 +76,17 @@ class OutputGenerator {
         return null;
     }
 
+    /** 行が JEP 467 のマークダウン Javadoc（/// 始まり）かどうか。 */
+    private static boolean isMarkdownDocLine(String trimmed) {
+        return trimmed.startsWith("///");
+    }
+
     /**
      * メソッド直上の Javadoc/コメントの先頭行（1-based）を返す。
-     * ブロックコメント（/ と * で始まり * と / で終わる形式）または連続する // 行を検出する。
+     * 検出する形式は次の3つ:
+     *   - 従来のブロック Javadoc（/ と * で始まり * と / で終わる形式）
+     *   - マークダウン Javadoc（Java 23 / JEP 467 の /// 行の連続）
+     *   - 連続する // 行（通常の行コメント）
      * 該当しなければ methodStart1Based を返す。
      */
     static int findCommentStartLine(List<String> lines, int methodStart1Based) {
@@ -96,6 +104,16 @@ class OutputGenerator {
             return methodStart1Based;
         }
         String trimmed = lines.get(i).trim();
+        // マークダウン Javadoc /// の連続。
+        // ブロック Javadoc の直上にある // は窓に含めないのと揃えるため、
+        // /// の連なりが途切れた時点で止める（手前の素の // は含めない）。
+        if (isMarkdownDocLine(trimmed)) {
+            int j = i;
+            while (j >= 0 && isMarkdownDocLine(lines.get(j).trim())) {
+                j--;
+            }
+            return j + 2; // 先頭の /// 行の 1-based
+        }
         // ブロックコメント終端 */ の直上 → 先頭 /** を逆順で探索
         if (trimmed.contains("*/")) {
             for (int j = i; j >= 0; j--) {

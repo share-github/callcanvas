@@ -6,6 +6,14 @@ import { analyzeNextLevelJS, reanalyzeRootJS } from './jsAnalyzer';
 import { analyzeNextLevelTS, reanalyzeRootTS } from './tsAnalyzer';
 import { analyzeNextLevelJava, analyzeIncomingCallsJava, reanalyzeRootJava } from './javaAnalyzer';
 import { extractMethodName, detectAnalysisLanguage } from './methodExtractor';
+import {
+    buildReanalysisPlan,
+    pickRootWindow,
+    preserveLineComments,
+    readAnalysisRecord,
+    summarizeReanalysis,
+    withAnalysisMetadata
+} from './reanalysis';
 import { perfSection, perfTotal, isPerfLogEnabled } from './perfLogger';
 import { getCommitChanges, getWorkbenchChanges } from './gitUtils';
 import { openFileAtLine } from './fileNavigator';
@@ -735,7 +743,7 @@ async function analyzeToRoot(
  */
 async function reanalyzeRootMethod(
     panel: vscode.WebviewPanel,
-    context: vscode.ExtensionContext,
+    _context: vscode.ExtensionContext,
     activeJsonPath: vscode.Uri | undefined
 ): Promise<void> {
     showDebugOutput();
@@ -762,14 +770,29 @@ async function reanalyzeRootMethod(
         return;
     }
 
-    const rootWindow = currentJson.windows[0];
-    log(`Root window: ${rootWindow.displayName}, file: ${rootWindow.filePath}, line: ${rootWindow.startLine}`);
-
-    const lang = detectAnalysisLanguage(rootWindow.filePath);
-    if (!lang) {
+    // Language decides which depth setting the plan falls back to, so resolve the
+    // root window first (recorded id > graph entry > windows[0]).
+    const record = readAnalysisRecord(currentJson);
+    const probeRoot = pickRootWindow(currentJson.windows, currentJson.connections, record.rootWindowId);
+    const langPath = record.rootFilePath || (probeRoot ? probeRoot.filePath : '');
+    const lang = record.language || detectAnalysisLanguage(langPath);
+    if (lang !== 'java' && lang !== 'typescript' && lang !== 'javascript') {
         vscode.window.showWarningMessage('この言語の再解析は未対応です');
         return;
     }
+
+    const depthSection = lang === 'java'
+        ? 'javaCallHierarchy'
+        : (lang === 'typescript' ? 'tsCallHierarchy' : 'jsCallHierarchy');
+    const configDepth = vscode.workspace.getConfiguration(depthSection).get<number>('depth', 5);
+
+    const plan = buildReanalysisPlan(currentJson, { depth: configDepth });
+    if (!plan || !plan.rootFilePath) {
+        vscode.window.showErrorMessage('ルートメソッドが見つかりません');
+        return;
+    }
+    log(`Reanalysis plan (${plan.source}): root=${plan.methodSignature || plan.rootClass || plan.rootWindow?.displayName}, `
+        + `file=${plan.rootFilePath}, declLine=${plan.declLine}, direction=${plan.direction}, depth=${plan.depth}`);
 
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -779,25 +802,81 @@ async function reanalyzeRootMethod(
 
     const workspaceRoot = workspaceFolders[0].uri.fsPath;
 
-    // Resolve absolute file path for rootWindow.filePath (stored as relative in JSON)
-    const absoluteFilePath = resolveAbsoluteFilePath(rootWindow.filePath, workspaceRoot, activeJsonPath.fsPath);
+    // Resolve absolute file path for the root (stored as relative in JSON)
+    const absoluteFilePath = resolveAbsoluteFilePath(plan.rootFilePath, workspaceRoot, activeJsonPath.fsPath);
     log(`Resolved absolute file path: ${absoluteFilePath}`);
 
-    await vscode.window.withProgress({
+    const rootLabel = plan.rootClass || (plan.rootWindow ? plan.rootWindow.displayName : plan.methodSignature);
+    const result = await vscode.window.withProgress({
         location: vscode.ProgressLocation.Notification,
-        title: `ルート再解析中: ${rootWindow.displayName}`,
+        title: `ルート再解析中: ${rootLabel}`,
         cancellable: false
     }, async () => {
         if (lang === 'java') {
-            await reanalyzeRootJava(rootWindow, absoluteFilePath, panel, activeJsonPath);
-        } else if (lang === 'typescript') {
-            await reanalyzeRootTS(rootWindow, absoluteFilePath, panel, context, activeJsonPath);
-        } else if (lang === 'javascript') {
-            await reanalyzeRootJS(rootWindow, absoluteFilePath, panel, context, activeJsonPath);
-        } else {
-            vscode.window.showWarningMessage('この言語の再解析は未対応です');
+            return reanalyzeRootJava(plan, absoluteFilePath);
         }
+        if (lang === 'typescript') {
+            return reanalyzeRootTS(plan, absoluteFilePath);
+        }
+        return reanalyzeRootJS(plan, absoluteFilePath, activeJsonPath);
     });
+
+    // Never replace a working canvas with a failed/empty analysis.
+    if (!result.success || !result.data) {
+        logError(`Reanalysis failed: ${result.error}`);
+        vscode.window.showErrorMessage(`再解析失敗: ${result.error || '不明なエラー'}（キャンバスは変更していません）`);
+        return;
+    }
+
+    const summary = summarizeReanalysis(currentJson, result.data);
+    const newData = withAnalysisMetadata(preserveLineComments(currentJson, result.data), {
+        language: lang,
+        root: plan.rootClass ? undefined : (result.signature || plan.methodSignature || undefined),
+        rootClass: plan.rootClass || undefined,
+        rootFilePath: plan.rootFilePath,
+        direction: plan.direction,
+        depth: plan.depth
+    });
+
+    const backupPath = backupJsonFile(activeJsonPath.fsPath);
+    try {
+        fs.writeFileSync(activeJsonPath.fsPath, JSON.stringify(newData, null, 2), 'utf8');
+        log(`Saved re-analyzed data to: ${activeJsonPath.fsPath}`);
+    } catch (saveError) {
+        logError(`Failed to save JSON: ${saveError}`);
+        vscode.window.showErrorMessage(`再解析結果の保存に失敗しました: ${saveError}`);
+        return;
+    }
+
+    panel.webview.postMessage({
+        command: 'reloadData',
+        data: newData
+    });
+
+    const diff = (summary.added > 0 || summary.removed > 0)
+        ? `（+${summary.added} / -${summary.removed}）`
+        : '';
+    const backupNote = backupPath ? ` バックアップ: ${path.basename(backupPath)}` : '';
+    vscode.window.showInformationMessage(`再解析完了: ${summary.total} メソッド${diff}${backupNote}`);
+    if (summary.removed > 0) {
+        log(`${summary.removed} windows are not part of the recorded analysis `
+            + '(added later via 次の階層/呼び出し元の解析) and were not reproduced.');
+    }
+}
+
+/**
+ * Copy the canvas JSON to `<name>.json.bak` before it is replaced, so a
+ * re-analysis that returns a smaller graph than expected stays recoverable.
+ */
+function backupJsonFile(fsPath: string): string | null {
+    try {
+        const backupPath = fsPath + '.bak';
+        fs.copyFileSync(fsPath, backupPath);
+        return backupPath;
+    } catch (error) {
+        log(`Failed to create backup: ${error}`);
+        return null;
+    }
 }
 
 /**

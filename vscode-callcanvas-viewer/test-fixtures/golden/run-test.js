@@ -152,6 +152,41 @@ const testRegistry = {
         fn: wv.extractMethodName,
         args: (input) => [input.displayName],
     },
+    'pick-root-window': {
+        fn: ext.pickRootWindow,
+        args: (input) => [input.windows, input.connections, input.rootWindowId],
+    },
+    'compute-graph-depth': {
+        fn: ext.computeGraphDepth,
+        args: (input) => [input.connections, input.rootId],
+    },
+    'find-declaration-line-offset': {
+        fn: ext.findDeclarationLineOffset,
+        args: (input) => [input.code],
+    },
+    'resolve-declaration-line': {
+        fn: ext.resolveDeclarationLine,
+        args: (input) => [input.windowData],
+    },
+    'build-reanalysis-plan': {
+        fn: ext.buildReanalysisPlan,
+        args: (input) => [input.currentJson, input.defaults],
+        clone: true,
+    },
+    'preserve-line-comments': {
+        fn: ext.preserveLineComments,
+        args: (input) => [input.oldJson, input.newData],
+        clone: true,
+    },
+    'with-analysis-metadata': {
+        fn: ext.withAnalysisMetadata,
+        args: (input) => [input.data, input.record],
+        clone: true,
+    },
+    'summarize-reanalysis': {
+        fn: ext.summarizeReanalysis,
+        args: (input) => [input.oldJson, input.newData],
+    },
     'wrap-constant-tokens': {
         fn: wv.wrapConstantTokens,
         args: (input) => {

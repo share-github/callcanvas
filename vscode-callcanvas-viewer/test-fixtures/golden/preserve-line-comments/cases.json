@@ -1,0 +1,275 @@
+[
+  {
+    "label": "comment inside the new window range is carried over",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 10,
+            "code": "a\nb\nc",
+            "lineComments": {
+              "11": "why this branch"
+            }
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "id": "window-1",
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 10,
+            "code": "a\nb\nc"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1",
+          "filePath": "A.java",
+          "displayName": "A # m",
+          "startLine": 10,
+          "code": "a\nb\nc",
+          "lineComments": {
+            "11": "why this branch"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "comment outside the new range is dropped",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 10,
+            "code": "a\nb\nc",
+            "lineComments": {
+              "99": "stale"
+            }
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "id": "window-1",
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 10,
+            "code": "a\nb\nc"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1",
+          "filePath": "A.java",
+          "displayName": "A # m",
+          "startLine": 10,
+          "code": "a\nb\nc"
+        }
+      ]
+    }
+  },
+  {
+    "label": "fresh comment wins over the carried one",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 10,
+            "code": "a\nb",
+            "lineComments": {
+              "10": "old"
+            }
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "id": "window-1",
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 10,
+            "code": "a\nb",
+            "lineComments": {
+              "10": "new"
+            }
+          }
+        ]
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1",
+          "filePath": "A.java",
+          "displayName": "A # m",
+          "startLine": 10,
+          "code": "a\nb",
+          "lineComments": {
+            "10": "new"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "window that disappeared is ignored",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "Gone.java",
+            "displayName": "Gone # m",
+            "startLine": 1,
+            "code": "x",
+            "lineComments": {
+              "1": "note"
+            }
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "id": "window-1",
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 1,
+            "code": "x"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1",
+          "filePath": "A.java",
+          "displayName": "A # m",
+          "startLine": 1,
+          "code": "x"
+        }
+      ]
+    }
+  },
+  {
+    "label": "array code form",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 10,
+            "code": "a\nb\nc",
+            "lineComments": {
+              "12": "tail"
+            }
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "id": "window-1",
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "code": [
+              {
+                "line": 10,
+                "content": "a"
+              },
+              {
+                "line": 11,
+                "content": "b"
+              },
+              {
+                "line": 12,
+                "content": "c"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1",
+          "filePath": "A.java",
+          "displayName": "A # m",
+          "code": [
+            {
+              "line": 10,
+              "content": "a"
+            },
+            {
+              "line": 11,
+              "content": "b"
+            },
+            {
+              "line": 12,
+              "content": "c"
+            }
+          ],
+          "lineComments": {
+            "12": "tail"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "label": "no comments to carry",
+    "input": {
+      "oldJson": {
+        "windows": [
+          {
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 1,
+            "code": "x"
+          }
+        ]
+      },
+      "newData": {
+        "windows": [
+          {
+            "id": "window-1",
+            "filePath": "A.java",
+            "displayName": "A # m",
+            "startLine": 1,
+            "code": "x"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1",
+          "filePath": "A.java",
+          "displayName": "A # m",
+          "startLine": 1,
+          "code": "x"
+        }
+      ]
+    }
+  }
+]

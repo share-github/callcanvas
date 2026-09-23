@@ -54,6 +54,50 @@ export interface AnalyzerOptions {
 /**
  * Run the Java Call Hierarchy Analyzer JAR and return the results.
  */
+
+/**
+ * Record what produced a CallCanvas JSON so the viewer's "ルート再解析" can replay
+ * the same analysis instead of guessing the root from window order.
+ * `rootFilePath` uses the same workspace-relative convention as window.filePath.
+ */
+function stampAnalysisMetadata(
+    callcanvasJsonPath: string | undefined,
+    workspaceRoot: string,
+    sourceFilePath: string,
+    record: { root?: string; rootClass?: string; direction: string; depth: number }
+): void {
+    if (!callcanvasJsonPath || !fs.existsSync(callcanvasJsonPath)) {
+        return;
+    }
+    try {
+        const raw = fs.readFileSync(callcanvasJsonPath, 'utf8');
+        const json = JSON.parse(raw);
+        let rootFilePath = path.relative(workspaceRoot, sourceFilePath);
+        if (!rootFilePath || rootFilePath.startsWith('..')) {
+            rootFilePath = sourceFilePath;
+        }
+        const analysis: any = {
+            language: 'java',
+            rootFilePath: rootFilePath.split(path.sep).join('/'),
+            direction: record.direction,
+            depth: record.depth
+        };
+        if (record.root) {
+            analysis.root = record.root;
+        }
+        if (record.rootClass) {
+            analysis.rootClass = record.rootClass;
+        }
+        if (Array.isArray(json.windows) && json.windows.length > 0 && json.windows[0].id) {
+            analysis.rootWindowId = json.windows[0].id;
+        }
+        json.metadata = Object.assign({}, json.metadata || {}, { analysis });
+        fs.writeFileSync(callcanvasJsonPath, JSON.stringify(json, null, 2), 'utf8');
+    } catch (error) {
+        log('[Java Call Hierarchy] Failed to stamp analysis metadata: ' + error);
+    }
+}
+
 export async function analyzeCallHierarchy(
     extensionPath: string,
     documentUri: vscode.Uri,
@@ -295,6 +339,14 @@ export async function analyzeCallHierarchy(
             }
         }
         
+        if (format === 'callcanvas') {
+            stampAnalysisMetadata(callcanvasJsonPath, workspaceRoot, documentUri.fsPath, {
+                root: methodSignature,
+                direction: options.direction || 'outgoing',
+                depth: options.depth
+            });
+        }
+
         if (options.debug) {
             const elapsed = Date.now() - startTime;
             log('[Java Call Hierarchy] END (total: ' + elapsed + 'ms)');
@@ -508,6 +560,14 @@ export async function analyzeCallHierarchyForClass(
             if (!callcanvasJsonPath && options.debug) {
                 log('[Java Call Hierarchy] WARNING: No callcanvas file found in: ' + outputDir);
             }
+        }
+
+        if (format === 'callcanvas') {
+            stampAnalysisMetadata(callcanvasJsonPath, workspaceRoot, documentUri.fsPath, {
+                rootClass: classFqn,
+                direction: options.direction || 'outgoing',
+                depth: options.depth
+            });
         }
 
         if (options.debug) {
@@ -1115,7 +1175,7 @@ function executeJar(javaExe: string, args: string[], cwd: string, debug: boolean
                 } else if (stderr.includes('root not found')) {
                     errorMessage = 'Method not found. Check the method signature.';
                 } else if (stderr.includes('unknown tree')) {
-                    errorMessage = 'Parse error: unknown tree. Try setting a different language level (e.g., JAVA_8 for older projects). Enable debug mode for more details.';
+                    errorMessage = 'Parse error: unknown tree. Try setting a different language level in javaCallHierarchy.languageLevel (e.g., JAVA_8 for older projects, JAVA_25 for the newest syntax). Enable debug mode for more details.';
                 } else {
                     errorMessage = stderr || `Process exited with code ${code}`;
                 }

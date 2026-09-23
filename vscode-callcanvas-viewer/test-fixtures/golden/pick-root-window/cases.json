@@ -1,0 +1,200 @@
+[
+  {
+    "label": "windows[0] is the graph entry (normal CLI export)",
+    "input": {
+      "windows": [
+        {
+          "id": "w1"
+        },
+        {
+          "id": "w2"
+        },
+        {
+          "id": "w3"
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w2"
+        },
+        {
+          "from": "w2",
+          "to": "w3"
+        }
+      ]
+    },
+    "expected": {
+      "id": "w1"
+    }
+  },
+  {
+    "label": "callers merged above the original root → entry is the top caller",
+    "input": {
+      "windows": [
+        {
+          "id": "w1"
+        },
+        {
+          "id": "w2"
+        },
+        {
+          "id": "caller1"
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w2"
+        },
+        {
+          "from": "caller1",
+          "to": "w1"
+        }
+      ]
+    },
+    "expected": {
+      "id": "caller1"
+    }
+  },
+  {
+    "label": "recorded rootWindowId wins over graph shape",
+    "input": {
+      "windows": [
+        {
+          "id": "w1"
+        },
+        {
+          "id": "w2"
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w2"
+        }
+      ],
+      "rootWindowId": "w2"
+    },
+    "expected": {
+      "id": "w2"
+    }
+  },
+  {
+    "label": "recorded rootWindowId no longer present → fall back to graph",
+    "input": {
+      "windows": [
+        {
+          "id": "w1"
+        },
+        {
+          "id": "w2"
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w2"
+        }
+      ],
+      "rootWindowId": "gone"
+    },
+    "expected": {
+      "id": "w1"
+    }
+  },
+  {
+    "label": "self-recursive root still counts as entry",
+    "input": {
+      "windows": [
+        {
+          "id": "w1"
+        },
+        {
+          "id": "w2"
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w1"
+        },
+        {
+          "from": "w1",
+          "to": "w2"
+        }
+      ]
+    },
+    "expected": {
+      "id": "w1"
+    }
+  },
+  {
+    "label": "hidden entry window is skipped in favour of a visible one",
+    "input": {
+      "windows": [
+        {
+          "id": "w0",
+          "visible": false
+        },
+        {
+          "id": "w1"
+        },
+        {
+          "id": "w2"
+        }
+      ],
+      "connections": [
+        {
+          "from": "w2",
+          "to": "w0"
+        },
+        {
+          "from": "w2",
+          "to": "w1"
+        },
+        {
+          "from": "w1",
+          "to": "root"
+        }
+      ]
+    },
+    "expected": {
+      "id": "w2"
+    }
+  },
+  {
+    "label": "fully cyclic graph → windows[0]",
+    "input": {
+      "windows": [
+        {
+          "id": "w1"
+        },
+        {
+          "id": "w2"
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w2"
+        },
+        {
+          "from": "w2",
+          "to": "w1"
+        }
+      ]
+    },
+    "expected": {
+      "id": "w1"
+    }
+  },
+  {
+    "label": "empty canvas → null",
+    "input": {
+      "windows": [],
+      "connections": []
+    },
+    "expected": null
+  }
+]

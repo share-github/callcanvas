@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { spawn } from 'child_process';
 import { log, logError } from './logger';
 import { extractMethodSignature } from './methodExtractor';
+import { ReanalysisPlan, ReanalysisResult, codeToString } from './reanalysis';
 import { findMultiModuleRoot, findSubModules, findAnalyzerJar, findJavaPath } from './projectDetector';
 import { isPerfLogEnabled, perfLog, perfTotal, emitJavaTimingLines } from './perfLogger';
 
@@ -402,17 +403,77 @@ export async function analyzeNextLevelJava(
  * Re-analyze the root method for Java files using javaCallHierarchy.analyzeMethod API.
  */
 export async function reanalyzeRootJava(
-    rootWindow: { displayName: string; filePath: string; code: any; startLine: number },
-    absoluteFilePath: string,
-    panel: vscode.WebviewPanel,
-    activeJsonPath: vscode.Uri
-): Promise<void> {
+    plan: ReanalysisPlan,
+    absoluteFilePath: string
+): Promise<ReanalysisResult> {
     const perfEnabled = isPerfLogEnabled();
     const opName = 'reanalyzeRoot';
     let totalStart = 0;
     if (perfEnabled) { totalStart = Date.now(); }
 
-    // Resolve method signature via Java Call Hierarchy API
+    // Class-level canvases are reproduced through the class API — every method of
+    // the class stays a root, which re-analysing a single method would discard.
+    if (plan.rootClass) {
+        const classResult = await callJavaAnalyzeApi(
+            { filePath: absoluteFilePath, rootClass: plan.rootClass, depth: plan.depth, direction: plan.direction },
+            opName,
+            perfEnabled
+        );
+        if (perfEnabled) { perfTotal(opName, Date.now() - totalStart); }
+        return classResult;
+    }
+
+    // 1st attempt: replay the signature recorded when the canvas was exported.
+    let methodSignature = plan.methodSignature;
+    let resolvedFromSource = false;
+    if (!methodSignature) {
+        methodSignature = await resolveJavaSignature(plan, absoluteFilePath, opName, perfEnabled);
+        resolvedFromSource = true;
+    }
+    if (!methodSignature) {
+        if (perfEnabled) { perfTotal(opName, Date.now() - totalStart); }
+        return { success: false, error: 'メソッドシグネチャを解決できませんでした' };
+    }
+
+    log(`Re-analyzing with signature: ${methodSignature}, depth: ${plan.depth}, direction: ${plan.direction}, filePath: ${absoluteFilePath}`);
+    let result = await callJavaAnalyzeApi(
+        { filePath: absoluteFilePath, methodSignature, depth: plan.depth, direction: plan.direction },
+        opName,
+        perfEnabled
+    );
+
+    // 2nd attempt: the recorded signature no longer exists (renamed / moved
+    // method). Re-resolve it from the current source so the canvas still rebuilds.
+    if (!result.success && !resolvedFromSource && plan.rootWindow) {
+        log(`Recorded signature failed (${result.error}) — re-resolving from source`);
+        const freshSignature = await resolveJavaSignature(plan, absoluteFilePath, opName, perfEnabled);
+        if (freshSignature && freshSignature !== methodSignature) {
+            result = await callJavaAnalyzeApi(
+                { filePath: absoluteFilePath, methodSignature: freshSignature, depth: plan.depth, direction: plan.direction },
+                opName,
+                perfEnabled
+            );
+            if (result.success) {
+                result.signature = freshSignature;
+            }
+        }
+    }
+
+    if (perfEnabled) { perfTotal(opName, Date.now() - totalStart); }
+    return result;
+}
+
+/**
+ * Resolve the root signature from the source file. Uses the declaration line
+ * (not the window's startLine, which points at the Javadoc block) and falls back
+ * to the local regex extractor when the Java extension API is unavailable.
+ */
+async function resolveJavaSignature(
+    plan: ReanalysisPlan,
+    absoluteFilePath: string,
+    opName: string,
+    perfEnabled: boolean
+): Promise<string | null> {
     let t0 = 0;
     if (perfEnabled) { t0 = Date.now(); }
     let methodSignature: string | null = null;
@@ -420,7 +481,7 @@ export async function reanalyzeRootJava(
         methodSignature = await vscode.commands.executeCommand<string | null>(
             'javaCallHierarchy.resolveMethodSignature',
             absoluteFilePath,
-            rootWindow.startLine
+            plan.declLine
         );
         if (methodSignature) {
             log(`Got method signature from Java Call Hierarchy API: ${methodSignature}`);
@@ -429,63 +490,54 @@ export async function reanalyzeRootJava(
         log(`Java Call Hierarchy API not available: ${error}`);
     }
 
-    // Fallback: extract from displayName
-    if (!methodSignature) {
-        methodSignature = extractMethodSignature(rootWindow.displayName, rootWindow.code, rootWindow.filePath);
+    if (!methodSignature && plan.rootWindow) {
+        methodSignature = extractMethodSignature(
+            plan.rootWindow.displayName,
+            codeToString(plan.rootWindow.code),
+            plan.rootWindow.filePath
+        );
         log(`Extracted method signature (fallback): ${methodSignature}`);
     }
     if (perfEnabled) { perfLog(opName, 'resolveSignature', Date.now() - t0); }
+    return methodSignature;
+}
 
-    if (!methodSignature) {
-        vscode.window.showErrorMessage('メソッドシグネチャを解決できませんでした');
-        return;
-    }
-
-    // Get depth from configuration (default matches package.json javaCallHierarchy.depth)
-    const config = vscode.workspace.getConfiguration('javaCallHierarchy');
-    const depth = config.get<number>('depth', 5);
-
-    log(`Re-analyzing with signature: ${methodSignature}, depth: ${depth}, filePath: ${absoluteFilePath}`);
-
+/**
+ * Call the Java extension analysis API. An analysis that resolves no root still
+ * exits 0 with an empty window list, so treat that as a failure instead of
+ * replacing the canvas with nothing.
+ */
+async function callJavaAnalyzeApi(
+    params: { filePath: string; methodSignature?: string; rootClass?: string; depth: number; direction: string },
+    opName: string,
+    perfEnabled: boolean
+): Promise<ReanalysisResult> {
     let apiStart = 0;
     if (perfEnabled) { apiStart = Date.now(); }
     try {
         const result = await vscode.commands.executeCommand<{ success: boolean; data?: any; error?: string }>(
             'javaCallHierarchy.analyzeMethod',
-            { filePath: absoluteFilePath, methodSignature, depth }
+            params
         );
         if (perfEnabled) { perfLog(opName, 'apiCall', Date.now() - apiStart); }
 
-        if (result?.success && result.data) {
-            // Preserve positions from current JSON
-            const newData = result.data;
-
-            // Overwrite the JSON file with new data
-            try {
-                fs.writeFileSync(activeJsonPath.fsPath, JSON.stringify(newData, null, 2), 'utf8');
-                log(`Saved re-analyzed data to: ${activeJsonPath.fsPath}`);
-            } catch (saveError) {
-                log(`Failed to save JSON: ${saveError}`);
-            }
-
-            // Reload entire viewer with new data
-            panel.webview.postMessage({
-                command: 'reloadData',
-                data: newData
-            });
-            vscode.window.showInformationMessage(
-                `再解析完了: ${newData.windows?.length || 0} メソッド`
-            );
-        } else {
-            vscode.window.showErrorMessage(`再解析失敗: ${result?.error || '不明なエラー'}`);
+        if (!result?.success || !result.data) {
+            return { success: false, error: result?.error || '不明なエラー' };
         }
+        const windowCount = result.data.windows?.length || 0;
+        if (windowCount === 0) {
+            const target = params.rootClass || params.methodSignature || '';
+            return { success: false, error: `解析対象が見つかりませんでした (${target})` };
+        }
+        return { success: true, data: result.data, signature: params.methodSignature };
     } catch (error) {
         if (perfEnabled) { perfLog(opName, 'apiCall', Date.now() - apiStart); }
-        vscode.window.showErrorMessage(
-            'Java Call Hierarchy拡張がインストールされていないか、エラーが発生しました'
-        );
+        logError(`javaCallHierarchy.analyzeMethod failed: ${error}`);
+        return {
+            success: false,
+            error: 'Java Call Hierarchy拡張がインストールされていないか、エラーが発生しました'
+        };
     }
-    if (perfEnabled) { perfTotal(opName, Date.now() - totalStart); }
 }
 
 /**

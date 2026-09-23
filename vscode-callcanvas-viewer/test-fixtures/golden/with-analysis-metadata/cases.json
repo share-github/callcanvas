@@ -1,0 +1,152 @@
+[
+  {
+    "label": "stamps analysis and keeps project context",
+    "input": {
+      "data": {
+        "windows": [
+          {
+            "id": "window-1"
+          }
+        ],
+        "metadata": {
+          "rootDir": "/proj"
+        }
+      },
+      "record": {
+        "language": "java",
+        "root": "com.example.A#m()",
+        "rootFilePath": "src/main/java/A.java",
+        "direction": "outgoing",
+        "depth": 5
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1"
+        }
+      ],
+      "metadata": {
+        "rootDir": "/proj",
+        "analysis": {
+          "language": "java",
+          "root": "com.example.A#m()",
+          "rootFilePath": "src/main/java/A.java",
+          "direction": "outgoing",
+          "depth": 5,
+          "rootWindowId": "window-1"
+        }
+      }
+    }
+  },
+  {
+    "label": "no metadata yet",
+    "input": {
+      "data": {
+        "windows": [
+          {
+            "id": "window-1"
+          }
+        ]
+      },
+      "record": {
+        "language": "typescript",
+        "root": "src/a.ts#run:3",
+        "direction": "outgoing",
+        "depth": 5
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1"
+        }
+      ],
+      "metadata": {
+        "analysis": {
+          "language": "typescript",
+          "root": "src/a.ts#run:3",
+          "direction": "outgoing",
+          "depth": 5,
+          "rootWindowId": "window-1"
+        }
+      }
+    }
+  },
+  {
+    "label": "existing analysis fields are overwritten, extras kept",
+    "input": {
+      "data": {
+        "windows": [
+          {
+            "id": "window-9"
+          }
+        ],
+        "metadata": {
+          "analysis": {
+            "language": "java",
+            "root": "old#m()",
+            "depth": 3,
+            "direction": "outgoing"
+          },
+          "htmlPath": "/a.html"
+        }
+      },
+      "record": {
+        "root": "new#m()",
+        "depth": 7
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-9"
+        }
+      ],
+      "metadata": {
+        "analysis": {
+          "language": "java",
+          "root": "new#m()",
+          "depth": 7,
+          "direction": "outgoing",
+          "rootWindowId": "window-9"
+        },
+        "htmlPath": "/a.html"
+      }
+    }
+  },
+  {
+    "label": "class-level record",
+    "input": {
+      "data": {
+        "windows": [
+          {
+            "id": "window-1"
+          }
+        ]
+      },
+      "record": {
+        "language": "java",
+        "rootClass": "com.example.A",
+        "direction": "outgoing",
+        "depth": 5
+      }
+    },
+    "expected": {
+      "windows": [
+        {
+          "id": "window-1"
+        }
+      ],
+      "metadata": {
+        "analysis": {
+          "language": "java",
+          "rootClass": "com.example.A",
+          "direction": "outgoing",
+          "depth": 5,
+          "rootWindowId": "window-1"
+        }
+      }
+    }
+  }
+]
