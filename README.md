@@ -183,6 +183,7 @@ done
 | タイトルバーをダブルクリック | **右サイドパネルにファイル全文を表示**（該当行をハイライト・自動スクロール、行番号とシンタックスハイライト付き）し、Neovim 側でも該当行を開く。パネルは左端ドラッグで幅変更、`Esc` で閉じる。パネル内の行をダブルクリックすると Neovim がその行へ移動する |
 | `callcanvas.jumpToCallTargetKey`（例 `shift+b`） | 呼び出し先へジャンプ。既定の `f12` はブラウザが DevTools に使うため変更推奨 |
 | `shift+o` / `alt+←` | ジャンプ履歴を戻る（VS Code 版の `alt+←` はブラウザの「戻る」と衝突するため、`shift+o` を既定にしている） |
+| `shift+w` | 手前にあるものを閉じる（ファイルパネル → 選択中のウィンドウ）。`ctrl+w` はブラウザがタブを閉じてしまい、拡張側から抑止できないため別のキーにしている |
 
 ### 設定
 
@@ -198,6 +199,7 @@ done
   "callcanvas": {
     "openFileMode": "both",
     "jumpBackKey": "shift+o",
+    "closeKey": "shift+w",
     "interceptBrowserBack": true
   }
 }
@@ -207,6 +209,7 @@ done
 |---|---|---|
 | `callcanvas.openFileMode` | `"both"` | タイトルバーのダブルクリック時の動作。`both` = ファイルパネル＋Neovim ジャンプ、`panel` = パネルのみ、`nvim` = ジャンプのみ |
 | `callcanvas.jumpBackKey` | `"shift+o"` | ジャンプ履歴を戻るキー |
+| `callcanvas.closeKey` | `"shift+w"` | ファイルパネル / 選択中ウィンドウを閉じるキー |
 | `callcanvas.interceptBrowserBack` | `true` | `alt+←` / `⌘←` をブラウザの「戻る」ではなくジャンプ履歴に割り当てる |
 
 ### 動作の要点

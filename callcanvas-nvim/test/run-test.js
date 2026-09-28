@@ -231,7 +231,7 @@ function loadBridge(settings, options = {}) {
     const handlers = [];
     let lastBadge = null;
     const appended = [];
-    const calls = { jumpBack: 0, toasts: [], fetched: [] };
+    const calls = { jumpBack: 0, toasts: [], fetched: [], dispatched: [] };
     const element = () => {
         const node = {
             style: {},
@@ -250,7 +250,11 @@ function loadBridge(settings, options = {}) {
                     });
                 }
             },
-            appendChild(child) { node.children.push(child); return child; },
+            appendChild(child) {
+                node.children.push(child);
+                if (child && typeof child === 'object') { child.parentNode = node; }
+                return child;
+            },
             removeChild() {},
             addEventListener(type, fn) { node.listeners[type] = fn; },
             click() {
@@ -293,13 +297,27 @@ function loadBridge(settings, options = {}) {
         sessionStorage: { getItem: () => null, setItem: () => {} },
         location: { reload: () => {} },
         innerWidth: 1400,
+        KeyboardEvent: function (type, init) {
+            Object.assign(this, { type: type }, init || {});
+        },
         document: {
             readyState: 'complete',
             addEventListener: (type, fn, capture) => handlers.push({ type, fn, capture }),
+            // Selection state the close key looks at.
+            querySelector: (sel) => (options.selected && options.selected.includes(sel)
+                ? { sel }
+                : null),
             createElement: element,
             createTextNode: (text) => ({ text }),
-            documentElement: { appendChild(node) { lastBadge = node; appended.push(node); return node; } },
-            body: { appendChild(node) { lastBadge = node; appended.push(node); return node; } },
+            documentElement: {
+                appendChild(node) { lastBadge = node; appended.push(node); return node; },
+                dispatchEvent(event) { calls.dispatched.push(event); return true; }
+            },
+            body: {
+                tagName: 'BODY',
+                appendChild(node) { lastBadge = node; appended.push(node); return node; },
+                dispatchEvent(event) { calls.dispatched.push(event); return true; }
+            },
             getElementById: () => null
         }
     };
@@ -540,11 +558,68 @@ async function testFilePanelRendering() {
         String(plain.calls.highlighted && plain.calls.highlighted.language));
 }
 
+async function testCloseKey() {
+    section('browser bridge: close key (ctrl+w is reserved by the browser)');
+
+    // 1) the file panel is in front -> close that
+    const withPanel = loadBridge({ openFileMode: 'panel' });
+    withPanel.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 1 });
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const panel = withPanel.panelBody() && withPanel.panelBody().parentNode;
+    check('the file panel is open before the key press',
+        !!panel && panel.style.display === 'flex', panel && panel.style.display);
+
+    const prevented = withPanel.press({ key: 'W', shiftKey: true });
+    check('shift+w is captured (and kept from reaching the page)', prevented === true);
+    check('shift+w closes the file panel',
+        panel.style.display === 'none', panel.style.display);
+    check('no Delete was sent while the panel was open',
+        withPanel.calls.dispatched.length === 0,
+        JSON.stringify(withPanel.calls.dispatched.map(e => e.key)));
+
+    // Pressing it again with the panel closed and nothing selected falls through to
+    // the canvas, which has nothing to close either -> a hint.
+    withPanel.press({ key: 'W', shiftKey: true });
+    check('a second shift+w falls through to the canvas',
+        withPanel.calls.toasts.some(t => /閉じるもの/.test(t)),
+        withPanel.calls.toasts.join(' | '));
+
+    // 2) no panel, a window is selected -> viewer.js's own Delete path
+    const selected = loadBridge({}, { selected: ['.code-window.selected'] });
+    selected.press({ key: 'W', shiftKey: true });
+    check('shift+w deletes the selected window through viewer.js',
+        selected.calls.dispatched.some(e => e.key === 'Delete' && e.bubbles === true),
+        JSON.stringify(selected.calls.dispatched.map(e => e.key)));
+
+    // 3) nothing to close -> a hint, not a silent no-op
+    const empty = loadBridge({});
+    empty.press({ key: 'W', shiftKey: true });
+    check('with nothing to close the user gets a hint',
+        empty.calls.toasts.some(t => /閉じるもの/.test(t)), empty.calls.toasts.join(' | '));
+    check('and nothing is deleted', empty.calls.dispatched.length === 0);
+
+    // 4) configurable
+    const custom = loadBridge({ closeKey: 'shift+q' }, { selected: ['.code-window.selected'] });
+    custom.press({ key: 'Q', shiftKey: true });
+    check('the close key is configurable',
+        custom.calls.dispatched.some(e => e.key === 'Delete'));
+    custom.press({ key: 'W', shiftKey: true });
+    check('the default key is not also bound when overridden',
+        custom.calls.dispatched.length === 1, String(custom.calls.dispatched.length));
+
+    // 5) typing is never hijacked
+    const typing = loadBridge({}, { selected: ['.code-window.selected'] });
+    typing.press({ key: 'W', shiftKey: true, target: { tagName: 'INPUT' } });
+    check('typing shift+w in a field does not close anything',
+        typing.calls.dispatched.length === 0 && typing.calls.toasts.length === 0);
+}
+
 async function main() {
     testGlob();
     testConfig();
     testBridgeKeys();
     await testFilePanelRendering();
+    await testCloseKey();
 
     if (!fs.existsSync(TARGET_FILE)) {
         console.log(`\nSKIP host tests: ${TARGET_FILE} not found`);

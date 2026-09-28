@@ -167,7 +167,7 @@
         var close = document.createElement('a');
         close.href = '#';
         close.textContent = '✕';
-        close.title = 'close (Esc)';
+        close.title = 'close (Esc / ' + CLOSE_KEY + ')';
         close.setAttribute('style', 'color:#ddd;text-decoration:none;flex:0 0 auto;padding:0 2px');
         header.appendChild(close);
 
@@ -407,6 +407,29 @@
         }
     }, true);
 
+    /**
+     * One key that closes whatever is in front: the file panel, else the selected
+     * windows. Deleting goes through viewer.js's own Delete handling (cascade,
+     * connections, autosave) rather than reimplementing it here.
+     */
+    function closeTopmost() {
+        if (filePanel && filePanel.style.display !== 'none') {
+            hideFile();
+            return true;
+        }
+        var selected = document.querySelector('.code-window.selected')
+            || document.querySelector('svg.selected');
+        if (selected) {
+            var target = document.body || document.documentElement;
+            target.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Delete', bubbles: true, cancelable: true
+            }));
+            return true;
+        }
+        toast('閉じるものがありません（ウィンドウを選択するか、ファイルパネルを開いてください）', 'info');
+        return false;
+    }
+
     // --- keyboard: jump back ------------------------------------------------
     // The VSIX binds `callcanvas.jumpBack` to alt+left via VS Code's keybinding
     // layer; in a browser nothing is bound and alt+left is the browser's Back
@@ -442,6 +465,9 @@
     }
 
     var JUMP_BACK_KEY = normalizeBinding(SETTINGS.jumpBackKey || 'shift+o');
+    // ctrl+w / cmd+w are reserved by the browser (preventDefault is ignored), so the
+    // canvas gets its own close key.
+    var CLOSE_KEY = normalizeBinding(SETTINGS.closeKey || 'shift+w');
     // Combos the browser would use to leave the page. Answering them with
     // jump-back keeps muscle memory from the VS Code build working.
     var BACK_ALIASES = ['alt+left', 'meta+left', 'meta+[', 'ctrl+['];
@@ -454,6 +480,14 @@
             return;
         }
         var binding = keyBinding(e);
+
+        if (binding === CLOSE_KEY) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeTopmost();
+            return;
+        }
+
         var isJumpBack = binding === JUMP_BACK_KEY
             || (SETTINGS.interceptBrowserBack !== false && BACK_ALIASES.indexOf(binding) >= 0);
         if (!isJumpBack) { return; }
@@ -577,11 +611,16 @@
         ].join(';'));
 
         var head = document.createElement('div');
-        var jumpBackLabel = JUMP_BACK_KEY.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        var pretty = function (binding) {
+            return binding.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        };
         var label = document.createElement('span');
-        label.textContent = (FOLLOW ? 'following newest' : 'pinned') + ' · back: ' + jumpBackLabel + ' ';
-        label.title = 'jump back in history: ' + JUMP_BACK_KEY
-            + (SETTINGS.interceptBrowserBack !== false ? ' (alt+left also works)' : '');
+        label.textContent = (FOLLOW ? 'following newest' : 'pinned')
+            + ' · back ' + pretty(JUMP_BACK_KEY) + ' · close ' + pretty(CLOSE_KEY) + ' ';
+        label.title = 'back in jump history: ' + JUMP_BACK_KEY
+            + (SETTINGS.interceptBrowserBack !== false ? ' (alt+left also works)' : '')
+            + '\nclose the file panel / selected windows: ' + CLOSE_KEY
+            + ' (ctrl+w cannot be used: the browser reserves it)';
         head.appendChild(label);
 
         if (BRIDGE.permalink && FOLLOW) {

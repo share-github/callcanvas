@@ -179,6 +179,9 @@ class CallCanvasHost {
                 // 'both' (default) = jump in Neovim AND show the file in a side panel,
                 // 'nvim' = jump only, 'panel' = side panel only.
                 openFileMode: this.config.lookup('callcanvas.openFileMode', 'both'),
+                // ctrl+w closes the browser tab and cannot be intercepted, so the
+                // canvas needs its own close key.
+                closeKey: this.config.lookup('callcanvas.closeKey', 'shift+w'),
                 // Also answer alt+left (and cmd/ctrl+[) with jump-back instead of
                 // letting the browser navigate away from the canvas.
                 interceptBrowserBack: this.config.lookup('callcanvas.interceptBrowserBack', true) !== false
