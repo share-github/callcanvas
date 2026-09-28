@@ -334,15 +334,47 @@ function M.status()
   end)
 end
 
---- Normal (non-floating) windows of the current tab.
-local function normal_windows()
-  return vim.tbl_filter(function(win)
-    return vim.api.nvim_win_get_config(win).relative == ''
-  end, vim.api.nvim_tabpage_list_wins(0))
+-- Plugin UI windows that happen to use ordinary (non-floating) splits. Opening a
+-- file into one of these does not fail loudly: the buffer gets relocated into
+-- another window instead, which silently replaces whatever the user had there.
+local UI_FILETYPE_PATTERNS = {
+  '^snacks', 'neo%-tree', 'NvimTree', 'trouble', '^Outline', '^aerial', 'undotree',
+  '^dap', '^fugitive', '^oil', '^qf$', '^help$', '^man$', '^netrw$', '^TelescopePrompt$',
+  '^lazy$', '^mason$', '^checkhealth$', '^notify$', '^noice',
+}
+
+--- Can a file be opened in this window without disturbing something else?
+local function usable_window(win)
+  if not win or not vim.api.nvim_win_is_valid(win) then
+    return false
+  end
+  if vim.api.nvim_win_get_config(win).relative ~= '' then
+    return false                                   -- floating
+  end
+  local buf = vim.api.nvim_win_get_buf(win)
+  if vim.bo[buf].buftype ~= '' then
+    return false                                   -- nofile / prompt / terminal / quickfix …
+  end
+  local ok, fixed = pcall(function() return vim.wo[win].winfixbuf end)
+  if ok and fixed then
+    return false                                   -- the window refuses buffer changes
+  end
+  local filetype = vim.bo[buf].filetype or ''
+  for _, pattern in ipairs(UI_FILETYPE_PATTERNS) do
+    if filetype:match(pattern) then
+      return false
+    end
+  end
+  return true
+end
+
+--- Windows of the current tab a file may be opened in.
+local function usable_windows()
+  return vim.tbl_filter(usable_window, vim.api.nvim_tabpage_list_wins(0))
 end
 
 local function window_showing(file)
-  for _, win in ipairs(normal_windows()) do
+  for _, win in ipairs(usable_windows()) do
     if vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win)) == file then
       return win
     end
@@ -350,17 +382,19 @@ local function window_showing(file)
   return nil
 end
 
---- Pick the window a jump should land in, without multiplying splits.
+--- Pick the window a jump should land in, without multiplying splits and without
+--- ever landing in a plugin UI window.
 local function target_window(file, current)
   local showing = window_showing(file)
   if showing then
     return showing
   end
-  if M.config.jump_mode == 'here' then
+  if M.config.jump_mode == 'here' and usable_window(current) then
     return current
   end
-  -- Reuse the window earlier jumps used.
-  if state.jump_win and vim.api.nvim_win_is_valid(state.jump_win) and state.jump_win ~= current then
+  -- Reuse the window earlier jumps used (re-checked: it may have become a UI window
+  -- or been closed since).
+  if state.jump_win and state.jump_win ~= current and usable_window(state.jump_win) then
     return state.jump_win
   end
   if M.config.jump_mode == 'tab' then
@@ -368,17 +402,21 @@ local function target_window(file, current)
     state.jump_win = vim.api.nvim_get_current_win()
     return state.jump_win
   end
-  -- 'split': use the other window when the tab is already split, else split once.
-  local wins = normal_windows()
-  if #wins > 1 then
-    for _, win in ipairs(wins) do
-      if win ~= current then
-        state.jump_win = win
-        return win
-      end
+  -- 'split': use another real file window if the tab already has one, else split.
+  for _, win in ipairs(usable_windows()) do
+    if win ~= current then
+      state.jump_win = win
+      return win
     end
   end
-  vim.cmd('vsplit')
+  -- Split off a real file window; a UI window cannot be split into a file window.
+  local base = usable_window(current) and current or usable_windows()[1]
+  if base then
+    vim.api.nvim_set_current_win(base)
+    vim.cmd('vsplit')
+  else
+    vim.cmd('tabnew')
+  end
   state.jump_win = vim.api.nvim_get_current_win()
   return state.jump_win
 end
