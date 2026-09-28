@@ -175,10 +175,11 @@ class CallCanvasHost {
                 // layer, which does not exist in a browser — and alt+left is the
                 // browser's own Back. The bridge binds these instead.
                 jumpBackKey: this.config.lookup('callcanvas.jumpBackKey', 'shift+o'),
-                // What a double-click on a window title does in the browser:
-                // 'both' (default) = jump in Neovim AND show the file in a side panel,
-                // 'nvim' = jump only, 'panel' = side panel only.
-                openFileMode: this.config.lookup('callcanvas.openFileMode', 'both'),
+                // Off by default: the browser is self-contained (a double-click shows
+                // the file in its own panel). Driving Neovim from the browser means
+                // rearranging windows in an editor nobody is looking at, which is how
+                // people lose the place they were working in — opt in explicitly.
+                nvimJump: this.config.lookup('callcanvas.nvimJump', false) === true,
                 // ctrl+w closes the browser tab and cannot be intercepted, so the
                 // canvas needs its own close key.
                 closeKey: this.config.lookup('callcanvas.closeKey', 'shift+w'),
@@ -205,7 +206,9 @@ class CallCanvasHost {
             log: this.log,
             extensionPaths: this.extensionDirs,
             ui: this.buildUi(),
-            panelSink: this.buildPanelSink()
+            panelSink: this.buildPanelSink(),
+            nvimJumpEnabled: () => this.nvimJumpEnabled(),
+            showFileInBrowser: (fsPath, line) => this.showFileInBrowser(fsPath, line)
         });
     }
 
@@ -459,6 +462,16 @@ class CallCanvasHost {
         // that sent it.
         this.activeCanvasId = canvasId || this.panelIds.get(panel) || null;
         panel._receive(message);
+    }
+
+    /** Is the browser allowed to drive Neovim (jump to source)? */
+    nvimJumpEnabled() {
+        return this.config.lookup('callcanvas.nvimJump', false) === true;
+    }
+
+    /** Show a file in the browser's own panel instead of opening an editor. */
+    showFileInBrowser(fsPath, line) {
+        this.sendToUi({ kind: 'show-file', path: fsPath, line: Math.max(1, Number(line) || 1) });
     }
 
     /** Where host-level UI (toasts, progress, dialogs) should be shown. */

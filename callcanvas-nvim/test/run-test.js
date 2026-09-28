@@ -425,32 +425,26 @@ function testBridgeKeys() {
     bridge.press({ key: 'O', shiftKey: true, target: { tagName: 'DIV', isContentEditable: true } });
     check('contenteditable is not hijacked', bridge.calls.jumpBack === 3);
 
-    section('browser bridge: file panel (double-click on a window title)');
-    const fileBridge = loadBridge({ openFileMode: 'both' });
+    section('browser bridge: file panel (default = the browser leaves Neovim alone)');
+    const fileBridge = loadBridge({});
     const api = fileBridge.sandbox.acquireVsCodeApi();
     api.postMessage({ command: 'openFile', filePath: 'src/A.java', line: 12 });
-    check('openFile is forwarded to the host (Neovim jump)',
-        fileBridge.calls.fetched.some(u => String(u).startsWith('/api/message')),
-        fileBridge.calls.fetched.join(' '));
-    check('openFile also asks the host for the file text',
+    check('openFile asks the host for the file text',
         fileBridge.calls.fetched.some(u => String(u).includes('/api/file') && u.includes('src%2FA.java')),
         fileBridge.calls.fetched.join(' '));
+    check('openFile does NOT touch Neovim by default',
+        !fileBridge.calls.fetched.some(u => String(u).startsWith('/api/message')),
+        fileBridge.calls.fetched.join(' '));
 
-    const panelOnly = loadBridge({ openFileMode: 'panel' });
-    panelOnly.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 3 });
-    check("openFileMode='panel' does not disturb Neovim",
-        panelOnly.calls.fetched.some(u => String(u).includes('/api/file'))
-        && !panelOnly.calls.fetched.some(u => String(u).startsWith('/api/message')),
-        panelOnly.calls.fetched.join(' '));
-
-    const nvimOnly = loadBridge({ openFileMode: 'nvim' });
-    nvimOnly.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 3 });
-    check("openFileMode='nvim' keeps the old behaviour",
-        !nvimOnly.calls.fetched.some(u => String(u).includes('/api/file'))
-        && nvimOnly.calls.fetched.some(u => String(u).startsWith('/api/message')));
+    const withJump = loadBridge({ nvimJump: true });
+    withJump.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 3 });
+    check('nvimJump=true also forwards the jump to the host',
+        withJump.calls.fetched.some(u => String(u).startsWith('/api/message'))
+        && withJump.calls.fetched.some(u => String(u).includes('/api/file')),
+        withJump.calls.fetched.join(' '));
 
     // The whole title bar must respond, not just the .file-path text.
-    const barBridge = loadBridge({ openFileMode: 'both' });
+    const barBridge = loadBridge({});
     const pathEl = {
         getAttribute: (name) => ({ 'data-filepath': 'src/B.java', 'data-line': '42' }[name])
     };
@@ -462,7 +456,7 @@ function testBridgeKeys() {
     check('a double-click anywhere on the title bar opens the file',
         barBridge.calls.fetched.some(u => String(u).includes('/api/file') && u.includes('src%2FB.java')),
         barBridge.calls.fetched.join(' '));
-    const onPathText = loadBridge({ openFileMode: 'both' });
+    const onPathText = loadBridge({});
     onPathText.dblclick({
         closest: (sel) => (sel === '.file-path' ? pathEl : (sel === '.title-bar' ? titleBar : null))
     });
@@ -479,7 +473,7 @@ function testBridgeKeys() {
 
 async function testFilePanelRendering() {
     section('browser bridge: file panel syntax highlighting');
-    const bridge = loadBridge({ openFileMode: 'panel' });
+    const bridge = loadBridge({});
     bridge.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 2 });
     await new Promise(resolve => setTimeout(resolve, 10));
 
@@ -507,7 +501,7 @@ async function testFilePanelRendering() {
     const realSource = path.join(REPO_ROOT, 'sample-app/src/main/java/com/example/demo/service/TodoService.java');
     if (fs.existsSync(hljsBundle) && fs.existsSync(realSource)) {
         const sourceText = fs.readFileSync(realSource, 'utf8');
-        const real = loadBridge({ openFileMode: 'panel' }, { realHljs: hljsBundle, fileText: sourceText });
+        const real = loadBridge({}, { realHljs: hljsBundle, fileText: sourceText });
         check('the real highlight.js bundle loads in the page context',
             typeof real.sandbox.hljs === 'object' && !!real.sandbox.hljs.highlight);
         real.sandbox.acquireVsCodeApi().postMessage({
@@ -531,8 +525,7 @@ async function testFilePanelRendering() {
             ' */',
             'public class A {}'
         ].join('\n');
-        const blockBridge = loadBridge({ openFileMode: 'panel' },
-            { realHljs: hljsBundle, fileText: javadoc });
+        const blockBridge = loadBridge({}, { realHljs: hljsBundle, fileText: javadoc });
         blockBridge.sandbox.acquireVsCodeApi().postMessage({
             command: 'openFile', filePath: 'A.java', line: 1
         });
@@ -550,7 +543,7 @@ async function testFilePanelRendering() {
     }
 
     // Unknown extension -> plaintext, never a thrown-away render.
-    const plain = loadBridge({ openFileMode: 'panel' });
+    const plain = loadBridge({});
     plain.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'notes.rb', line: 1 });
     await new Promise(resolve => setTimeout(resolve, 10));
     check('an unregistered language falls back to plaintext',
@@ -562,7 +555,7 @@ async function testCloseKey() {
     section('browser bridge: close key (ctrl+w is reserved by the browser)');
 
     // 1) the file panel is in front -> close that
-    const withPanel = loadBridge({ openFileMode: 'panel' });
+    const withPanel = loadBridge({});
     withPanel.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 1 });
     await new Promise(resolve => setTimeout(resolve, 10));
     const panel = withPanel.panelBody() && withPanel.panelBody().parentNode;
@@ -668,6 +661,8 @@ async function main() {
         check('the page carries the configured jump key',
             page.body.includes(`jumpToCallTargetKey: ${JSON.stringify(configuredKey)}`),
             configuredKey);
+        check('the page tells the browser that Neovim driving is off by default',
+            /"nvimJump":false/.test(page.body), (page.body.match(/"nvimJump":[a-z]+/) || [''])[0]);
         check('the page carries a browser-safe jump-back key',
             /"jumpBackKey":"[^"]+"/.test(page.body) && !/"jumpBackKey":"alt\+left"/.test(page.body),
             (page.body.match(/"jumpBackKey":"[^"]+"/) || [''])[0]);
@@ -764,9 +759,10 @@ async function main() {
         check('/api/file needs the token',
             (await get(base, '/api/file?p=src/x.java')).status === 403);
 
-        section('a failed Neovim jump is reported to the browser');
-        // No Neovim address is configured in this test, so the jump must fail loudly.
-        const jumpToast = stream.wait(e => e.kind === 'toast' && e.level === 'error');
+        section('an editor open request goes to the browser, not to Neovim');
+        // callcanvas.nvimJump is off by default, so "open this file" must come back as
+        // a show-file event instead of poking an editor nobody is looking at.
+        const shown = stream.wait(e => e.kind === 'show-file');
         await post(base, token, '/api/message', {
             canvasId: firstCanvasId,
             message: {
@@ -775,10 +771,13 @@ async function main() {
                 line: 34
             }
         });
-        const toastEvent = await jumpToast;
-        check('the browser is told why the jump failed',
-            /ジャンプに失敗/.test(toastEvent.text) && /Neovim address/.test(toastEvent.text),
-            toastEvent.text);
+        const shownEvent = await shown;
+        check('the host asks the browser to show the file',
+            /TodoService\.java$/.test(shownEvent.path) && shownEvent.line === 34,
+            JSON.stringify(shownEvent));
+        check('no Neovim error toast is produced',
+            !stream.events.some(e => e.kind === 'toast' && /ジャンプ/.test(e.text || '')),
+            JSON.stringify(stream.events.filter(e => e.kind === 'toast').map(e => e.text)));
 
         section('the first visit uses a short, typable URL');
         const shortUrl = opened.shortUrl;

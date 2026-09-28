@@ -16,6 +16,9 @@
     var CANVAS_ID = BRIDGE.canvasId || '';
     var FOLLOW = BRIDGE.follow === true;
     var SETTINGS = BRIDGE.settings || {};
+    // The browser is self-contained by default: opening a file shows it here, and
+    // Neovim is left alone. `callcanvas.nvimJump` turns the editor jump back on.
+    var NVIM_JUMP = SETTINGS.nvimJump === true;
 
     function url(pathname) {
         return pathname + (pathname.indexOf('?') < 0 ? '?' : '&') + 't=' + encodeURIComponent(TOKEN);
@@ -39,12 +42,9 @@
                 // browser there is no editor pane, so also (or instead) show the file
                 // here — see callcanvas.openFileMode.
                 if (message && message.command === 'openFile') {
-                    var mode = SETTINGS.openFileMode || 'both';
-                    if (mode !== 'nvim') {
-                        showFile(message.filePath, message.line);
-                    }
-                    if (mode === 'panel') {
-                        return;
+                    showFile(message.filePath, message.line);
+                    if (!NVIM_JUMP) {
+                        return;   // nothing to ask the host for
                     }
                 }
                 // canvasId keeps several open canvases apart on the host side.
@@ -162,7 +162,9 @@
         openInNvim.href = '#';
         openInNvim.textContent = 'open in Neovim';
         openInNvim.setAttribute('style', 'color:#7fb9ff;text-decoration:none;flex:0 0 auto');
-        header.appendChild(openInNvim);
+        if (NVIM_JUMP) {
+            header.appendChild(openInNvim);
+        }
 
         var close = document.createElement('a');
         close.href = '#';
@@ -340,13 +342,15 @@
             }
             row.appendChild(code);
 
-            // Clicking a line jumps Neovim there.
-            row.addEventListener('dblclick', function () {
-                post('/api/message', {
-                    canvasId: CANVAS_ID,
-                    message: { command: 'openFile', filePath: data.path, line: nr }
+            // Double-clicking a line jumps Neovim there, when that is enabled.
+            if (NVIM_JUMP) {
+                row.addEventListener('dblclick', function () {
+                    post('/api/message', {
+                        canvasId: CANVAS_ID,
+                        message: { command: 'openFile', filePath: data.path, line: nr }
+                    });
                 });
-            });
+            }
 
             if (nr === data.line) { target = row; }
             table.appendChild(row);
@@ -400,10 +404,12 @@
         var filePath = pathElement.getAttribute('data-filepath');
         var line = parseInt(pathElement.getAttribute('data-line'), 10) || 1;
         if (!filePath) { return; }
-        var mode = SETTINGS.openFileMode || 'both';
-        if (mode !== 'nvim') { showFile(filePath, line); }
-        if (mode !== 'panel') {
-            post('/api/message', { canvasId: CANVAS_ID, message: { command: 'openFile', filePath: filePath, line: line } });
+        showFile(filePath, line);
+        if (NVIM_JUMP) {
+            post('/api/message', {
+                canvasId: CANVAS_ID,
+                message: { command: 'openFile', filePath: filePath, line: line }
+            });
         }
     }, true);
 
@@ -522,6 +528,9 @@
                 break;
             case 'ui':
                 answerUi(payload);
+                break;
+            case 'show-file':
+                showFile(payload.path, payload.line);
                 break;
             case 'canvas-added':
                 announceCanvas(payload);

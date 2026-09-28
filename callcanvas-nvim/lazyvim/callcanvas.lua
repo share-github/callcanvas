@@ -42,8 +42,15 @@ return {
       -- Seconds to keep the host alive after the last browser tab closes (0 = forever).
       idle_timeout = 300,
 
-      -- Where a jump from the browser lands: 'split' | 'here' | 'tab'
-      jump_mode = 'split',
+      -- The browser is self-contained: a double-click on a window title shows the
+      -- file in a side panel there, and Neovim is left alone. Set
+      -- ['callcanvas.nvimJump'] = true in `settings` below if you want the browser to
+      -- move Neovim as well — it rearranges windows in an editor you are not looking
+      -- at, so it is off by default.
+      --
+      -- Only used when that is on:
+      jump_mode = 'split',   -- 'split' (one reused window) | 'here' | 'tab'
+      jump_focus = 'auto',   -- 'auto' (only when Neovim has focus) | true | false
 
       -- Settings normally come from `.vscode/settings.json` (the project's, or any
       -- ancestor up to the repo root) — the same file the VSIX reads, so
@@ -55,6 +62,7 @@ return {
       -- leaves `callcanvas.jumpToCallTargetKey` at its default, set it to something
       -- like "shift+b" there.
       settings = {
+        -- ['callcanvas.nvimJump'] = true,   -- let the browser jump in Neovim too
         -- ['callcanvas.windowWidth'] = 700,
       },
     },

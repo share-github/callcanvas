@@ -60,7 +60,7 @@ else
     step "start headless Neovim with the plugin"
     nvim --headless --listen "$SOCK" -u NONE \
         --cmd "set rtp+=$PLUGIN_DIR" \
-        -c "lua require('callcanvas').setup({ auto_open = false })" \
+        -c "lua require('callcanvas').setup({ auto_open = false, settings = { ['callcanvas.nvimJump'] = true } })" \
         -c "edit $TARGET_FILE" \
         -c "call cursor($TARGET_LINE, 1)" \
         >"$WORK/nvim.log" 2>&1 &
@@ -147,7 +147,37 @@ else
     bad "bridge script missing"
 fi
 
-step "browser -> host -> Neovim jump (openFile)"
+if [[ -n "$APPNAME" ]]; then
+    # The shipped spec leaves callcanvas.nvimJump off: the browser must be
+    # self-contained and never move Neovim.
+    step "browser -> host: openFile must NOT move Neovim (default)"
+    BEFORE="$(nvim --server "$SOCK" --remote-expr 'winnr("$") . ":" . expand("%:t") . ":" . line(".")' 2>/dev/null)"
+    curl -s -o /dev/null -X POST -H 'Content-Type: application/json' \
+        -d '{"message": {"command": "openFile", "filePath": "src/main/java/com/example/demo/service/NoticeService.java", "line": 24}}' \
+        "$BASE/api/message?t=$TOKEN"
+    sleep 3
+    AFTER="$(nvim --server "$SOCK" --remote-expr 'winnr("$") . ":" . expand("%:t") . ":" . line(".")' 2>/dev/null)"
+    if [[ "$AFTER" == "$BEFORE" ]]; then
+        ok "Neovim was left untouched ($AFTER)"
+    else
+        bad "Neovim changed although nvimJump is off: '$BEFORE' -> '$AFTER'"
+    fi
+
+    step "host rejects an unauthenticated request"
+    CODE="$(curl -s -o /dev/null -w '%{http_code}' "$BASE/?t=nope")"
+    if [[ "$CODE" == "403" ]]; then
+        ok "bad token rejected"
+    else
+        bad "bad token returned HTTP $CODE"
+    fi
+
+    printf '\n%s\n' "----------------------------------------"
+    printf 'PASS: %d  FAIL: %d\n' "$PASS" "$FAIL"
+    [[ "$FAIL" -eq 0 ]]
+    exit $?
+fi
+
+step "browser -> host -> Neovim jump (openFile, nvimJump=true)"
 # Prefer a window in a DIFFERENT file so the jump really navigates.
 JUMP_FILE="$(node -e "
 const fs = require('fs');

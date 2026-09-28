@@ -497,10 +497,17 @@ function createVscodeShim(host) {
     };
 
     /**
-     * A failed jump used to be logged and nothing else, which looks like "the
-     * double-click does nothing". Tell the browser instead.
+     * "Open this in an editor" from extension code. By default there is no editor to
+     * drive — the browser shows the file itself — so send it there. Driving Neovim is
+     * opt-in (`callcanvas.nvimJump`).
      */
     async function jumpAndReport(fsPath, line) {
+        if (host.nvimJumpEnabled && !host.nvimJumpEnabled()) {
+            if (host.showFileInBrowser) {
+                host.showFileInBrowser(fsPath, line);
+            }
+            return true;
+        }
         const result = await host.nvim.jump(fsPath, line);
         if (result && result.ok) {
             return true;
