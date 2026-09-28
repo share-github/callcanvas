@@ -171,16 +171,43 @@ console.log(JSON.stringify({ command: 'openFile', filePath: t.filePath, line: t.
 EXPECTED_LINE="$(node -e "console.log(JSON.parse(process.argv[1]).line)" "$JUMP_FILE")"
 EXPECTED_NAME="$(node -e "const p=JSON.parse(process.argv[1]).filePath; console.log(p.split('/').pop())" "$JUMP_FILE")"
 
-CURSOR=""
+# Where the user was before the jump. A jump is triggered from the browser, so this
+# window and cursor must still be there afterwards.
+BEFORE="$(nvim --server "$SOCK" --remote-expr 'expand("%:t") . ":" . line(".")' 2>/dev/null)"
+
+# The cursor line of whichever window ended up showing the file (-1 = none).
+LANDED_EXPR="luaeval('(function() for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do local name = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(w)); if vim.fn.fnamemodify(name, \":t\") == _A[1] then return vim.api.nvim_win_get_cursor(w)[1] end end return -1 end)()', ['$EXPECTED_NAME'])"
+
+LANDED=""
 for _ in $(seq 1 40); do
-    CURSOR="$(nvim --server "$SOCK" --remote-expr 'expand("%:t") . ":" . line(".")' 2>/dev/null)"
-    [[ "$CURSOR" == "$EXPECTED_NAME:$EXPECTED_LINE" ]] && break
+    LANDED="$(nvim --server "$SOCK" --remote-expr "$LANDED_EXPR" 2>/dev/null)"
+    [[ "$LANDED" == "$EXPECTED_LINE" ]] && break
     sleep 0.25
 done
-if [[ "$CURSOR" == "$EXPECTED_NAME:$EXPECTED_LINE" ]]; then
-    ok "Neovim jumped to $CURSOR"
+if [[ "$LANDED" == "$EXPECTED_LINE" ]]; then
+    ok "Neovim opened $EXPECTED_NAME at line $LANDED"
 else
-    bad "Neovim cursor is '$CURSOR', expected '$EXPECTED_NAME:$EXPECTED_LINE'"
+    bad "no window shows $EXPECTED_NAME:$EXPECTED_LINE (got line '$LANDED')"
+fi
+
+AFTER="$(nvim --server "$SOCK" --remote-expr 'expand("%:t") . ":" . line(".")' 2>/dev/null)"
+if [[ "$AFTER" == "$BEFORE" ]]; then
+    ok "the window the user was in is untouched ($AFTER)"
+else
+    bad "the jump stole the current window: '$BEFORE' -> '$AFTER'"
+fi
+
+# A second jump must reuse the same window instead of splitting again.
+WINS_BEFORE="$(nvim --server "$SOCK" --remote-expr 'winnr("$")' 2>/dev/null)"
+curl -s -o /dev/null -X POST -H 'Content-Type: application/json' \
+    -d "{\"message\": {\"command\": \"openFile\", \"filePath\": \"$(node -e "console.log(JSON.parse(process.argv[1]).filePath)" "$JUMP_FILE")\", \"line\": 1}}" \
+    "$BASE/api/message?t=$TOKEN"
+sleep 2
+WINS_AFTER="$(nvim --server "$SOCK" --remote-expr 'winnr("$")' 2>/dev/null)"
+if [[ "$WINS_AFTER" == "$WINS_BEFORE" ]]; then
+    ok "repeated jumps reuse one window (still $WINS_AFTER)"
+else
+    bad "a repeated jump split again: $WINS_BEFORE -> $WINS_AFTER"
 fi
 
 step "host rejects an unauthenticated request"

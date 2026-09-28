@@ -29,13 +29,26 @@ M.config = {
   copy_url = true,
   -- Extra configuration overrides, e.g. { ['callcanvas.windowWidth'] = 800 }.
   settings = {},
-  -- Where the browser should jump: 'split' reuses a vertical split, 'here'
-  -- replaces the current window, 'tab' opens a new tab.
+  -- Where a jump from the browser lands: 'split' keeps ONE dedicated window
+  -- (created on the first jump and reused afterwards), 'here' replaces the current
+  -- window, 'tab' uses a dedicated tab.
   jump_mode = 'split',
+  -- Whether a jump moves the cursor focus to the opened file:
+  --   'auto'  (default) only when Neovim actually has terminal focus
+  --   true    always (the old behaviour)
+  --   false   never — the file is shown but your window and cursor stay put
+  -- A jump is triggered from the browser, i.e. usually while you are NOT in Neovim;
+  -- stealing the window then loses the place you were working in.
+  jump_focus = 'auto',
 }
 
 local state = { url = nil, short_url = nil, short_bookmark_url = nil, bookmark_url = nil,
-  permalink = nil, list_url = nil, title = nil, canvas_count = 0 }
+  permalink = nil, list_url = nil, title = nil, canvas_count = 0,
+  -- Terminal focus, tracked via FocusGained/FocusLost. Starts false: a jump can only
+  -- come from the browser, so "not focused" is the safe assumption.
+  focused = false,
+  -- The one window jumps reuse, so repeated jumps do not keep splitting.
+  jump_win = nil }
 
 local function plugin_root()
   local source = debug.getinfo(1, 'S').source:sub(2)
@@ -270,6 +283,8 @@ function M.session()
     list_url = state.list_url,
     title = state.title,
     canvas_count = state.canvas_count,
+    focused = state.focused,
+    jump_win = state.jump_win,
   }
 end
 
@@ -319,48 +334,76 @@ function M.status()
   end)
 end
 
---- Pick the window a jump should land in.
-local function target_window(file)
-  -- Reuse a window already showing the file.
-  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    local buf = vim.api.nvim_win_get_buf(win)
-    if vim.api.nvim_buf_get_name(buf) == file then
+--- Normal (non-floating) windows of the current tab.
+local function normal_windows()
+  return vim.tbl_filter(function(win)
+    return vim.api.nvim_win_get_config(win).relative == ''
+  end, vim.api.nvim_tabpage_list_wins(0))
+end
+
+local function window_showing(file)
+  for _, win in ipairs(normal_windows()) do
+    if vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win)) == file then
       return win
     end
   end
+  return nil
+end
+
+--- Pick the window a jump should land in, without multiplying splits.
+local function target_window(file, current)
+  local showing = window_showing(file)
+  if showing then
+    return showing
+  end
   if M.config.jump_mode == 'here' then
-    return vim.api.nvim_get_current_win()
+    return current
+  end
+  -- Reuse the window earlier jumps used.
+  if state.jump_win and vim.api.nvim_win_is_valid(state.jump_win) and state.jump_win ~= current then
+    return state.jump_win
   end
   if M.config.jump_mode == 'tab' then
     vim.cmd('tabnew')
-    return vim.api.nvim_get_current_win()
+    state.jump_win = vim.api.nvim_get_current_win()
+    return state.jump_win
   end
-  -- 'split': reuse the other window when the tab is already split.
-  local wins = vim.tbl_filter(function(win)
-    return vim.api.nvim_win_get_config(win).relative == ''
-  end, vim.api.nvim_tabpage_list_wins(0))
+  -- 'split': use the other window when the tab is already split, else split once.
+  local wins = normal_windows()
   if #wins > 1 then
-    local current = vim.api.nvim_get_current_win()
     for _, win in ipairs(wins) do
       if win ~= current then
+        state.jump_win = win
         return win
       end
     end
   end
   vim.cmd('vsplit')
-  return vim.api.nvim_get_current_win()
+  state.jump_win = vim.api.nvim_get_current_win()
+  return state.jump_win
 end
 
 --- Called by the host (via `nvim --server ... --remote-expr`) to jump to a location.
 function M.jump(file, line)
   vim.schedule(function()
     local ok, err = pcall(function()
-      local win = target_window(file)
+      local previous = vim.api.nvim_get_current_win()
+      local win = target_window(file, previous)
       vim.api.nvim_set_current_win(win)
       vim.cmd('edit ' .. vim.fn.fnameescape(file))
       local count = vim.api.nvim_buf_line_count(0)
       vim.api.nvim_win_set_cursor(0, { math.min(math.max(1, line), count), 0 })
       vim.cmd('normal! zz')
+
+      -- Hand the seat back: the jump was triggered from the browser, so the window
+      -- and cursor the user left behind must still be there when they return.
+      local follow = M.config.jump_focus
+      if follow == 'auto' then
+        follow = state.focused
+      end
+      if not follow and win ~= previous and vim.api.nvim_win_is_valid(previous) then
+        vim.api.nvim_set_current_win(previous)
+      end
     end)
     if not ok then
       notify('jump failed: ' .. tostring(err), vim.log.levels.ERROR)
@@ -394,6 +437,17 @@ end
 
 function M.setup(opts)
   M.config = vim.tbl_deep_extend('force', M.config, opts or {})
+
+  -- Terminal focus: a jump only steals the cursor when the user is actually here.
+  local group = vim.api.nvim_create_augroup('CallCanvasFocus', { clear = true })
+  vim.api.nvim_create_autocmd('FocusGained', {
+    group = group,
+    callback = function() state.focused = true end,
+  })
+  vim.api.nvim_create_autocmd('FocusLost', {
+    group = group,
+    callback = function() state.focused = false end,
+  })
 
   -- VimL entry points for `nvim --server ... --remote-expr`.
   vim.cmd([[

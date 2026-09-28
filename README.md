@@ -150,7 +150,8 @@ done
   opts = {
     -- Neovim がコンテナ / リモートで、ブラウザが手元にある場合:
     -- host = '0.0.0.0', port = 7333,   （そのポートを publish / forward しておく）
-    jump_mode = 'split',                -- ブラウザからのジャンプ先: 'split' | 'here' | 'tab'
+    jump_mode = 'split',                -- ジャンプ先: 'split'（専用窓1枚を再利用）| 'here' | 'tab'
+    jump_focus = 'auto',                -- 'auto': Neovim を見ている時だけフォーカスが追従する
   },
 }
 ```
@@ -211,6 +212,20 @@ done
 | `callcanvas.jumpBackKey` | `"shift+o"` | ジャンプ履歴を戻るキー |
 | `callcanvas.closeKey` | `"shift+w"` | ファイルパネル / 選択中ウィンドウを閉じるキー |
 | `callcanvas.interceptBrowserBack` | `true` | `alt+←` / `⌘←` をブラウザの「戻る」ではなくジャンプ履歴に割り当てる |
+
+### ブラウザからのジャンプと Neovim の作業位置
+
+ジャンプはブラウザを操作している最中に飛んでくるため、既定では Neovim 側の作業位置を
+壊さないようにしている。
+
+- 開く先は専用ウィンドウ 1 枚。初回のジャンプで分割し、以降は同じウィンドウを再利用する
+  （ジャンプのたびに分割が増えることはない）
+- ジャンプ後はカーソルを元のウィンドウに戻すので、Neovim に戻ったとき作業していた場所は
+  そのまま残っている
+- Neovim にフォーカスがある間は、開いた先にフォーカスが移る（`jump_focus = 'auto'`）
+
+`jump_mode` は `'split'` / `'here'`（カレントウィンドウを置き換え）/ `'tab'`、
+`jump_focus` は `'auto'` / `true`（常に追従）/ `false`（常に戻す）から選べる。
 
 ### 動作の要点
 
