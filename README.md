@@ -10,6 +10,7 @@ Java / JavaScript / TypeScript のメソッド呼び出し階層を静的解析�
 | `.vscode/settings.json` | 推奨設定の例（解析深さ・Java 言語レベル・Viewer 表示など） |
 | `app/` | Java 解析器のソース（ビルド済み JAR は `vscode-java-call-hierarchy/resources/` に同梱） |
 | `vscode-*/` | 各拡張のソース |
+| `callcanvas-nvim/` | VS Code を使わず **Neovim + ブラウザ**で同じ Viewer を動かすホスト（下記「Neovim から使う」） |
 
 | VSIX | 拡張 ID | 役割 |
 |---|---|---|
@@ -96,6 +97,8 @@ code --uninstall-extension share-github.callcanvas-viewer \
 | `javaCallHierarchy.excludePatterns` | `"**generated**,**config**,**dto**"` | 解析から除外するパターン（カンマ区切り） |
 | `callcanvas.minWindowHeight` / `callcanvas.maxWindowHeight` | `80` / `600` | Viewer ウィンドウの高さの下限 / 上限（px） |
 | `tsCallHierarchy.nestedLocalWindows` | `true` | 名前付きのローカル関数を別ウィンドウに分割する |
+| `callcanvas.jumpBackKey` | `"shift+o"` | **Neovim + ブラウザ利用時のみ**。ジャンプ履歴を戻るキー（VS Code 側は `alt+←`） |
+| `callcanvas.interceptBrowserBack` | `true` | **同上**。`alt+←` / `⌘←` をブラウザの「戻る」ではなくジャンプ履歴に割り当てる |
 
 ## 使い方
 
@@ -105,6 +108,101 @@ code --uninstall-extension share-github.callcanvas-viewer \
 4. Viewer 上で **`CallCanvas: Analyze Next Level`** を実行すると、さらに深い階層を追加解析する
 
 Java ではクラス宣言行にカーソルを置くとクラス単位で解析する（初回はインデックス構築の完了を待つ）。
+
+## Neovim から使う（VS Code 不要）
+
+`callcanvas-nvim/` は、VS Code の代わりに **Neovim + ブラウザ**で同じ Viewer を使うためのホスト。
+カーソル位置でコマンドを実行すると、ローカル HTTP サーバが立ち上がり、ブラウザで
+キャンバスを操作できる。ブラウザからソースへジャンプすると Neovim 側が該当行を開く。
+
+解析・シグネチャ解決・Viewer の HTML は**拡張のコンパイル済みコードをそのまま動かしている**
+ため、VS Code 版と同じ結果になる（Viewer の JS は無改変）。
+
+### 前提
+
+- Neovim 0.10 以上、Node.js 18 以上
+- Java 解析を使う場合: Java 21 以上
+- **拡張がビルド済みであること**（`out/` はリポジトリに含まれないため、下記のいずれか）
+
+```bash
+# a) このリポジトリでビルドする
+for d in vscode-java-call-hierarchy vscode-javascript-call-hierarchy \
+         vscode-typescript-call-hierarchy vscode-callcanvas-viewer; do
+  (cd "$d" && npm install && npm run compile)
+done
+
+# b) すでに VSIX をインストール済みなら何もしなくてよい
+#    (~/.vscode/extensions/share-github.* を自動検出する)
+```
+
+### セットアップ（lazy.nvim / LazyVim）
+
+`callcanvas-nvim/lazyvim/callcanvas.lua` が spec の雛形。`~/.config/nvim/lua/plugins/` に
+コピー（または symlink）し、`dir` をこのリポジトリの `callcanvas-nvim` に合わせる。
+
+```lua
+{
+  dir = '/path/to/callcanvas/callcanvas-nvim',
+  main = 'callcanvas',           -- lua モジュール名（ディレクトリ名と異なる）
+  cmd = { 'CallCanvas', 'CallCanvasBrowse', 'CallCanvasUrl',
+          'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop' },
+  keys = { { '<leader>vv', '<cmd>CallCanvas<cr>', desc = 'CallCanvas' } },
+  opts = {
+    -- Neovim がコンテナ / リモートで、ブラウザが手元にある場合:
+    -- host = '0.0.0.0', port = 7333,   （そのポートを publish / forward しておく）
+    jump_mode = 'split',                -- ブラウザからのジャンプ先: 'split' | 'here' | 'tab'
+  },
+}
+```
+
+> LazyVim は `<leader>c*`（`<leader>cc` = Run Codelens など）をほぼ使用済みのため、
+> 雛形では未使用の `<leader>v*` を使っている。
+
+### 使い方
+
+| コマンド / キー | 動作 |
+|---|---|
+| `:CallCanvas`（`<leader>vv`） | カーソル位置のメソッド / 関数を解析し、URL をクリップボードへ入れる |
+| `:CallCanvasList`（`<leader>vl`） | 開いているキャンバスの一覧 |
+| `:CallCanvasUrl`（`<leader>vu`） | URL の再表示・再コピー |
+| `:CallCanvasStatus` / `:CallCanvasStop` | ホストの状態表示 / 終了 |
+
+1. 解析したいメソッド / 関数の行にカーソルを置いて `:CallCanvas`
+2. URL は **OSC 52 でターミナルのクリップボードに直接入る**ので、ブラウザに貼って開く
+   （ターミナル側でクリップボード書き込みの許可が必要。tmux は `set -g set-clipboard on`）
+3. 一度開いたら `http://127.0.0.1:<port>/` をブックマークしておけばよい。以降 `:CallCanvas`
+   を実行するとそのタブが自動で更新される
+4. キャンバスは同時に何枚でも開ける。`:CallCanvas` がクリップボードに入れる URL は
+   「今解析したキャンバス」を指すので、**新しいタブに貼れば並べて比較できる**
+   （ページ右下の `canvases ▾` からも切り替えられる）
+
+ブラウザ側のキー操作:
+
+| キー | 動作 |
+|---|---|
+| ウィンドウをダブルクリック | Neovim 側でソースの該当行を開く |
+| `callcanvas.jumpToCallTargetKey`（例 `shift+b`） | 呼び出し先へジャンプ。既定の `f12` はブラウザが DevTools に使うため変更推奨 |
+| `shift+o` / `alt+←` | ジャンプ履歴を戻る（VS Code 版の `alt+←` はブラウザの「戻る」と衝突するため、`shift+o` を既定にしている） |
+
+### 設定
+
+**VS Code と同じ `.vscode/settings.json` を読む**（解析対象プロジェクトのもの、なければ
+上位ディレクトリをリポジトリルートまで遡る。コメント付き JSON 可）。上の「設定キー」の表が
+そのまま効くので、VS Code 版と設定を共用できる。
+
+ブラウザ専用のキーは VS Code が知らない設定なので、`<プロジェクト>/.callcanvas/config.json`
+に置く:
+
+```json
+{ "callcanvas": { "jumpBackKey": "shift+o", "interceptBrowserBack": true } }
+```
+
+### 動作の要点
+
+- サーバは既定で `127.0.0.1` のみ待ち受け、全エンドポイントにセッショントークンが必要。
+  静的配信は拡張のディレクトリ配下に限定
+- ブラウザを全部閉じてから既定 300 秒（`idle_timeout`）で自動終了する。常駐しない
+- 解析対象はディスク上のファイル。未保存バッファは反映されない
 
 ## AI エージェント向けの導入手順まとめ
 

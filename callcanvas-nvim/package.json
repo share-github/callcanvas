@@ -1,0 +1,20 @@
+{
+  "name": "callcanvas-nvim",
+  "version": "0.1.0",
+  "description": "Run the CallCanvas viewer from Neovim: analyze at the caret, view and drive the canvas in a browser",
+  "license": "MIT",
+  "author": "share-github",
+  "private": true,
+  "bin": {
+    "callcanvas": "src/cli.js"
+  },
+  "main": "src/host.js",
+  "scripts": {
+    "test": "node test/run-test.js",
+    "start": "node src/cli.js serve --verbose"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {}
+}
