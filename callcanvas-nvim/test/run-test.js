@@ -223,9 +223,14 @@ function testConfig() {
 }
 
 // --- the browser-side bridge, run on a minimal DOM stub --------------------
-function loadBridge(settings) {
+// A block comment that spans two lines: highlighting line by line would break it.
+const FILE_TEXT = '/* a\nb */ int x;';
+const HIGHLIGHTED = '<span class="hljs-comment">/* a\nb */</span> <span class="hljs-keyword">int</span> x;';
+
+function loadBridge(settings, options = {}) {
     const handlers = [];
     let lastBadge = null;
+    const appended = [];
     const calls = { jumpBack: 0, toasts: [], fetched: [] };
     const element = () => {
         const node = {
@@ -233,6 +238,9 @@ function loadBridge(settings) {
             children: [],
             textContent: '',
             listeners: {},
+            className: '',
+            innerHTML: null,
+            scrollIntoView() {},
             setAttribute(name, value) {
                 // Mirror the browser enough that reading node.style.* back works.
                 if (name === 'style') {
@@ -264,10 +272,15 @@ function loadBridge(settings) {
         fetch: (u, init) => {
             calls.fetched.push(u);
             if (String(u).includes('/api/file')) {
+                // Echo the requested path back, like the host does.
+                const asked = decodeURIComponent((String(u).match(/[?&]p=([^&]*)/) || [])[1] || 'src/A.java');
                 return Promise.resolve({
                     json: () => Promise.resolve({
-                        ok: true, path: '/abs/src/A.java', relPath: 'src/A.java', line: 12,
-                        text: 'line1\nline2\nline3'
+                        ok: true,
+                        path: '/abs/' + asked,
+                        relPath: asked,
+                        line: 2,
+                        text: options.fileText !== undefined ? options.fileText : FILE_TEXT
                     })
                 });
             }
@@ -285,8 +298,8 @@ function loadBridge(settings) {
             addEventListener: (type, fn, capture) => handlers.push({ type, fn, capture }),
             createElement: element,
             createTextNode: (text) => ({ text }),
-            documentElement: { appendChild(node) { lastBadge = node; return node; } },
-            body: { appendChild(node) { lastBadge = node; return node; } },
+            documentElement: { appendChild(node) { lastBadge = node; appended.push(node); return node; } },
+            body: { appendChild(node) { lastBadge = node; appended.push(node); return node; } },
             getElementById: () => null
         }
     };
@@ -294,11 +307,28 @@ function loadBridge(settings) {
     sandbox.__CALLCANVAS_BRIDGE__ = {
         token: 't', canvasId: 'c1', follow: true, permalink: 'p', listUrl: 'l', settings
     };
+    // Mirrors the viewer's custom highlight.js bundle: java/javascript/typescript/xml
+    // plus plaintext, and a value whose spans straddle a newline.
+    sandbox.hljs = {
+        getLanguage: (lang) => ['java', 'javascript', 'typescript', 'xml', 'plaintext'].includes(lang),
+        highlight: (text, options) => {
+            calls.highlighted = { length: String(text).length, language: options && options.language };
+            return { value: HIGHLIGHTED };
+        }
+    };
     sandbox.jumpBack = () => { calls.jumpBack++; };
+    if (options.realHljs) {
+        // Load the viewer's own highlight.js bundle instead of the stub.
+        delete sandbox.hljs;
+        vm.createContext(sandbox);
+        vm.runInContext(fs.readFileSync(options.realHljs, 'utf8'), sandbox);
+    }
     sandbox.showToast = (text) => { calls.toasts.push(text); };
     sandbox.addEventListener = () => {};
 
-    vm.createContext(sandbox);
+    if (!vm.isContext(sandbox)) {
+        vm.createContext(sandbox);
+    }
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'bridge.client.js'), 'utf8'), sandbox);
 
     const keydown = handlers.find(h => h.type === 'keydown');
@@ -321,7 +351,28 @@ function loadBridge(settings) {
     const dblclick = (target) => {
         dblclickHandler.fn(Object.assign({ target }, { target }));
     };
-    return { sandbox, calls, keydown, press, clickAll, dblclick, badge: () => lastBadge };
+    /** Every node with a non-null innerHTML, i.e. the highlighted code cells. */
+    const highlightedCells = () => {
+        const out = [];
+        const walk = (node, depth = 0) => {
+            if (!node || depth > 8) { return; }
+            if (typeof node.innerHTML === 'string') { out.push(node); }
+            (node.children || []).forEach(child => walk(child, depth + 1));
+        };
+        appended.forEach(node => walk(node));
+        return out;
+    };
+    const panelBody = () => {
+        for (const node of appended) {
+            const found = (node.children || []).find(c => c.className === 'code-area');
+            if (found) { return found; }
+        }
+        return null;
+    };
+    return {
+        sandbox, calls, keydown, press, clickAll, dblclick,
+        badge: () => lastBadge, highlightedCells, panelBody
+    };
 }
 
 function testBridgeKeys() {
@@ -408,10 +459,92 @@ function testBridgeKeys() {
         custom.calls.jumpBack === 1 && notPrevented === false);
 }
 
+async function testFilePanelRendering() {
+    section('browser bridge: file panel syntax highlighting');
+    const bridge = loadBridge({ openFileMode: 'panel' });
+    bridge.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 2 });
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    check('the panel body reuses the viewer .code-area class (so viewer.css colours apply)',
+        !!bridge.panelBody(), 'no .code-area element');
+    check('the whole file is highlighted in one pass (not line by line)',
+        bridge.calls.highlighted && bridge.calls.highlighted.length === FILE_TEXT.length,
+        JSON.stringify(bridge.calls.highlighted));
+    check('the language is resolved from the extension',
+        bridge.calls.highlighted && bridge.calls.highlighted.language === 'java',
+        String(bridge.calls.highlighted && bridge.calls.highlighted.language));
+
+    const cells = bridge.highlightedCells().filter(c => c.innerHTML);
+    check('every source line got highlighted HTML', cells.length === 2, String(cells.length));
+    check('a span straddling a newline is closed on line 1',
+        cells[0] && cells[0].innerHTML === '<span class="hljs-comment">/* a</span>',
+        cells[0] && cells[0].innerHTML);
+    check('…and reopened on line 2',
+        cells[1] && cells[1].innerHTML.startsWith('<span class="hljs-comment">b */</span>')
+        && cells[1].innerHTML.includes('hljs-keyword'),
+        cells[1] && cells[1].innerHTML);
+
+    // End-to-end with the viewer's real highlight.js bundle and a real source file.
+    const hljsBundle = path.join(REPO_ROOT, 'vscode-callcanvas-viewer', 'media', 'highlight.min.js');
+    const realSource = path.join(REPO_ROOT, 'sample-app/src/main/java/com/example/demo/service/TodoService.java');
+    if (fs.existsSync(hljsBundle) && fs.existsSync(realSource)) {
+        const sourceText = fs.readFileSync(realSource, 'utf8');
+        const real = loadBridge({ openFileMode: 'panel' }, { realHljs: hljsBundle, fileText: sourceText });
+        check('the real highlight.js bundle loads in the page context',
+            typeof real.sandbox.hljs === 'object' && !!real.sandbox.hljs.highlight);
+        real.sandbox.acquireVsCodeApi().postMessage({
+            command: 'openFile', filePath: 'src/main/java/com/example/demo/service/TodoService.java', line: 34
+        });
+        await new Promise(resolve => setTimeout(resolve, 50));
+        const realCells = real.highlightedCells().filter(c => typeof c.innerHTML === 'string');
+        const expectedLines = sourceText.split(/\r?\n/).length;
+        check('a real Java file highlights every line',
+            realCells.length === expectedLines, `${realCells.length} vs ${expectedLines}`);
+        const joined = realCells.map(c => c.innerHTML).join('\n');
+        check('real output carries hljs token classes',
+            /hljs-keyword/.test(joined) && /hljs-comment/.test(joined),
+            joined.slice(0, 120));
+        // The sample file has no Javadoc block, so exercise a multi-line comment
+        // explicitly against the real grammar.
+        const javadoc = [
+            '/**',
+            ' * first line',
+            ' * second line',
+            ' */',
+            'public class A {}'
+        ].join('\n');
+        const blockBridge = loadBridge({ openFileMode: 'panel' },
+            { realHljs: hljsBundle, fileText: javadoc });
+        blockBridge.sandbox.acquireVsCodeApi().postMessage({
+            command: 'openFile', filePath: 'A.java', line: 1
+        });
+        await new Promise(resolve => setTimeout(resolve, 20));
+        const blockCells = blockBridge.highlightedCells().filter(c => typeof c.innerHTML === 'string');
+        const commentLines = blockCells.filter(c => /hljs-comment/.test(c.innerHTML)).length;
+        check('a multi-line comment keeps its colour on every one of its lines',
+            commentLines === 4, `${commentLines}/4 lines`);
+        check('code after the comment is highlighted as code, not comment',
+            blockCells[4] && /hljs-keyword/.test(blockCells[4].innerHTML)
+            && !/hljs-comment/.test(blockCells[4].innerHTML),
+            blockCells[4] && blockCells[4].innerHTML);
+    } else {
+        check('real highlight.js fixture available', false, 'bundle or sample source missing');
+    }
+
+    // Unknown extension -> plaintext, never a thrown-away render.
+    const plain = loadBridge({ openFileMode: 'panel' });
+    plain.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'notes.rb', line: 1 });
+    await new Promise(resolve => setTimeout(resolve, 10));
+    check('an unregistered language falls back to plaintext',
+        plain.calls.highlighted && plain.calls.highlighted.language === 'plaintext',
+        String(plain.calls.highlighted && plain.calls.highlighted.language));
+}
+
 async function main() {
     testGlob();
     testConfig();
     testBridgeKeys();
+    await testFilePanelRendering();
 
     if (!fs.existsSync(TARGET_FILE)) {
         console.log(`\nSKIP host tests: ${TARGET_FILE} not found`);

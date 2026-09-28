@@ -172,7 +172,10 @@
         header.appendChild(close);
 
         var body = document.createElement('div');
-        body.setAttribute('style', 'flex:1 1 auto;overflow:auto;padding:8px 0');
+        // viewer.css scopes every .hljs-* colour under .code-area, so reuse that class
+        // to get exactly the same palette as the canvas windows.
+        body.className = 'code-area';
+        body.setAttribute('style', 'flex:1 1 auto;overflow:auto;padding:8px 0;height:auto');
 
         var grip = document.createElement('div');
         grip.setAttribute('style', [
@@ -216,14 +219,86 @@
         }
     }
 
-    function languageClass(path) {
+    // The viewer ships a custom highlight.js bundle with java / javascript /
+    // typescript / xml only; anything else falls back to plaintext (which hljs core
+    // always provides). Same check viewer.js does before highlighting.
+    function languageFor(path) {
         var ext = String(path).toLowerCase().split('.').pop();
         var map = {
-            java: 'java', js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
-            ts: 'typescript', tsx: 'typescript', html: 'xml', jsp: 'xml', xml: 'xml',
-            json: 'json', css: 'css', md: 'markdown', sql: 'sql', py: 'python', sh: 'bash'
+            java: 'java',
+            js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
+            ts: 'typescript', tsx: 'typescript',
+            html: 'xml', htm: 'xml', jsp: 'xml', xml: 'xml', xsd: 'xml'
         };
-        return map[ext] || 'plaintext';
+        var lang = map[ext] || 'plaintext';
+        if (window.hljs && typeof window.hljs.getLanguage === 'function') {
+            return window.hljs.getLanguage(lang) ? lang : 'plaintext';
+        }
+        return lang;
+    }
+
+    /**
+     * Split highlighted HTML into one string per source line, closing and
+     * re-opening the spans that straddle a newline (block comments, strings).
+     * Highlighting line by line would break exactly those.
+     */
+    function splitHighlightedLines(html) {
+        var lines = [];
+        var open = [];
+        var buffer = '';
+        var i = 0;
+        while (i < html.length) {
+            var c = html.charAt(i);
+            if (c === '<') {
+                var end = html.indexOf('>', i);
+                if (end < 0) {
+                    buffer += html.slice(i);
+                    break;
+                }
+                var tag = html.slice(i, end + 1);
+                if (tag.charAt(1) === '/') {
+                    open.pop();
+                } else if (tag.charAt(tag.length - 2) !== '/') {
+                    open.push(tag);
+                }
+                buffer += tag;
+                i = end + 1;
+            } else if (c === '\n') {
+                for (var n = 0; n < open.length; n++) { buffer += '</span>'; }
+                lines.push(buffer);
+                buffer = open.join('');
+                i += 1;
+            } else {
+                var nextTag = html.indexOf('<', i);
+                var nextNl = html.indexOf('\n', i);
+                var stop = Math.min(
+                    nextTag < 0 ? html.length : nextTag,
+                    nextNl < 0 ? html.length : nextNl
+                );
+                buffer += html.slice(i, stop);
+                i = stop;
+            }
+        }
+        lines.push(buffer);
+        return lines;
+    }
+
+    /** Highlighted HTML per line, or null to render plain text. */
+    function highlightLines(text, path) {
+        if (!window.hljs || typeof window.hljs.highlight !== 'function') {
+            return null;
+        }
+        try {
+            var result = window.hljs.highlight(String(text), {
+                language: languageFor(path),
+                ignoreIllegals: true
+            });
+            var split = splitHighlightedLines(result.value);
+            // If the split did not line up, fall back rather than garble the file.
+            return split.length === String(text).split(/\r?\n/).length ? split : null;
+        } catch (e) {
+            return null;
+        }
     }
 
     /** Render the file with the target line highlighted and scrolled into view. */
@@ -235,6 +310,7 @@
         parts.body.textContent = '';
 
         var lines = String(data.text).split(/\r?\n/);
+        var highlighted = highlightLines(data.text, data.relPath || data.path);
         var table = document.createElement('div');
         table.setAttribute('style', 'display:table;width:100%;border-collapse:collapse');
         var target = null;
@@ -257,14 +333,10 @@
 
             var code = document.createElement('span');
             code.setAttribute('style', 'display:table-cell;white-space:pre-wrap;word-break:break-word;padding-right:10px');
-            code.textContent = text;
-            if (window.hljs && typeof window.hljs.highlight === 'function') {
-                try {
-                    code.innerHTML = window.hljs.highlight(text, {
-                        language: languageClass(data.relPath || data.path),
-                        ignoreIllegals: true
-                    }).value;
-                } catch (e) { /* keep the plain text */ }
+            if (highlighted) {
+                code.innerHTML = highlighted[index];
+            } else {
+                code.textContent = text;
             }
             row.appendChild(code);
 
