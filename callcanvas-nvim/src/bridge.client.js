@@ -35,6 +35,18 @@
     window.acquireVsCodeApi = function () {
         return {
             postMessage: function (message) {
+                // A double-click on a window title asks the host to open the file. In a
+                // browser there is no editor pane, so also (or instead) show the file
+                // here — see callcanvas.openFileMode.
+                if (message && message.command === 'openFile') {
+                    var mode = SETTINGS.openFileMode || 'both';
+                    if (mode !== 'nvim') {
+                        showFile(message.filePath, message.line);
+                    }
+                    if (mode === 'panel') {
+                        return;
+                    }
+                }
                 // canvasId keeps several open canvases apart on the host side.
                 post('/api/message', { message: message, canvasId: CANVAS_ID });
             },
@@ -119,6 +131,210 @@
         post('/api/ui-reply', { id: request.id, value: value });
     }
 
+    // --- file panel ---------------------------------------------------------
+    // A devtools-style pane on the right showing the whole file, with the target
+    // line highlighted. viewer.js only ever shows the analysed fragment, and in a
+    // browser there is no editor to fall back on.
+    var filePanel = null;
+    var filePanelParts = null;
+
+    function buildFilePanel() {
+        var panel = document.createElement('div');
+        panel.setAttribute('style', [
+            'position:fixed', 'top:0', 'right:0', 'bottom:0', 'width:46vw', 'min-width:320px',
+            'z-index:99997', 'display:none', 'flex-direction:column',
+            'background:#1e1e1e', 'color:#d4d4d4', 'border-left:1px solid #444',
+            'box-shadow:-4px 0 16px rgba(0,0,0,0.45)', 'font:12px/1.5 ui-monospace,Menlo,Consolas,monospace'
+        ].join(';'));
+
+        var header = document.createElement('div');
+        header.setAttribute('style', [
+            'flex:0 0 auto', 'display:flex', 'align-items:center', 'gap:8px',
+            'padding:6px 10px', 'background:#252526', 'border-bottom:1px solid #444',
+            'font:12px/1.6 sans-serif'
+        ].join(';'));
+
+        var title = document.createElement('span');
+        title.setAttribute('style', 'flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap');
+        header.appendChild(title);
+
+        var openInNvim = document.createElement('a');
+        openInNvim.href = '#';
+        openInNvim.textContent = 'open in Neovim';
+        openInNvim.setAttribute('style', 'color:#7fb9ff;text-decoration:none;flex:0 0 auto');
+        header.appendChild(openInNvim);
+
+        var close = document.createElement('a');
+        close.href = '#';
+        close.textContent = '✕';
+        close.title = 'close (Esc)';
+        close.setAttribute('style', 'color:#ddd;text-decoration:none;flex:0 0 auto;padding:0 2px');
+        header.appendChild(close);
+
+        var body = document.createElement('div');
+        body.setAttribute('style', 'flex:1 1 auto;overflow:auto;padding:8px 0');
+
+        var grip = document.createElement('div');
+        grip.setAttribute('style', [
+            'position:absolute', 'left:-3px', 'top:0', 'bottom:0', 'width:6px',
+            'cursor:col-resize'
+        ].join(';'));
+
+        panel.appendChild(grip);
+        panel.appendChild(header);
+        panel.appendChild(body);
+        (document.body || document.documentElement).appendChild(panel);
+
+        close.addEventListener('click', function (e) {
+            e.preventDefault();
+            hideFile();
+        });
+
+        // Drag the left edge to resize.
+        grip.addEventListener('mousedown', function (down) {
+            down.preventDefault();
+            var move = function (e) {
+                var width = Math.min(Math.max(window.innerWidth - e.clientX, 280), window.innerWidth - 120);
+                panel.style.width = width + 'px';
+            };
+            var up = function () {
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup', up);
+            };
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup', up);
+        });
+
+        filePanel = panel;
+        filePanelParts = { title: title, body: body, openInNvim: openInNvim, current: null };
+        return filePanelParts;
+    }
+
+    function hideFile() {
+        if (filePanel) {
+            filePanel.style.display = 'none';
+        }
+    }
+
+    function languageClass(path) {
+        var ext = String(path).toLowerCase().split('.').pop();
+        var map = {
+            java: 'java', js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
+            ts: 'typescript', tsx: 'typescript', html: 'xml', jsp: 'xml', xml: 'xml',
+            json: 'json', css: 'css', md: 'markdown', sql: 'sql', py: 'python', sh: 'bash'
+        };
+        return map[ext] || 'plaintext';
+    }
+
+    /** Render the file with the target line highlighted and scrolled into view. */
+    function renderFile(data) {
+        var parts = filePanelParts || buildFilePanel();
+        parts.current = { path: data.relPath || data.path, line: data.line };
+        parts.title.textContent = (data.relPath || data.path) + ':' + data.line;
+        parts.title.title = data.path;
+        parts.body.textContent = '';
+
+        var lines = String(data.text).split(/\r?\n/);
+        var table = document.createElement('div');
+        table.setAttribute('style', 'display:table;width:100%;border-collapse:collapse');
+        var target = null;
+        var gutterWidth = String(lines.length).length;
+
+        lines.forEach(function (text, index) {
+            var nr = index + 1;
+            var row = document.createElement('div');
+            row.setAttribute('style', 'display:table-row'
+                + (nr === data.line ? ';background:#3a3d41' : ''));
+
+            var gutter = document.createElement('span');
+            gutter.setAttribute('style', [
+                'display:table-cell', 'text-align:right', 'padding:0 8px',
+                'color:' + (nr === data.line ? '#ffd479' : '#6b6b6b'),
+                'user-select:none', 'width:' + (gutterWidth + 1) + 'ch', 'vertical-align:top'
+            ].join(';'));
+            gutter.textContent = String(nr);
+            row.appendChild(gutter);
+
+            var code = document.createElement('span');
+            code.setAttribute('style', 'display:table-cell;white-space:pre-wrap;word-break:break-word;padding-right:10px');
+            code.textContent = text;
+            if (window.hljs && typeof window.hljs.highlight === 'function') {
+                try {
+                    code.innerHTML = window.hljs.highlight(text, {
+                        language: languageClass(data.relPath || data.path),
+                        ignoreIllegals: true
+                    }).value;
+                } catch (e) { /* keep the plain text */ }
+            }
+            row.appendChild(code);
+
+            // Clicking a line jumps Neovim there.
+            row.addEventListener('dblclick', function () {
+                post('/api/message', {
+                    canvasId: CANVAS_ID,
+                    message: { command: 'openFile', filePath: data.path, line: nr }
+                });
+            });
+
+            if (nr === data.line) { target = row; }
+            table.appendChild(row);
+        });
+
+        parts.body.appendChild(table);
+        filePanel.style.display = 'flex';
+        if (target && target.scrollIntoView) {
+            target.scrollIntoView({ block: 'center' });
+        }
+
+        parts.openInNvim.onclick = function (e) {
+            e.preventDefault();
+            post('/api/message', {
+                canvasId: CANVAS_ID,
+                message: { command: 'openFile', filePath: data.path, line: data.line }
+            });
+        };
+    }
+
+    function showFile(filePath, line) {
+        if (!filePath) { return; }
+        if (!filePanelParts) { buildFilePanel(); }
+        filePanelParts.title.textContent = 'loading ' + filePath + ' …';
+        filePanel.style.display = 'flex';
+        fetch(url('/api/file') + '&p=' + encodeURIComponent(filePath) + '&line=' + (line || 1))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data && data.ok) {
+                    renderFile(data);
+                } else {
+                    filePanelParts.title.textContent = 'could not read ' + filePath;
+                    toast((data && data.error) || 'could not read the file', 'error');
+                }
+            })
+            .catch(function (err) {
+                filePanelParts.title.textContent = 'could not read ' + filePath;
+                toast('could not read the file: ' + err, 'error');
+            });
+    }
+
+    // The window title text (.file-path) is the only element viewer.js binds a
+    // double-click to. Make the whole title bar work, which is what people aim at.
+    document.addEventListener('dblclick', function (e) {
+        if (!e.target || !e.target.closest) { return; }
+        if (e.target.closest('.file-path')) { return; }   // viewer.js handles that one
+        var titleBar = e.target.closest('.title-bar');
+        if (!titleBar) { return; }
+        var pathElement = titleBar.querySelector('.file-path');
+        if (!pathElement) { return; }
+        var filePath = pathElement.getAttribute('data-filepath');
+        var line = parseInt(pathElement.getAttribute('data-line'), 10) || 1;
+        if (!filePath) { return; }
+        var mode = SETTINGS.openFileMode || 'both';
+        if (mode !== 'nvim') { showFile(filePath, line); }
+        if (mode !== 'panel') {
+            post('/api/message', { canvasId: CANVAS_ID, message: { command: 'openFile', filePath: filePath, line: line } });
+        }
+    }, true);
+
     // --- keyboard: jump back ------------------------------------------------
     // The VSIX binds `callcanvas.jumpBack` to alt+left via VS Code's keybinding
     // layer; in a browser nothing is bound and alt+left is the browser's Back
@@ -160,6 +376,11 @@
 
     document.addEventListener('keydown', function (e) {
         if (isTyping(e.target)) { return; }
+        if (e.key === 'Escape' && filePanel && filePanel.style.display !== 'none') {
+            hideFile();
+            e.stopPropagation();
+            return;
+        }
         var binding = keyBinding(e);
         var isJumpBack = binding === JUMP_BACK_KEY
             || (SETTINGS.interceptBrowserBack !== false && BACK_ALIASES.indexOf(binding) >= 0);

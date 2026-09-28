@@ -276,7 +276,7 @@ function createVscodeShim(host) {
                     const line = options.selection && options.selection.start
                         ? options.selection.start.line + 1
                         : 1;
-                    await host.nvim.jump(uri.fsPath, line);
+                    await jumpAndReport(uri.fsPath, line);
                     return undefined;
                 }
                 if (id === 'setContext' || id === 'workbench.action.closeActiveEditor') {
@@ -458,7 +458,7 @@ function createVscodeShim(host) {
                 const line = options.selection && options.selection.start
                     ? options.selection.start.line + 1
                     : 1;
-                await host.nvim.jump(fsPath, line);
+                await jumpAndReport(fsPath, line);
                 return makeEditor(fsPath, line);
             },
 
@@ -495,6 +495,20 @@ function createVscodeShim(host) {
             }
         }
     };
+
+    /**
+     * A failed jump used to be logged and nothing else, which looks like "the
+     * double-click does nothing". Tell the browser instead.
+     */
+    async function jumpAndReport(fsPath, line) {
+        const result = await host.nvim.jump(fsPath, line);
+        if (result && result.ok) {
+            return true;
+        }
+        const reason = (result && result.error) || 'unknown error';
+        host.ui.message('error', `Neovim へのジャンプに失敗: ${reason}`, []);
+        return false;
+    }
 
     function flattenItems(items) {
         const flat = [];

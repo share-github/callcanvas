@@ -175,11 +175,16 @@ class CallCanvasHost {
                 // layer, which does not exist in a browser — and alt+left is the
                 // browser's own Back. The bridge binds these instead.
                 jumpBackKey: this.config.lookup('callcanvas.jumpBackKey', 'shift+o'),
+                // What a double-click on a window title does in the browser:
+                // 'both' (default) = jump in Neovim AND show the file in a side panel,
+                // 'nvim' = jump only, 'panel' = side panel only.
+                openFileMode: this.config.lookup('callcanvas.openFileMode', 'both'),
                 // Also answer alt+left (and cmd/ctrl+[) with jump-back instead of
                 // letting the browser navigate away from the canvas.
                 interceptBrowserBack: this.config.lookup('callcanvas.interceptBrowserBack', true) !== false
             },
             assetRoots: Object.values(this.extensionDirs),
+            fileRoot: this.projectRoot,
             log: this.log,
             handlers: {
                 onMessage: (message, canvasId) => this.onBrowserMessage(message, canvasId),

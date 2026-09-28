@@ -261,8 +261,16 @@ function loadBridge(settings) {
         clearTimeout,
         setInterval: () => 0,
         clearInterval: () => {},
-        fetch: (u) => {
+        fetch: (u, init) => {
             calls.fetched.push(u);
+            if (String(u).includes('/api/file')) {
+                return Promise.resolve({
+                    json: () => Promise.resolve({
+                        ok: true, path: '/abs/src/A.java', relPath: 'src/A.java', line: 12,
+                        text: 'line1\nline2\nline3'
+                    })
+                });
+            }
             return Promise.resolve({ json: () => Promise.resolve({ canvases: [] }) });
         },
         EventSource: function () {
@@ -271,6 +279,7 @@ function loadBridge(settings) {
         },
         sessionStorage: { getItem: () => null, setItem: () => {} },
         location: { reload: () => {} },
+        innerWidth: 1400,
         document: {
             readyState: 'complete',
             addEventListener: (type, fn, capture) => handlers.push({ type, fn, capture }),
@@ -308,7 +317,11 @@ function loadBridge(settings) {
         }, event));
         return prevented;
     };
-    return { sandbox, calls, keydown, press, clickAll, badge: () => lastBadge };
+    const dblclickHandler = handlers.find(h => h.type === 'dblclick');
+    const dblclick = (target) => {
+        dblclickHandler.fn(Object.assign({ target }, { target }));
+    };
+    return { sandbox, calls, keydown, press, clickAll, dblclick, badge: () => lastBadge };
 }
 
 function testBridgeKeys() {
@@ -342,6 +355,50 @@ function testBridgeKeys() {
     check('typing in a textarea is not hijacked', bridge.calls.jumpBack === 3);
     bridge.press({ key: 'O', shiftKey: true, target: { tagName: 'DIV', isContentEditable: true } });
     check('contenteditable is not hijacked', bridge.calls.jumpBack === 3);
+
+    section('browser bridge: file panel (double-click on a window title)');
+    const fileBridge = loadBridge({ openFileMode: 'both' });
+    const api = fileBridge.sandbox.acquireVsCodeApi();
+    api.postMessage({ command: 'openFile', filePath: 'src/A.java', line: 12 });
+    check('openFile is forwarded to the host (Neovim jump)',
+        fileBridge.calls.fetched.some(u => String(u).startsWith('/api/message')),
+        fileBridge.calls.fetched.join(' '));
+    check('openFile also asks the host for the file text',
+        fileBridge.calls.fetched.some(u => String(u).includes('/api/file') && u.includes('src%2FA.java')),
+        fileBridge.calls.fetched.join(' '));
+
+    const panelOnly = loadBridge({ openFileMode: 'panel' });
+    panelOnly.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 3 });
+    check("openFileMode='panel' does not disturb Neovim",
+        panelOnly.calls.fetched.some(u => String(u).includes('/api/file'))
+        && !panelOnly.calls.fetched.some(u => String(u).startsWith('/api/message')),
+        panelOnly.calls.fetched.join(' '));
+
+    const nvimOnly = loadBridge({ openFileMode: 'nvim' });
+    nvimOnly.sandbox.acquireVsCodeApi().postMessage({ command: 'openFile', filePath: 'src/A.java', line: 3 });
+    check("openFileMode='nvim' keeps the old behaviour",
+        !nvimOnly.calls.fetched.some(u => String(u).includes('/api/file'))
+        && nvimOnly.calls.fetched.some(u => String(u).startsWith('/api/message')));
+
+    // The whole title bar must respond, not just the .file-path text.
+    const barBridge = loadBridge({ openFileMode: 'both' });
+    const pathEl = {
+        getAttribute: (name) => ({ 'data-filepath': 'src/B.java', 'data-line': '42' }[name])
+    };
+    const titleBar = { querySelector: () => pathEl };
+    barBridge.dblclick({
+        closest: (sel) => (sel === '.title-bar' ? titleBar : null),
+        target: null
+    });
+    check('a double-click anywhere on the title bar opens the file',
+        barBridge.calls.fetched.some(u => String(u).includes('/api/file') && u.includes('src%2FB.java')),
+        barBridge.calls.fetched.join(' '));
+    const onPathText = loadBridge({ openFileMode: 'both' });
+    onPathText.dblclick({
+        closest: (sel) => (sel === '.file-path' ? pathEl : (sel === '.title-bar' ? titleBar : null))
+    });
+    check('viewer.js keeps owning the .file-path double-click (no double fire)',
+        onPathText.calls.fetched.length === 0, onPathText.calls.fetched.join(' '));
 
     const custom = loadBridge({ jumpBackKey: 'shift+u', interceptBrowserBack: false });
     custom.press({ key: 'U', shiftKey: true });
@@ -481,6 +538,40 @@ async function main() {
         }
 
         // saveData writes the canvas JSON the viewer was opened from.
+        section('/api/file: the in-page file viewer');
+        const fileApi = await get(base,
+            `/api/file?t=${token}&p=${encodeURIComponent('src/main/java/com/example/demo/service/TodoService.java')}&line=34`);
+        const filePayload = JSON.parse(fileApi.body);
+        check('a relative path (what the viewer sends) resolves',
+            fileApi.status === 200 && filePayload.ok === true, fileApi.body.slice(0, 120));
+        check('the whole file comes back',
+            filePayload.text.split('\n').length > 100,
+            String(filePayload.text.split('\n').length));
+        check('the requested line is reported', filePayload.line === 34);
+        for (const bad of ['/etc/passwd', '../../../etc/passwd', 'src/../../../etc/passwd']) {
+            const denied = await get(base, `/api/file?t=${token}&p=${encodeURIComponent(bad)}`);
+            check(`a path outside the project is refused (${bad})`, denied.status === 404,
+                String(denied.status));
+        }
+        check('/api/file needs the token',
+            (await get(base, '/api/file?p=src/x.java')).status === 403);
+
+        section('a failed Neovim jump is reported to the browser');
+        // No Neovim address is configured in this test, so the jump must fail loudly.
+        const jumpToast = stream.wait(e => e.kind === 'toast' && e.level === 'error');
+        await post(base, token, '/api/message', {
+            canvasId: firstCanvasId,
+            message: {
+                command: 'openFile',
+                filePath: 'src/main/java/com/example/demo/service/TodoService.java',
+                line: 34
+            }
+        });
+        const toastEvent = await jumpToast;
+        check('the browser is told why the jump failed',
+            /ジャンプに失敗/.test(toastEvent.text) && /Neovim address/.test(toastEvent.text),
+            toastEvent.text);
+
         section('the first visit uses a short, typable URL');
         const shortUrl = opened.shortUrl;
         check('open() returns a short unlock URL', !!shortUrl, String(shortUrl));

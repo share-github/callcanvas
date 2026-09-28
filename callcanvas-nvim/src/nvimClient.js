@@ -66,6 +66,11 @@ class NvimClient {
      */
     async jump(file, line) {
         const lineNr = Math.max(1, Number(line) || 1);
+        if (!this.address) {
+            const error = 'no Neovim address — run :CallCanvas once from the Neovim you want to jump in';
+            this.log(`nvim jump skipped: ${error}`);
+            return { ok: false, error };
+        }
         const expr = `CallCanvasNvimJump(${vimStr(file)}, ${lineNr})`;
         let result = await this.run(['--remote-expr', expr]);
         if (!result.ok) {
@@ -75,8 +80,9 @@ class NvimClient {
         }
         if (!result.ok) {
             this.log(`nvim jump failed: ${result.error}`);
+            return { ok: false, error: result.error };
         }
-        return result.ok;
+        return { ok: true };
     }
 
     /** Show a message in the launching Neovim (used for host-side notifications). */

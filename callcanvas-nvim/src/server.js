@@ -66,6 +66,7 @@ class ViewerServer {
      * @param {boolean} [options.auth]         false disables the token check
      * @param {object} [options.bridgeSettings] values the browser-side bridge needs
      *                                          (browser key bindings, …)
+     * @param {string} [options.fileRoot]       project root that /api/file may read from
      */
     constructor(options) {
         this.bindHost = options.host || '127.0.0.1';
@@ -76,6 +77,7 @@ class ViewerServer {
         this.token = options.token || crypto.randomBytes(24).toString('hex');
         this.authEnabled = options.auth !== false;
         this.bridgeSettings = options.bridgeSettings || {};
+        this.fileRoot = options.fileRoot ? path.resolve(options.fileRoot) : null;
 
         /** @type {Map<string, {id: string, html: string, title: string, jsonPath: string, pending: object[], updatedAt: number}>} */
         this.canvases = new Map();
@@ -396,6 +398,9 @@ class ViewerServer {
             case '/api/events':
                 this.serveEvents(req, res, parsed);
                 return;
+            case '/api/file':
+                this.serveSourceFile(res, parsed.searchParams.get('p'), parsed.searchParams.get('line'));
+                return;
             case '/api/canvases':
                 this.json(res, 200, { ok: true, latest: this.latestId, canvases: this.canvasSummaries() });
                 return;
@@ -551,6 +556,105 @@ class ViewerServer {
             + `<h1>Open canvases</h1><ul>${rows || '<li>none</li>'}</ul>`
             + `<p><a href="/?t=${this.token}">newest canvas</a></p>`
         );
+    }
+
+    /**
+     * Source text for the in-page file viewer.
+     *
+     * Confined to the project root: a relative path is resolved there, and an
+     * absolute path is rejected unless it lives inside it. Nothing else on the
+     * machine is readable through this endpoint.
+     */
+    serveSourceFile(res, rawPath, rawLine) {
+        if (!rawPath) {
+            this.json(res, 400, { ok: false, error: 'missing p' });
+            return;
+        }
+        if (!this.fileRoot) {
+            this.json(res, 503, { ok: false, error: 'no project root configured' });
+            return;
+        }
+        const resolved = this.resolveInProject(String(rawPath));
+        if (!resolved) {
+            this.log(`file denied or not found: ${rawPath}`);
+            this.json(res, 404, { ok: false, error: `not found in the project: ${rawPath}` });
+            return;
+        }
+        let stat;
+        try {
+            stat = fs.statSync(resolved);
+        } catch {
+            this.json(res, 404, { ok: false, error: 'not found' });
+            return;
+        }
+        const MAX_BYTES = 4 * 1024 * 1024;
+        if (!stat.isFile()) {
+            this.json(res, 404, { ok: false, error: 'not a file' });
+            return;
+        }
+        if (stat.size > MAX_BYTES) {
+            this.json(res, 413, { ok: false, error: `file is larger than ${MAX_BYTES} bytes` });
+            return;
+        }
+        let text;
+        try {
+            text = fs.readFileSync(resolved, 'utf8');
+        } catch (error) {
+            this.json(res, 500, { ok: false, error: String(error.message || error) });
+            return;
+        }
+        const line = Math.max(1, parseInt(rawLine, 10) || 1);
+        this.json(res, 200, {
+            ok: true,
+            path: resolved,
+            relPath: path.relative(this.fileRoot, resolved),
+            line,
+            text
+        });
+    }
+
+    /** Find `candidate` inside the project root, or null. */
+    resolveInProject(candidate) {
+        const inside = (target) => target === this.fileRoot || target.startsWith(this.fileRoot + path.sep);
+
+        if (path.isAbsolute(candidate)) {
+            const target = path.resolve(candidate);
+            return inside(target) && fs.existsSync(target) ? target : null;
+        }
+        const direct = path.resolve(this.fileRoot, candidate);
+        if (inside(direct) && fs.existsSync(direct)) {
+            return direct;
+        }
+        // Multi-module layouts hand out module-relative paths; look for a suffix match.
+        const wanted = candidate.replace(/\\/g, '/');
+        const found = [];
+        const walk = (dir, depth) => {
+            if (found.length > 0 || depth > 10) {
+                return;
+            }
+            let entries;
+            try {
+                entries = fs.readdirSync(dir, { withFileTypes: true });
+            } catch {
+                return;
+            }
+            for (const entry of entries) {
+                if (found.length > 0) {
+                    return;
+                }
+                const full = path.join(dir, entry.name);
+                if (entry.isDirectory()) {
+                    if (['.git', 'node_modules', '.gradle', 'out', 'dist'].includes(entry.name)) {
+                        continue;
+                    }
+                    walk(full, depth + 1);
+                } else if (full.replace(/\\/g, '/').endsWith('/' + wanted)) {
+                    found.push(full);
+                }
+            }
+        };
+        walk(this.fileRoot, 0);
+        return found[0] || null;
     }
 
     serveFile(res, filePath) {

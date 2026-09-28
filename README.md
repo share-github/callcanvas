@@ -180,7 +180,7 @@ done
 
 | キー | 動作 |
 |---|---|
-| ウィンドウをダブルクリック | Neovim 側でソースの該当行を開く |
+| タイトルバーをダブルクリック | **右サイドパネルにファイル全文を表示**（該当行をハイライト・自動スクロール）し、Neovim 側でも該当行を開く。パネルは左端ドラッグで幅変更、`Esc` で閉じる。パネル内の行をダブルクリックすると Neovim がその行へ移動する |
 | `callcanvas.jumpToCallTargetKey`（例 `shift+b`） | 呼び出し先へジャンプ。既定の `f12` はブラウザが DevTools に使うため変更推奨 |
 | `shift+o` / `alt+←` | ジャンプ履歴を戻る（VS Code 版の `alt+←` はブラウザの「戻る」と衝突するため、`shift+o` を既定にしている） |
 
@@ -190,12 +190,24 @@ done
 上位ディレクトリをリポジトリルートまで遡る。コメント付き JSON 可）。上の「設定キー」の表が
 そのまま効くので、VS Code 版と設定を共用できる。
 
-ブラウザ専用のキーは VS Code が知らない設定なので、`<プロジェクト>/.callcanvas/config.json`
+ブラウザ専用の設定は VS Code が知らないキーなので、`<プロジェクト>/.callcanvas/config.json`
 に置く:
 
 ```json
-{ "callcanvas": { "jumpBackKey": "shift+o", "interceptBrowserBack": true } }
+{
+  "callcanvas": {
+    "openFileMode": "both",
+    "jumpBackKey": "shift+o",
+    "interceptBrowserBack": true
+  }
+}
 ```
+
+| キー | 既定 | 意味 |
+|---|---|---|
+| `callcanvas.openFileMode` | `"both"` | タイトルバーのダブルクリック時の動作。`both` = ファイルパネル＋Neovim ジャンプ、`panel` = パネルのみ、`nvim` = ジャンプのみ |
+| `callcanvas.jumpBackKey` | `"shift+o"` | ジャンプ履歴を戻るキー |
+| `callcanvas.interceptBrowserBack` | `true` | `alt+←` / `⌘←` をブラウザの「戻る」ではなくジャンプ履歴に割り当てる |
 
 ### 動作の要点
 
@@ -203,6 +215,7 @@ done
   静的配信は拡張のディレクトリ配下に限定
 - ブラウザを全部閉じてから既定 300 秒（`idle_timeout`）で自動終了する。常駐しない
 - 解析対象はディスク上のファイル。未保存バッファは反映されない
+- ファイルパネルが読むソースはプロジェクトルート配下に限定される（外は 404）
 
 ## AI エージェント向けの導入手順まとめ
 
