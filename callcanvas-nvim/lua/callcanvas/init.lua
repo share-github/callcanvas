@@ -319,6 +319,56 @@ function M.stop()
   end)
 end
 
+--- Build the Java call index for this project.
+---
+--- The index is what makes incoming-call analysis (and class-level export) fast.
+--- The Java extension builds it in the background when an analysis needs it; this is
+--- the explicit "build it now" route, for when you would rather wait once than have
+--- the first analysis be slow. Java only — JS/TS analysis uses no index.
+---
+--- It runs for minutes on a large project, so it is fire-and-forget: the host keeps
+--- building even if the browser is closed, and the result arrives as a notification.
+function M.build_index(opts)
+  opts = opts or {}
+  local args = { M.config.node, cli_path(), 'build-index' }
+  local file = opts.file or vim.api.nvim_buf_get_name(0)
+  if file ~= '' then
+    -- The project is resolved from this file, which also skips the
+    -- "which project?" prompt when the buffer is a Java file.
+    table.insert(args, '--file')
+    table.insert(args, file)
+  end
+  -- Deliberately no --host/--port: when a host is already running this goes through
+  -- it, and otherwise the CLI starts a throwaway one that nothing has to reach from a
+  -- browser. Pinning it to the configured port (7333 in the LazyVim spec) would fail
+  -- with EADDRINUSE whenever another project's host holds it.
+
+  notify('building the call index — this can take several minutes ...')
+
+  vim.system(args, { text = true }, function(result)
+    vim.schedule(function()
+      -- The extensions print to stdout while activating, so the JSON result is the
+      -- LAST line, not the whole output.
+      local last = ''
+      for line in (result.stdout or ''):gmatch('[^\r\n]+') do
+        last = line
+      end
+      local ok, payload = pcall(vim.json.decode, last)
+      if result.code == 0 and (not ok or type(payload) ~= 'table' or payload.ok ~= false) then
+        -- The extension's own toast reaches Neovim only while no browser tab is
+        -- attached (otherwise it goes to the tab), so say it here as well: this is
+        -- the only signal that the wait is over.
+        notify('call index built')
+        return
+      end
+      local err = (ok and type(payload) == 'table' and payload.error)
+        or (result.stderr or ''):gsub('%s+$', '')
+      notify('building the call index failed: '
+        .. (err ~= '' and err or ('exit ' .. result.code)), vim.log.levels.ERROR)
+    end)
+  end)
+end
+
 --- Print host status.
 function M.status()
   local args = { M.config.node, cli_path(), 'status' }
@@ -465,6 +515,27 @@ end
 
 --- Called by the host when it needs a value typed by the user.
 --- Runs inside a synchronous --remote-expr call, so input() blocks until answered.
+--- Answer a host-side QuickPick ("which project?" when the call index is built
+--- without a Java buffer open) inside Neovim.
+--- @return number 0-based choice, -1 when nobody can be asked (headless), -2 = cancelled
+function M.select_remote(prompt, items)
+  items = items or {}
+  -- No UI attached (headless, or a detached host with nobody watching): there is no
+  -- one to ask, so let the host fall back instead of blocking on input.
+  if #vim.api.nvim_list_uis() == 0 or #items == 0 then
+    return -1
+  end
+  local lines = { prompt ~= '' and prompt or 'Select' }
+  for index, item in ipairs(items) do
+    table.insert(lines, index .. ': ' .. tostring(item))
+  end
+  local ok, choice = pcall(vim.fn.inputlist, lines)
+  if not ok or type(choice) ~= 'number' or choice < 1 or choice > #items then
+    return -2                                  -- cancelled (0 / Esc / out of range)
+  end
+  return choice - 1
+end
+
 function M.prompt(message, default_value)
   local ok, answer = pcall(vim.fn.input, message, default_value or '')
   if not ok then
@@ -498,6 +569,9 @@ function M.setup(opts)
     function! CallCanvasNvimInput(prompt, default) abort
       return luaeval("require('callcanvas').prompt(_A[1], _A[2])", [a:prompt, a:default])
     endfunction
+    function! CallCanvasNvimSelect(prompt, items) abort
+      return luaeval("require('callcanvas').select_remote(_A[1], _A[2])", [a:prompt, a:items])
+    endfunction
   ]])
 
   vim.api.nvim_create_user_command('CallCanvas', function()
@@ -519,6 +593,10 @@ function M.setup(opts)
   vim.api.nvim_create_user_command('CallCanvasStop', function()
     M.stop()
   end, { desc = 'CallCanvas: stop the viewer host for this project' })
+
+  vim.api.nvim_create_user_command('CallCanvasBuildIndex', function()
+    M.build_index()
+  end, { desc = 'CallCanvas: build the Java call index for this project' })
 
   vim.api.nvim_create_user_command('CallCanvasStatus', function()
     M.status()

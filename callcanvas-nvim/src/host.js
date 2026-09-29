@@ -27,6 +27,8 @@ const OPEN_COMMANDS = {
 };
 
 const BUILD_FILES = ['build.gradle', 'build.gradle.kts', 'pom.xml', 'settings.gradle', 'settings.gradle.kts', 'package.json'];
+/** A Java module is a directory with a Java build file — package.json does not count. */
+const JAVA_BUILD_FILES = ['pom.xml', 'build.gradle', 'build.gradle.kts'];
 
 /** Session lock files live outside the project so they never pollute the repo. */
 function sessionDir() {
@@ -79,23 +81,129 @@ function persistentToken(projectRoot) {
     return token;
 }
 
+/** Does this directory declare itself the root of a multi-module build? */
+function isAggregatorDir(dir) {
+    for (const name of ['settings.gradle', 'settings.gradle.kts']) {
+        try {
+            if (fs.readFileSync(path.join(dir, name), 'utf8').includes('include')) {
+                return true;
+            }
+        } catch { /* not there */ }
+    }
+    try {
+        // '<modules>' only: '<artifactId>module-core</artifactId>' is not an aggregator.
+        return fs.readFileSync(path.join(dir, 'pom.xml'), 'utf8').includes('<modules>');
+    } catch {
+        return false;
+    }
+}
+
+/** The text of a directory's Java build files, for spotting dependencies by name. */
+function buildFileText(dir) {
+    let text = '';
+    for (const name of JAVA_BUILD_FILES) {
+        try {
+            text += fs.readFileSync(path.join(dir, name), 'utf8');
+        } catch { /* not there */ }
+    }
+    return text;
+}
+
+/** Java modules beside `exclude` under `parent`. */
+function siblingModules(parent, exclude) {
+    let entries;
+    try {
+        entries = fs.readdirSync(parent, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+    return entries
+        .filter(entry => entry.isDirectory())
+        .map(entry => path.join(parent, entry.name))
+        .filter(sibling => sibling !== exclude
+            && JAVA_BUILD_FILES.some(f => fs.existsSync(path.join(sibling, f)))
+            && fs.existsSync(path.join(sibling, 'src', 'main', 'java')));
+}
+
+/** Is `name` mentioned as a whole name? "sample-app" must not match "sample-app-animal". */
+function namesModule(text, name) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(^|[^\\w-])${escaped}($|[^\\w-])`).test(text);
+}
+
+/**
+ * Do `module` and a sibling name each other in their build files?
+ *
+ * Without an aggregator file that dependency is the only thing that tells modules of
+ * one build (sample-cross-module-app: module-front depends on module-core) from
+ * unrelated projects that merely share a parent directory (sample-project/*, where
+ * widening would pull every sample app into one analysis).
+ */
+function modulesReferenceEachOther(parent, module) {
+    const siblings = siblingModules(parent, module);
+    if (siblings.length === 0) {
+        return false;
+    }
+    const ownText = buildFileText(module);
+    const ownName = path.basename(module);
+    return siblings.some(sibling => namesModule(ownText, path.basename(sibling))
+        || namesModule(buildFileText(sibling), ownName));
+}
+
+/**
+ * Climb from a module to the root of its multi-module build, mirroring the Java
+ * extension's own rules (an aggregator file, or modules side by side).
+ *
+ * This has to happen here: the extension only walks up as far as the workspace
+ * folder it is given, so handing it a submodule hides every other module —
+ * cross-module calls then resolve to nothing.
+ */
+function findMultiModuleRoot(module, gitRoot) {
+    // Only Java builds have modules. A package.json project must not be widened into
+    // the directory that happens to hold it (sample-project/sample-nextjs).
+    if (!JAVA_BUILD_FILES.some(f => fs.existsSync(path.join(module, f)))) {
+        return null;
+    }
+    const ceiling = gitRoot && module.startsWith(gitRoot) ? gitRoot : path.dirname(module);
+    let dir = module;
+    while (true) {
+        if (isAggregatorDir(dir)) {
+            return dir;
+        }
+        const parent = path.dirname(dir);
+        if (dir === ceiling || parent === dir) {
+            break;
+        }
+        dir = parent;
+    }
+    // No aggregator file, just modules in one directory (sample-cross-module-app).
+    // Never the repository root: that usually holds unrelated projects rather than
+    // modules, and grouping them would analyse (and index) the whole repo.
+    const parent = path.dirname(module);
+    if (parent !== module && parent !== gitRoot && modulesReferenceEachOther(parent, module)) {
+        return parent;
+    }
+    return null;
+}
+
 /**
  * Pick the workspace root the extensions should see.
  *
  * The nearest build file wins over the repository root: in a monorepo that keeps
- * the analysis (and `workspace.findFiles`) inside the project being analysed,
- * and the extensions expand it to the multi-module root by themselves when
- * needed. `--root` overrides this.
+ * the analysis (and `workspace.findFiles`) inside the project being analysed.
+ * A submodule is widened to its multi-module root, because that is the boundary
+ * the extension needs to see every module. `--root` overrides this.
  */
 function detectProjectRoot(startFile) {
     const resolved = path.resolve(startFile);
     let dir = fs.existsSync(resolved) && fs.statSync(resolved).isDirectory()
         ? resolved
         : path.dirname(resolved);
+    let nearest = null;
     let gitRoot = null;
     while (true) {
-        if (BUILD_FILES.some(f => fs.existsSync(path.join(dir, f)))) {
-            return dir;
+        if (!nearest && BUILD_FILES.some(f => fs.existsSync(path.join(dir, f)))) {
+            nearest = dir;
         }
         if (!gitRoot && fs.existsSync(path.join(dir, '.git'))) {
             gitRoot = dir;
@@ -106,7 +214,10 @@ function detectProjectRoot(startFile) {
         }
         dir = parent;
     }
-    return gitRoot || path.dirname(resolved);
+    if (!nearest) {
+        return gitRoot || path.dirname(resolved);
+    }
+    return findMultiModuleRoot(nearest, gitRoot) || nearest;
 }
 
 /** The viewer HTML carries the canvas JSON path — use it as the canvas identity. */
@@ -144,6 +255,11 @@ class CallCanvasHost {
         this.idleTimeoutMs = options.idleTimeoutMs === undefined ? 5 * 60 * 1000 : options.idleTimeoutMs;
         this.idleTimer = null;
         this.hadClient = false;
+        /**
+         * Commands in flight. `javaCallHierarchy.buildIndex` runs for minutes on a
+         * real project, so the idle shutdown must not fire in the middle of one.
+         */
+        this.runningCommands = 0;
         /** canvas id -> panel (several canvases can be open at once) */
         this.panels = new Map();
         /** panel -> canvas id */
@@ -306,10 +422,19 @@ class CallCanvasHost {
             this.nvim.setAddress(request.nvim);
         }
         const line = Math.max(1, Number(request.line) || 1);
-        this.shim.setActiveEditor(file, line);
+        // A directory is a legitimate anchor for `callcanvas command` / `build-index`
+        // run with no file (Neovim with no buffer open falls back to its cwd): the
+        // project is then resolved from the workspace, not from a caret. Making an
+        // editor out of it would only fail (EISDIR) before the command ever ran.
+        const isDirectory = fs.statSync(file).isDirectory();
+        if (isDirectory) {
+            this.shim.clearActiveEditor();
+        } else {
+            this.shim.setActiveEditor(file, line);
+        }
 
         const languageId = languageIdFor(file);
-        this.log(`open ${file}:${line} (${languageId})`);
+        this.log(`open ${file}:${line} (${isDirectory ? 'directory' : languageId})`);
 
         const generationBefore = this.panelGeneration;
         this.lastError = null;
@@ -318,6 +443,12 @@ class CallCanvasHost {
             // Explicit command form (`callcanvas command <id>`)
             if (request.command) {
                 const value = await this.runCommand(request.command, request.args, null);
+                // The extensions report problems through `showErrorMessage` and return
+                // normally (same as the analysis path, see openResult), so the toast is
+                // the only sign the command did not do its job.
+                if (this.lastError) {
+                    return { ok: false, error: this.lastError, url: this.url };
+                }
                 return { ok: true, value: value === undefined ? null : value, url: this.url };
             }
             if (file.endsWith('.json')) {
@@ -327,9 +458,14 @@ class CallCanvasHost {
                 );
                 return this.openResult(generationBefore);
             }
-            const command = OPEN_COMMANDS[languageId];
+            const command = isDirectory ? null : OPEN_COMMANDS[languageId];
             if (!command) {
-                return { ok: false, error: `unsupported file type: ${path.basename(file)}` };
+                return {
+                    ok: false,
+                    error: isDirectory
+                        ? `${file} is a directory — analysis needs a file and a line`
+                        : `unsupported file type: ${path.basename(file)}`
+                };
             }
             await this.shim.vscode.commands.executeCommand(command);
             return this.openResult(generationBefore);
@@ -385,7 +521,19 @@ class CallCanvasHost {
         if (context && context.nvim) {
             this.nvim.setAddress(context.nvim);
         }
-        return this.shim.vscode.commands.executeCommand(commandId, ...(args || []));
+        this.runningCommands++;
+        if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+            this.idleTimer = null;
+        }
+        try {
+            return await this.shim.vscode.commands.executeCommand(commandId, ...(args || []));
+        } finally {
+            this.runningCommands--;
+            if (this.server.clients.size === 0) {
+                this.scheduleIdleShutdown();
+            }
+        }
     }
 
     // --- webview plumbing --------------------------------------------------
@@ -601,6 +749,26 @@ class CallCanvasHost {
             });
         }
 
+        // A QuickPick ("which project?") must not be answered silently: picking the
+        // wrong project means minutes spent indexing the wrong tree.
+        if (this.nvim.available && type === 'pick') {
+            // The items are {label, description} for the browser's dialog; Neovim gets
+            // one line each (the description is the project path, worth showing).
+            const labels = (payload.items || []).map(item => (
+                typeof item === 'string'
+                    ? item
+                    : (item.description ? `${item.label}  —  ${item.description}` : item.label)
+            ));
+            const choice = await this.nvim.select(payload.placeHolder, labels);
+            if (choice === -2) {
+                this.log('pick cancelled in nvim');
+                return null;
+            }
+            if (choice >= 0) {
+                return choice;
+            }
+        }
+
         if (this.nvim.available && (type === 'input' || type === 'openPath' || type === 'savePath')) {
             const prompt = type === 'input'
                 ? `${payload.prompt}${payload.error ? ` [${payload.error}]` : ''}: `
@@ -634,7 +802,15 @@ class CallCanvasHost {
             }
             return;
         }
-        if (!this.hadClient || !this.idleTimeoutMs) {
+        this.scheduleIdleShutdown();
+    }
+
+    /**
+     * Arm the "no browser left" shutdown. A command still running keeps the host
+     * alive: building the call index takes minutes and nobody is watching a tab.
+     */
+    scheduleIdleShutdown() {
+        if (!this.hadClient || !this.idleTimeoutMs || this.runningCommands > 0) {
             return;
         }
         if (this.idleTimer) {
@@ -646,14 +822,15 @@ class CallCanvasHost {
         }, this.idleTimeoutMs);
     }
 
-    async shutdown() {
+    /** @param {number} code exit status — non-zero when a one-shot command failed */
+    async shutdown(code = 0) {
         this.clearSession();
         await this.server.close();
-        process.exit(0);
+        process.exit(code);
     }
 }
 
 module.exports = {
-    CallCanvasHost, detectProjectRoot, sessionFile, sessionDir, persistentToken,
+    CallCanvasHost, detectProjectRoot, findMultiModuleRoot, sessionFile, sessionDir, persistentToken,
     extractJsonPath, canvasIdFor, OPEN_COMMANDS
 };

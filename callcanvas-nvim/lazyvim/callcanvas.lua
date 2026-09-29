@@ -19,6 +19,7 @@ return {
     cmd = {
       'CallCanvas', 'CallCanvasBrowse', 'CallCanvasUrl',
       'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop',
+      'CallCanvasBuildIndex',
     },
     keys = {
       { '<leader>vv', '<cmd>CallCanvas<cr>', desc = 'CallCanvas: analyze at cursor' },
@@ -26,6 +27,8 @@ return {
       { '<leader>vu', '<cmd>CallCanvasUrl<cr>', desc = 'CallCanvas: copy viewer URL' },
       { '<leader>vl', '<cmd>CallCanvasList<cr>', desc = 'CallCanvas: list open canvases' },
       { '<leader>vs', '<cmd>CallCanvasStatus<cr>', desc = 'CallCanvas: host status' },
+      -- Java only: builds the call index up front so the first analysis is not slow.
+      { '<leader>vi', '<cmd>CallCanvasBuildIndex<cr>', desc = 'CallCanvas: build call index (Java)' },
       { '<leader>vq', '<cmd>CallCanvasStop<cr>', desc = 'CallCanvas: stop host' },
     },
     opts = {

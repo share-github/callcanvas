@@ -94,6 +94,14 @@ if [[ -n "$APPNAME" ]]; then
     else
         bad "<leader>vv is not mapped"
     fi
+    # The index key must reach the command; it is the one people press with no
+    # buffer open (from the project root), so a missing mapping is invisible.
+    MAPPED_INDEX="$(nvim --server "$SOCK" --remote-expr "maparg(' vi', 'n')" 2>/dev/null)"
+    if [[ "$MAPPED_INDEX" == *"CallCanvasBuildIndex"* ]]; then
+        ok "<leader>vi runs :CallCanvasBuildIndex"
+    else
+        bad "<leader>vi maps to '$MAPPED_INDEX'"
+    fi
 fi
 
 SESSION=""
@@ -145,6 +153,63 @@ if grep -q 'acquireVsCodeApi' "$WORK/page.html" || grep -q 'bridge.js' "$WORK/pa
     ok "bridge script injected"
 else
     bad "bridge script missing"
+fi
+
+# The host asks Neovim when a command needs a choice ("which project?" while building
+# the call index). Headless Neovim has no UI to ask, which must answer "-1" (let the
+# host fall back) rather than block on input.
+step "the host can put a QuickPick to Neovim"
+SELECT_HEADLESS="$(nvim --server "$SOCK" --remote-expr \
+    "CallCanvasNvimSelect('which project?', ['app', 'sample-app'])" 2>/dev/null)"
+if [[ "$SELECT_HEADLESS" == "-1" ]]; then
+    ok "no UI attached -> the host decides (-1)"
+else
+    bad "headless select returned '$SELECT_HEADLESS', expected -1"
+fi
+# With a UI and an answer the choice comes back 0-based; 0 (Esc) means cancelled.
+# The UI / input stubs are restored inside the same expression so the rest of this
+# test still runs against an unmodified Neovim.
+cat >"$WORK/select.lua" <<'LUA'
+local uis, ask = vim.api.nvim_list_uis, vim.fn.inputlist
+vim.api.nvim_list_uis = function() return { {} } end
+vim.fn.inputlist = function() return 2 end
+local picked = require('callcanvas').select_remote('p', { 'a', 'b' })
+vim.fn.inputlist = function() return 0 end
+local cancelled = require('callcanvas').select_remote('p', { 'a', 'b' })
+vim.api.nvim_list_uis = uis
+vim.fn.inputlist = ask
+return picked .. ',' .. cancelled
+LUA
+SELECTED="$(nvim --server "$SOCK" --remote-expr \
+    "luaeval('loadfile(_A)()', '$WORK/select.lua')" 2>/dev/null)"
+if [[ "$SELECTED" == "1,-2" ]]; then
+    ok "a picked item is 0-based and Esc cancels ($SELECTED)"
+else
+    bad "select returned '$SELECTED', expected '1,-2'"
+fi
+
+# The index is what makes incoming-call analysis fast. `:CallCanvasBuildIndex`
+# goes through the CLI to the *running* host, so this also covers the long-running
+# command route (the default 120 s HTTP timeout is not enough for a real project).
+step "run :CallCanvasBuildIndex from Neovim (Java call index)"
+PROJECT_ROOT="$(node -e "console.log(JSON.parse(process.argv[1]).projectRoot)" "$SESSION")"
+INDEX_FILE="$PROJECT_ROOT/.callcanvas-cache/call-index.json"
+index_mtime() { node -e "
+const fs = require('fs');
+try { console.log(Math.round(fs.statSync(process.argv[1]).mtimeMs)); } catch { console.log('0'); }
+" "$INDEX_FILE"; }
+INDEX_BEFORE="$(index_mtime)"
+nvim --server "$SOCK" --remote-expr "execute('CallCanvasBuildIndex')" >/dev/null
+INDEX_AFTER="$INDEX_BEFORE"
+for _ in $(seq 1 300); do
+    INDEX_AFTER="$(index_mtime)"
+    [[ "$INDEX_AFTER" -gt "$INDEX_BEFORE" ]] && break
+    sleep 1
+done
+if [[ "$INDEX_AFTER" -gt "$INDEX_BEFORE" ]]; then
+    ok "call index rebuilt ($INDEX_FILE)"
+else
+    bad "call index was not rebuilt ($INDEX_FILE, mtime $INDEX_BEFORE)"
 fi
 
 if [[ -n "$APPNAME" ]]; then

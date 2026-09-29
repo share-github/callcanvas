@@ -138,10 +138,11 @@ function get(base, pathname, headers) {
 
 const CLI = path.join(__dirname, '..', 'src', 'cli.js');
 
+/** @returns {Promise<{stdout: string, code: number}>} */
 function runCli(args) {
     return new Promise((resolve) => {
-        execFile(process.execPath, [CLI, ...args], { timeout: 30000 }, (error, stdout) => {
-            resolve(String(stdout || ''));
+        execFile(process.execPath, [CLI, ...args], { timeout: 60000 }, (error, stdout) => {
+            resolve({ stdout: String(stdout || ''), code: error && error.code ? error.code : 0 });
         });
     });
 }
@@ -154,7 +155,7 @@ async function stopExistingHost() {
     await runCli(['stop', '--file', TARGET_FILE]);
     for (let attempt = 0; attempt < 30; attempt++) {
         const status = await runCli(['status', '--file', TARGET_FILE, '--json']);
-        if (status.includes('"running":false')) {
+        if (status.stdout.includes('"running":false')) {
             return;
         }
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -165,6 +166,26 @@ async function stopExistingHost() {
 function extractInitialData(html) {
     const match = html.match(/initialData: (\{[\s\S]*?\}),\n\s*jsonFilePath/);
     return match ? JSON.parse(match[1]) : null;
+}
+
+/**
+ * `callcanvas build-index` with no host running: the CLI starts one itself. Pointed
+ * at a project with no Java in it the command can only fail, which is what makes it
+ * a cheap check that a failure really is reported as one (the extensions show an
+ * error toast and return normally, so silence used to look like success).
+ */
+async function testBuildIndexCliFailure() {
+    section('callcanvas build-index reports a failure');
+    const jsOnly = path.join(REPO_ROOT, 'sample-project/sample-nextjs/package.json');
+    if (!fs.existsSync(jsOnly)) {
+        console.log('  SKIP: sample-nextjs not found');
+        return;
+    }
+    const result = await runCli(['build-index', '--file', jsOnly]);
+    check('the CLI exits non-zero', result.code === 1, `code=${result.code}`);
+    check('the error is on stdout as JSON',
+        /"ok":false/.test(result.stdout) && /"error":"[^"]+"/.test(result.stdout),
+        result.stdout.trim().split('\n').pop());
 }
 
 // --- unit-ish checks that need no host ------------------------------------
@@ -220,6 +241,41 @@ function testConfig() {
         stripJsonComments('{"u": "http://a//b"}').includes('http://a//b'));
 
     fs.rmSync(tmp, { recursive: true, force: true });
+}
+
+/**
+ * The project root handed to the extensions is also their workspace boundary: they
+ * only walk up that far, so a submodule as root hides every other module and
+ * cross-module calls resolve to nothing.
+ */
+function testMultiModuleRoot() {
+    section('multi-module: the project root is the root of the build');
+    const cases = [
+        // Explicit aggregators.
+        ['sample-project/sample-maven-multi-module/module-app', 'sample-project/sample-maven-multi-module'],
+        ['sample-project/sample-multi-module-app/module-service', 'sample-project/sample-multi-module-app'],
+        // No aggregator file: the modules name each other in their poms.
+        ['sample-project/sample-cross-module-app/module-front', 'sample-project/sample-cross-module-app'],
+        ['sample-project/sample-cross-module-app/module-core', 'sample-project/sample-cross-module-app'],
+        // Unrelated projects that merely share a parent directory stay separate —
+        // grouping them would analyse and index everything beside them.
+        ['sample-project/spring-petclinic', 'sample-project/spring-petclinic'],
+        ['sample-project/sample-app', 'sample-project/sample-app'],
+        ['sample-project/large-ecommerce-app', 'sample-project/large-ecommerce-app'],
+        // A package.json project has no modules to widen to.
+        ['sample-project/sample-nextjs', 'sample-project/sample-nextjs'],
+        // A project directly under the repository root keeps its own root.
+        ['sample-app', 'sample-app']
+    ];
+    for (const [from, expected] of cases) {
+        const start = path.join(REPO_ROOT, from);
+        if (!fs.existsSync(start)) {
+            console.log(`  SKIP ${from} (not in this checkout)`);
+            continue;
+        }
+        const got = detectProjectRoot(start);
+        check(`${from} -> ${expected}`, got === path.join(REPO_ROOT, expected), got);
+    }
 }
 
 // --- the browser-side bridge, run on a minimal DOM stub --------------------
@@ -610,9 +666,11 @@ async function testCloseKey() {
 async function main() {
     testGlob();
     testConfig();
+    testMultiModuleRoot();
     testBridgeKeys();
     await testFilePanelRendering();
     await testCloseKey();
+    await testBuildIndexCliFailure();
 
     if (!fs.existsSync(TARGET_FILE)) {
         console.log(`\nSKIP host tests: ${TARGET_FILE} not found`);
@@ -637,6 +695,28 @@ async function main() {
     const token = listening.token;
     check('extensions activated', host.activation.activated.length === 4,
         `activated=${host.activation.activated.length} missing=${host.activation.missing.join(',')}`);
+
+    // Before any browser attaches: a QuickPick ("which project?" when the call index
+    // is built with no Java file open) must be put to Neovim. Answering it silently
+    // means minutes spent indexing whichever project happened to be first.
+    section('a QuickPick is put to Neovim');
+    const realNvim = host.nvim;
+    let asked = null;
+    host.nvim = {
+        available: true,
+        select: async (prompt, items) => { asked = { prompt, items }; return 1; }
+    };
+    const chosen = await host.requestUi('pick', { items: ['app', 'sample-app'], placeHolder: 'which?' }, () => 0);
+    check('the choice comes from Neovim, not from the fallback', chosen === 1, String(chosen));
+    check('Neovim is given the items and the prompt',
+        asked && asked.items.length === 2 && asked.prompt === 'which?', JSON.stringify(asked));
+    host.nvim = { available: true, select: async () => -2 };
+    check('cancelling in Neovim answers with nothing',
+        (await host.requestUi('pick', { items: ['a'], placeHolder: 'p' }, () => 0)) === null);
+    host.nvim = { available: true, select: async () => -1 };
+    check('with nobody to ask (headless) the fallback decides',
+        (await host.requestUi('pick', { items: ['a'], placeHolder: 'p' }, () => 0)) === 0);
+    host.nvim = realNvim;
 
     let stream;
     try {
@@ -919,6 +999,59 @@ async function main() {
         const after = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
         check('canvas JSON updated', after.windows[0].comment === 'callcanvas-nvim test marker');
         fs.writeFileSync(jsonPath, before, 'utf8');
+
+        // Anchored at the project directory, which is what `callcanvas build-index`
+        // sends when Neovim has no file open (it falls back to its cwd). A directory
+        // has no caret, so the project is resolved from the workspace instead.
+        section('build the Java call index with no file open (directory anchor)');
+        const indexPath = path.join(projectRoot, '.callcanvas-cache', 'call-index.json');
+        const indexBefore = fs.existsSync(indexPath) ? fs.statSync(indexPath).mtimeMs : 0;
+        const built = await post(base, token, '/api/open', {
+            file: projectRoot,
+            command: 'javaCallHierarchy.buildIndex'
+        });
+        check('buildIndex reported success', built.body && built.body.ok === true,
+            JSON.stringify(built.body));
+        check('the call index was (re)written',
+            fs.existsSync(indexPath) && fs.statSync(indexPath).mtimeMs > indexBefore,
+            `${indexPath} before=${indexBefore}`);
+
+        // Analysis, unlike a command, does need a caret — but it must say so rather
+        // than fail while building an editor out of the directory.
+        const asAnalysis = await post(base, token, '/api/open', { file: projectRoot });
+        check('analysing a directory is refused with a readable message',
+            asAnalysis.body && asAnalysis.body.ok === false
+                && /is a directory/.test(asAnalysis.body.error || ''),
+            JSON.stringify(asAnalysis.body));
+
+        // A command that only shows an error toast still returns normally, so the
+        // caller would otherwise be told it succeeded.
+        section('a command that fails is reported as a failure');
+        const failed = await post(base, token, '/api/open', {
+            file: TARGET_FILE,
+            line: 1,
+            command: 'javaCallHierarchy.openCallCanvasViewer'
+        });
+        check('an error toast turns into ok:false',
+            failed.body && failed.body.ok === false && /cursor position/i.test(failed.body.error || ''),
+            JSON.stringify(failed.body));
+
+        // Building the index takes minutes with nobody watching a tab: the idle
+        // shutdown must not fire in the middle of it.
+        section('a running command holds off the idle shutdown');
+        const savedTimeout = host.idleTimeoutMs;
+        host.idleTimeoutMs = 60000;
+        host.hadClient = true;
+        host.runningCommands = 1;
+        host.scheduleIdleShutdown();
+        check('no idle timer while a command runs', host.idleTimer === null);
+        host.runningCommands = 0;
+        host.scheduleIdleShutdown();
+        check('the idle timer is armed once it finishes', host.idleTimer !== null);
+        clearTimeout(host.idleTimer);
+        host.idleTimer = null;
+        host.idleTimeoutMs = savedTimeout;
+        host.hadClient = false;
     } finally {
         if (stream) {
             stream.close();

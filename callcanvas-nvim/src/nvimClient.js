@@ -106,6 +106,26 @@ class NvimClient {
         const value = result.stdout;
         return value.length > 0 ? value : null;
     }
+
+    /**
+     * Ask the launching Neovim to choose from a list (a QuickPick in VS Code terms).
+     * @returns {Promise<number>} 0-based choice, -1 when nobody could be asked
+     *   (no address, no UI, plugin missing), -2 when the user cancelled.
+     */
+    async select(prompt, items) {
+        if (!this.address) {
+            return -1;
+        }
+        const list = (items || []).map(item => vimStr(item)).join(', ');
+        const expr = `CallCanvasNvimSelect(${vimStr(prompt || 'Select')}, [${list}])`;
+        const result = await this.run(['--remote-expr', expr]);
+        if (!result.ok) {
+            this.log(`nvim select failed: ${result.error}`);
+            return -1;
+        }
+        const value = parseInt(result.stdout, 10);
+        return Number.isNaN(value) ? -1 : value;
+    }
 }
 
 module.exports = { NvimClient, vimStr };

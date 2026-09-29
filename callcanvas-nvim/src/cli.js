@@ -6,6 +6,7 @@
  *   callcanvas open --file <path> [--line N] [--nvim <servername>]
  *   callcanvas serve [--file <path> --line N] [--host H] [--port P]
  *   callcanvas command <commandId> [--arg <json>]...
+ *   callcanvas build-index [--file <path>]
  *   callcanvas status | stop
  *
  * `open` is the command Neovim calls: it reuses a running session for the same
@@ -36,6 +37,7 @@ function parseArgs(argv) {
             case 'host': options.host = next(); break;
             case 'port': options.port = parseInt(next(), 10); break;
             case 'idle-timeout': options.idleTimeout = parseInt(next(), 10); break;
+            case 'timeout': options.timeout = parseInt(next(), 10); break;
             case 'browser': options.browser = true; break;
             case 'no-browser': options.browser = false; break;
             case 'verbose': options.verbose = true; break;
@@ -70,6 +72,7 @@ Usage:
   callcanvas open --file <path> [--line N] [--nvim <servername>] [options]
   callcanvas serve [--file <path>] [--line N] [options]
   callcanvas command <commandId> [--arg <json>] [--file <path> --line N]
+  callcanvas build-index [--file <path>] [--root <dir>]
   callcanvas status [--root <dir>] [--json]
   callcanvas stop   [--root <dir>]
 
@@ -78,6 +81,7 @@ Options:
   --host <addr>        bind address (default 127.0.0.1; use 0.0.0.0 for containers)
   --port <n>           port (default: an unused one)
   --idle-timeout <s>   exit this long after the last browser closes (default 300, 0 = never)
+  --timeout <s>        how long to wait for a command / index build (default 1800)
   --set key=value      configuration override, e.g. --set callcanvas.windowWidth=800
   --browser            open the URL with the system browser
   --no-token           disable the token check (loopback only; convenience over safety)
@@ -92,7 +96,7 @@ function readSession(projectRoot) {
     }
 }
 
-function request(session, pathname, body) {
+function request(session, pathname, body, timeoutMs = 120000) {
     return new Promise((resolve) => {
         const payload = body ? JSON.stringify(body) : null;
         const req = http.request({
@@ -103,7 +107,7 @@ function request(session, pathname, body) {
             headers: payload
                 ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
                 : {},
-            timeout: 120000
+            timeout: timeoutMs
         }, (res) => {
             let data = '';
             res.on('data', chunk => { data += chunk; });
@@ -272,8 +276,19 @@ async function cmdServe(options) {
     }
 }
 
-async function cmdCommand(options) {
-    const commandId = options._[1];
+/**
+ * `javaCallHierarchy.buildIndex` — the command behind `build-index`. The index is
+ * what makes incoming-call analysis fast, and the Java extension builds it in the
+ * background on demand; this is the explicit "build it now" route.
+ */
+const BUILD_INDEX_COMMAND = 'javaCallHierarchy.buildIndex';
+
+/** Commands may run for minutes (a full index build), so they get their own budget. */
+function commandTimeoutMs(options) {
+    return (options.timeout ? options.timeout : 1800) * 1000;
+}
+
+async function cmdCommand(options, commandId = options._[1]) {
     if (!commandId) {
         throw new Error('a command id is required');
     }
@@ -288,8 +303,14 @@ async function cmdCommand(options) {
             nvim: options.nvim || process.env.NVIM || null,
             command: commandId,
             args: options.arg.map(a => JSON.parse(a))
-        });
+        }, commandTimeoutMs(options));
+        if (!result.ok) {
+            throw new Error(result.error || 'the running host did not answer');
+        }
         process.stdout.write(JSON.stringify(result.body) + '\n');
+        if (result.body && result.body.ok === false) {
+            process.exitCode = 1;
+        }
         return;
     }
 
@@ -307,8 +328,22 @@ async function cmdCommand(options) {
         file: options.file,
         line: options.line
     });
-    process.stdout.write(JSON.stringify(value === undefined ? { ok: true } : value) + '\n');
-    await host.shutdown();
+    // Same rule as the live-session branch: a command that only showed an error
+    // toast still "returns" normally, so the toast decides the exit status.
+    const failure = host.lastError;
+    if (failure) {
+        process.stdout.write(JSON.stringify({ ok: false, error: failure }) + '\n');
+    } else {
+        process.stdout.write(JSON.stringify(value === undefined ? { ok: true } : value) + '\n');
+    }
+    // shutdown() ends the process, so the status has to be passed in — setting
+    // process.exitCode here would be overwritten by its process.exit().
+    await host.shutdown(failure ? 1 : 0);
+}
+
+/** `callcanvas build-index` — build the Java call index for this project. */
+async function cmdBuildIndex(options) {
+    return cmdCommand(options, BUILD_INDEX_COMMAND);
 }
 
 async function cmdStatus(options) {
@@ -379,6 +414,7 @@ async function main() {
         case 'open': await cmdOpen(options); return;
         case 'serve': await cmdServe(options); return;
         case 'command': await cmdCommand(options); return;
+        case 'build-index': await cmdBuildIndex(options); return;
         case 'status': await cmdStatus(options); return;
         case 'stop': await cmdStop(options); return;
         default:
