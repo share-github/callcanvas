@@ -1,0 +1,649 @@
+[
+  {
+    "label": "plain text: three refs on one line (two to the same field, this.-qualified, enum constant)",
+    "input": {
+      "html": "    return orderService.place(req, this.orderService.defaultType(), PaymentType.CARD);",
+      "refs": [
+        {
+          "line": 36,
+          "col": 11,
+          "len": 12,
+          "field": "com.example.app.controller.OrderController#orderService"
+        },
+        {
+          "line": 36,
+          "col": 40,
+          "len": 12,
+          "field": "com.example.app.controller.OrderController#orderService"
+        },
+        {
+          "line": 36,
+          "col": 80,
+          "len": 4,
+          "field": "com.example.app.domain.PaymentType#CARD"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "    return <span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">orderService</span>.place(req, this.<span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">orderService</span>.defaultType(), PaymentType.<span class=\"field-ref-token\" data-field=\"com.example.app.domain.PaymentType#CARD\" data-tip=\"enum%20constant%20PaymentType%20CARD%20%20(com.example.app.domain.PaymentType)\">CARD</span>);"
+  },
+  {
+    "label": "tab-mixed line: col counts a tab as one character",
+    "input": {
+      "html": "\t\tthrow new IllegalArgumentException(\"max \" + MAX_ITEMS);",
+      "refs": [
+        {
+          "line": 33,
+          "col": 46,
+          "len": 9,
+          "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "\t\tthrow new IllegalArgumentException(\"max \" + <span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#MAX_ITEMS\" data-tip=\"static%20final%20int%20MAX_ITEMS%20%3D%2050%20%20(com.example.app.controller.OrderController)\">MAX_ITEMS</span>);"
+  },
+  {
+    "label": "hljs line with &quot; entities before the ref (entity = one character)",
+    "input": {
+      "html": "\t\t<span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">IllegalArgumentException</span>(<span class=\"hljs-string\">&quot;max &quot;</span> + MAX_ITEMS);",
+      "refs": [
+        {
+          "line": 33,
+          "col": 46,
+          "len": 9,
+          "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "\t\t<span class=\"hljs-keyword\">throw</span> <span class=\"hljs-keyword\">new</span> <span class=\"hljs-title class_\">IllegalArgumentException</span>(<span class=\"hljs-string\">&quot;max &quot;</span> + <span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#MAX_ITEMS\" data-tip=\"static%20final%20int%20MAX_ITEMS%20%3D%2050%20%20(com.example.app.controller.OrderController)\">MAX_ITEMS</span>);"
+  },
+  {
+    "label": "hljs line: refs inside/next to hljs spans",
+    "input": {
+      "html": "    <span class=\"hljs-keyword\">return</span> orderService.place(req, <span class=\"hljs-built_in\">this</span>.orderService.defaultType(), PaymentType.CARD);",
+      "refs": [
+        {
+          "line": 36,
+          "col": 11,
+          "len": 12,
+          "field": "com.example.app.controller.OrderController#orderService"
+        },
+        {
+          "line": 36,
+          "col": 40,
+          "len": 12,
+          "field": "com.example.app.controller.OrderController#orderService"
+        },
+        {
+          "line": 36,
+          "col": 80,
+          "len": 4,
+          "field": "com.example.app.domain.PaymentType#CARD"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "    <span class=\"hljs-keyword\">return</span> <span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">orderService</span>.place(req, <span class=\"hljs-built_in\">this</span>.<span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">orderService</span>.defaultType(), PaymentType.<span class=\"field-ref-token\" data-field=\"com.example.app.domain.PaymentType#CARD\" data-tip=\"enum%20constant%20PaymentType%20CARD%20%20(com.example.app.domain.PaymentType)\">CARD</span>);"
+  },
+  {
+    "label": "constant-token coexistence: field ref wins at its position, other MAX_ITEMS (in comment) stays constant-token",
+    "input": {
+      "html": "\t<span class=\"hljs-keyword\">if</span> (req.items().size() &gt; MAX_ITEMS) { <span class=\"hljs-comment\">// MAX_ITEMS guard</span>",
+      "refs": [
+        {
+          "line": 32,
+          "col": 26,
+          "len": 9,
+          "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      },
+      "symbolIndex": {
+        "MAX_ITEMS": {
+          "value": "50",
+          "qualifier": "OrderController",
+          "type": "int"
+        }
+      }
+    },
+    "expected": "\t<span class=\"hljs-keyword\">if</span> (req.items().size() &gt; <span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#MAX_ITEMS\" data-tip=\"static%20final%20int%20MAX_ITEMS%20%3D%2050%20%20(com.example.app.controller.OrderController)\">MAX_ITEMS</span>) { <span class=\"hljs-comment\">// <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span> guard</span>"
+  },
+  {
+    "label": "ref pointing into an hljs comment is not tokenized",
+    "input": {
+      "html": "\t<span class=\"hljs-keyword\">if</span> (req.items().size() &gt; MAX_ITEMS) { <span class=\"hljs-comment\">// MAX_ITEMS guard</span>",
+      "refs": [
+        {
+          "line": 32,
+          "col": 42,
+          "len": 9,
+          "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "\t<span class=\"hljs-keyword\">if</span> (req.items().size() &gt; MAX_ITEMS) { <span class=\"hljs-comment\">// MAX_ITEMS guard</span>"
+  },
+  {
+    "label": "ref pointing into a fallback-highlighter comment is not tokenized",
+    "input": {
+      "html": "<span class=\"keyword\">return</span> x; <span class=\"comment\">// orderService</span>",
+      "refs": [
+        {
+          "line": 1,
+          "col": 13,
+          "len": 12,
+          "field": "com.example.app.controller.OrderController#orderService"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "<span class=\"keyword\">return</span> x; <span class=\"comment\">// orderService</span>"
+  },
+  {
+    "label": "ref to a field missing from fields is skipped",
+    "input": {
+      "html": "    return orderService.place(req, this.orderService.defaultType(), PaymentType.CARD);",
+      "refs": [
+        {
+          "line": 36,
+          "col": 11,
+          "len": 12,
+          "field": "com.example.Unknown#orderService"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "    return orderService.place(req, this.orderService.defaultType(), PaymentType.CARD);"
+  },
+  {
+    "label": "range crossing a tag is split into text-only token spans",
+    "input": {
+      "html": "a<span class=\"x\">bc</span>d;",
+      "refs": [
+        {
+          "line": 1,
+          "col": 0,
+          "len": 4,
+          "field": "com.example.app.controller.OrderController#orderService"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "<span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">a</span><span class=\"x\"><span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">bc</span></span><span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">d</span>;"
+  },
+  {
+    "label": "&lt; before the ref (escaped plain text)",
+    "input": {
+      "html": "if (a &lt; MAX_ITEMS) return;",
+      "refs": [
+        {
+          "line": 1,
+          "col": 8,
+          "len": 9,
+          "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+        }
+      ],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      }
+    },
+    "expected": "if (a &lt; <span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#MAX_ITEMS\" data-tip=\"static%20final%20int%20MAX_ITEMS%20%3D%2050%20%20(com.example.app.controller.OrderController)\">MAX_ITEMS</span>) return;"
+  },
+  {
+    "label": "no refs: same as wrapConstantTokens",
+    "input": {
+      "html": "\t<span class=\"hljs-keyword\">if</span> (req.items().size() &gt; MAX_ITEMS) { <span class=\"hljs-comment\">// MAX_ITEMS guard</span>",
+      "refs": [],
+      "fields": {
+        "com.example.app.controller.OrderController#MAX_ITEMS": {
+          "displayName": "OrderController # MAX_ITEMS",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 16,
+          "endLine": 16,
+          "code": "    private static final int MAX_ITEMS = 50;",
+          "type": "int",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": true,
+          "final": true,
+          "enumConstant": false,
+          "value": "50"
+        },
+        "com.example.app.controller.OrderController#orderService": {
+          "displayName": "OrderController # orderService",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "startLine": 17,
+          "endLine": 18,
+          "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+          "type": "OrderService",
+          "declaringClass": "com.example.app.controller.OrderController",
+          "static": false,
+          "final": true,
+          "enumConstant": false,
+          "value": null
+        },
+        "com.example.app.domain.PaymentType#CARD": {
+          "displayName": "PaymentType # CARD",
+          "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+          "startLine": 5,
+          "endLine": 5,
+          "code": "    CARD(\"card\"),",
+          "type": "PaymentType",
+          "declaringClass": "com.example.app.domain.PaymentType",
+          "static": true,
+          "final": true,
+          "enumConstant": true,
+          "value": null
+        }
+      },
+      "symbolIndex": {
+        "MAX_ITEMS": {
+          "value": "50",
+          "qualifier": "OrderController",
+          "type": "int"
+        }
+      }
+    },
+    "expected": "\t<span class=\"hljs-keyword\">if</span> (req.items().size() &gt; <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span>) { <span class=\"hljs-comment\">// <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span> guard</span>"
+  }
+]

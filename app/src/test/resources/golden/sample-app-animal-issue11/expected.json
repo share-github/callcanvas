@@ -15,6 +15,12 @@
       "id": "window-4"
     },
     {
+      "fieldRefs": [{
+        "col": 8,
+        "len": 11,
+        "field": "com.example.animal.issue11.MailAction#mailService",
+        "line": 12
+      }],
       "code": "    /**\n     * issue11: インターフェース経由の呼び出し\n     * MailServiceInterface#sendMail() → BaseMailService#sendMail() への解決を検証\n     */\n    public void execute() {\n        mailService.sendMail();\n    }",
       "displayName": "MailAction # execute",
       "startLine": 7,
@@ -29,6 +35,19 @@
       "id": "window-2"
     }
   ],
+  "fields": {"com.example.animal.issue11.MailAction#mailService": {
+    "endLine": 5,
+    "code": "    private MailServiceInterface mailService;",
+    "static": false,
+    "enumConstant": false,
+    "displayName": "MailAction # mailService",
+    "filePath": "src/main/java/com/example/animal/issue11/MailAction.java",
+    "startLine": 5,
+    "final": false,
+    "type": "MailServiceInterface",
+    "value": null,
+    "declaringClass": "com.example.animal.issue11.MailAction"
+  }},
   "connections": [
     {
       "callLine": 12,

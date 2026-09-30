@@ -391,6 +391,9 @@ public class GoldenFileTest {
                 if (window.has("collapsed")) {
                     normalizedWindow.put("collapsed", window.getBoolean("collapsed"));
                 }
+                if (window.has("fieldRefs")) {
+                    normalizedWindow.put("fieldRefs", window.getJSONArray("fieldRefs"));
+                }
                 
                 // ファイルパスを正規化
                 if (window.has("filePath")) {
@@ -419,6 +422,20 @@ public class GoldenFileTest {
         // symbolIndex（そのままコピー）
         if (json.has("symbolIndex")) {
             normalized.put("symbolIndex", json.getJSONObject("symbolIndex"));
+        }
+
+        // fields（filePath はウィンドウと同じくワークスペースルートを除去）
+        if (json.has("fields")) {
+            JSONObject fields = json.getJSONObject("fields");
+            JSONObject normalizedFields = new JSONObject();
+            for (String key : fields.keySet()) {
+                JSONObject f = new JSONObject(fields.getJSONObject(key).toString());
+                if (f.has("filePath")) {
+                    f.put("filePath", f.getString("filePath").replace(workspaceRoot.toString() + "/", ""));
+                }
+                normalizedFields.put(key, f);
+            }
+            normalized.put("fields", normalizedFields);
         }
 
         return normalized;
@@ -487,6 +504,18 @@ public class GoldenFileTest {
                     diff.append("Unexpected window: ").append(name).append("\n");
                 }
             }
+
+            // fieldRefs（ウィンドウ内のフィールド参照の位置）
+            for (String name : expMap.keySet()) {
+                if (!actMap.containsKey(name)) continue;
+                JSONArray expRefs = expMap.get(name).optJSONArray("fieldRefs");
+                JSONArray actRefs = actMap.get(name).optJSONArray("fieldRefs");
+                boolean same = expRefs == null ? actRefs == null : actRefs != null && expRefs.similar(actRefs);
+                if (!same) {
+                    diff.append("fieldRefs mismatch in window ").append(name)
+                        .append(": expected=").append(expRefs).append(", actual=").append(actRefs).append("\n");
+                }
+            }
         }
 
         // connections比較
@@ -514,6 +543,28 @@ public class GoldenFileTest {
             for (String key : actConnSet) {
                 if (!expConnSet.contains(key)) {
                     diff.append("Unexpected connection: ").append(key).append("\n");
+                }
+            }
+        }
+
+        // fields比較
+        JSONObject expFields = expected.optJSONObject("fields");
+        JSONObject actFields = actual.optJSONObject("fields");
+        if ((expFields == null) != (actFields == null)) {
+            diff.append("fields presence mismatch: expected=").append(expFields != null)
+                .append(", actual=").append(actFields != null).append("\n");
+        } else if (expFields != null) {
+            for (String key : expFields.keySet()) {
+                if (!actFields.has(key)) {
+                    diff.append("Missing field: ").append(key).append("\n");
+                } else if (!expFields.getJSONObject(key).similar(actFields.getJSONObject(key))) {
+                    diff.append("field value mismatch for '").append(key).append("': expected=")
+                        .append(expFields.getJSONObject(key)).append(", actual=").append(actFields.getJSONObject(key)).append("\n");
+                }
+            }
+            for (String key : actFields.keySet()) {
+                if (!expFields.has(key)) {
+                    diff.append("Unexpected field: ").append(key).append("\n");
                 }
             }
         }

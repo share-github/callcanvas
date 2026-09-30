@@ -1,22 +1,12 @@
 package tools.depquery;
 
-import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.ParserConfiguration.LanguageLevel;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
-import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.*;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.util.concurrent.CompletableFuture;
 import static tools.depquery.DiagnosticLogger.*;
 import static tools.depquery.FqnUtils.*;
 import static tools.depquery.NodeFactory.*;
@@ -134,6 +124,8 @@ public class DepQueryCli {
         String prefix = classFqn + "#";
         List<String> fqns = callIndex.allMethodFqns().stream()
                 .filter(fqn -> fqn.startsWith(prefix))
+                // 初期化子の擬似エントリ（<init>/<clinit>）はソース上のメソッドではないのでルートにしない
+                .filter(fqn -> !JdtCallCollector.isInitializerPseudo(fqn))
                 .sorted()
                 .toList();
         return fqns;
@@ -163,56 +155,6 @@ public class DepQueryCli {
         long totalStart = startTiming("Index Build");
         info("[INFO] Building/updating call index...");
         
-        long analyzerSetupStart = startTiming("Analyzer Setup");
-        CombinedTypeSolver solver = new CombinedTypeSolver(new ReflectionTypeSolver());
-        for (Path src : cfg.srcRoots)
-            solver.add(new JavaParserTypeSolver(src.toFile()));
-        
-        if (!cfg.classDirs.isEmpty()) {
-            try {
-                URL[] urls = cfg.classDirs.stream().map(p -> p.toUri()).map(u -> {
-                    try {
-                        return u.toURL();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }).toArray(URL[]::new);
-                ClassLoader cl = new URLClassLoader(urls, DepQueryCli.class.getClassLoader());
-                solver.add(new ClassLoaderTypeSolver(cl));
-            } catch (Throwable ignore) {
-            }
-        }
-        for (Path jar : cfg.cpJars) {
-            try {
-                solver.add(new JarTypeSolver(jar.toString()));
-            } catch (Throwable ignore) {
-            }
-        }
-        for (Path dir : cfg.cpDirs) {
-            try {
-                if (Files.isDirectory(dir)) {
-                    try (var s = Files.walk(dir)) {
-                        s.filter(p -> p.toString().endsWith(".jar")).forEach(p -> {
-                            try {
-                                solver.add(new JarTypeSolver(p.toString()));
-                            } catch (Throwable ignore) {
-                            }
-                        });
-                    }
-                } else if (dir.toString().endsWith(".jar")) {
-                    solver.add(new JarTypeSolver(dir.toString()));
-                }
-            } catch (Throwable ignore) {
-            }
-        }
-        
-        StaticJavaParser.setConfiguration(new ParserConfiguration()
-                .setSymbolResolver(new JavaSymbolSolver(solver))
-                .setLanguageLevel(cfg.languageLevel));
-        var facade = JavaParserFacade.get(solver);
-        var locator = new SourceLocator(cfg.srcRoots);
-        endTiming("Analyzer Setup", analyzerSetupStart);
-        
         // HierarchyCache (CHA用)
         long hierarchyCacheStart = startTiming("Hierarchy Cache Build");
         Path cacheDir = cfg.workspace != null
@@ -222,32 +164,36 @@ public class DepQueryCli {
         hierarchyCache.initialize(cfg.rebuildCache);
         endTiming("Hierarchy Cache Build", hierarchyCacheStart);
         
-        // ChaContext
-        ChaContext chaContext = new ChaContext(locator, hierarchyCache);
-        
         // CallIndexManager
         Path projectRoot = cfg.workspace != null ? cfg.workspace : cfg.outDir.getParent();
         CallIndexManager indexManager = new CallIndexManager(projectRoot);
         
-        // CallIndexBuilder
-        CallIndexBuilder builder = new CallIndexBuilder(cfg, locator, facade, chaContext);
+        // CallIndexBuilder（解析は JDT。CHA は HierarchyCache + 宣言済みメソッド）
+        CallIndexBuilder builder = new CallIndexBuilder(cfg, hierarchyCache);
         
         // 既存インデックスをチェック
         CallIndex callIndex;
         long indexBuildStart = startTiming("Index Construction");
+        CallIndex oldIndex = null;
         if (indexManager.indexExists()) {
+            long loadStart = startTiming("Index Load");
+            oldIndex = indexManager.loadIndex();
+            endTiming("Index Load", loadStart);
+            if (oldIndex != null && !CallIndex.CURRENT_VERSION.equals(oldIndex.version)) {
+                info("[INFO] Existing index was built by an older analyzer (version " + oldIndex.version
+                        + "). Rebuilding from scratch...");
+                oldIndex = null;
+            }
+        }
+        if (oldIndex != null) {
             timing("META buildMode=incremental");
             info("[INFO] Existing index found. Performing incremental update...");
-            long loadStart = startTiming("Index Load");
-            CallIndex oldIndex = indexManager.loadIndex();
-            endTiming("Index Load", loadStart);
             callIndex = builder.updateIndex(oldIndex, indexManager);
         } else {
             timing("META buildMode=full");
             info("[INFO] No existing index found. Building from scratch...");
             callIndex = builder.buildFullIndex();
         }
-        chaContext.emitChaTimingSummary();
         timing("SUMMARY index=methods=" + callIndex.methods.size()
                 + ",indexedFiles=" + callIndex.fileHashes.size());
         endTiming("Index Construction", indexBuildStart);
@@ -304,6 +250,10 @@ public class DepQueryCli {
         // --build-index オプションが指定された場合、インデックスを構築して終了
         // 同時に --root-class が指定されていても root-class は無視し、インデックス構築のみ行う
         if (cfg.buildIndex) {
+            // lombok.jar がクラスパスにあれば Lombok の agent 付きで自身を起動し直す（成功したらそちらの結果で終了）
+            if (LombokSupport.relaunchWithAgentIfNeeded(cfg, args)) {
+                return;
+            }
             long buildStart = System.currentTimeMillis();
             buildCallIndex(cfg);
             indexBuildTime = System.currentTimeMillis() - buildStart;
@@ -383,274 +333,95 @@ public class DepQueryCli {
             System.exit(2);
         }
 
-        // TypeSolver 構築
-        CombinedTypeSolver solver = new CombinedTypeSolver(new ReflectionTypeSolver());
-        for (Path src : cfg.srcRoots)
-            solver.add(new JavaParserTypeSolver(src.toFile()));
-        // 追加: ビルド済みクラスディレクトリをClassLoader経由で解決
-        if (!cfg.classDirs.isEmpty()) {
-            try {
-                URL[] urls = cfg.classDirs.stream().map(p -> p.toUri()).map(u -> {
-                    try {
-                        return u.toURL();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }).toArray(URL[]::new);
-                ClassLoader cl = new URLClassLoader(urls, DepQueryCli.class.getClassLoader());
-                solver.add(new ClassLoaderTypeSolver(cl));
-            } catch (Throwable ignore) {
-            }
-        }
-        // 追加クラスパス（JAR/ディレクトリ）
-        for (Path jar : cfg.cpJars) {
-            try {
-                solver.add(new JarTypeSolver(jar.toString()));
-                // Spring Boot fat-jar を自動展開（BOOT-INF/lib/*.jar）
-                try {
-                    expandBootJarLibs(jar).forEach(nestedJar -> {
-                        try {
-                            solver.add(new JarTypeSolver(nestedJar.toString()));
-                        } catch (Throwable ignore2) {
-                        }
-                    });
-                } catch (Throwable ignore3) {
-                }
-            } catch (Throwable ignore) {
-            }
-        }
-        for (Path dir : cfg.cpDirs) {
-            try {
-                if (Files.isDirectory(dir)) {
-                    try (var s = Files.walk(dir)) {
-                        s.filter(p -> p.toString().endsWith(".jar")).forEach(p -> {
-                            try {
-                                solver.add(new JarTypeSolver(p.toString()));
-                            } catch (Throwable ignore) {
-                            }
-                        });
-                    }
-                } else if (dir.toString().endsWith(".jar")) {
-                    solver.add(new JarTypeSolver(dir.toString()));
-                }
-            } catch (Throwable ignore) {
-            }
-        }
-        // JavaParser 設定（言語レベル/JSS）
-        LanguageLevel langLevel = cfg.languageLevel;
-        info("[INFO] Using language level: " + langLevel);
-        ParserConfiguration pc = new ParserConfiguration()
-                .setLanguageLevel(langLevel)
-                .setAttributeComments(false)
-                .setSymbolResolver(new JavaSymbolSolver(solver));
-        StaticJavaParser.setConfiguration(pc);
-
-        JavaParserFacade facade = JavaParserFacade.get(solver);
-
-        // 解析準備
-        var locator = new SourceLocator(cfg.srcRoots);
         var graph = new GraphModels.Graph();
-        var visited = new HashSet<String>();
-        var q = new ArrayDeque<Item>();
 
-        // 遅延評価用のキャッシュ（必要に応じてオンデマンドで構築）
-        Map<String, String> methodIndex = new HashMap<>(); // 曖昧マッチング時のみ使用
-        Map<Path, CompilationUnit> parsedFiles = new HashMap<>(); // パース済みファイルキャッシュ
-
-        // ルートメソッドが曖昧な場合のみ、メソッドインデックスをスキャン
-        boolean needsFullScan = cfg.roots.stream().anyMatch(r -> !isFullyQualifiedRoot(r));
-
-        if (needsFullScan) {
-            info("[INFO] Scanning source files for method signatures (ambiguous root detected)...");
-            methodIndex = buildMethodIndex(cfg.srcRoots, facade);
-            info("[INFO] Found " + methodIndex.size() + " methods");
-        } else {
-            info("[INFO] Using lazy evaluation mode (fully qualified root)");
-            info("[INFO] CHA will use on-demand search (no full scan)");
+        // ルート解決: インデックスがあればインデックスの FQN から（曖昧マッチング対応）
+        CallIndex analysisIndex = finalCallIndex;
+        List<String> rootFqns = new ArrayList<>();
+        if (finalCallIndex != null) {
+            for (String userRoot : cfg.roots) {
+                String fqn = finalCallIndex.getMethod(userRoot) != null ? userRoot
+                        : resolveRootMethodFqn(userRoot, finalCallIndex.allMethodFqns());
+                if (fqn == null) {
+                    // インデックスに無い（未構築のファイル・古いインデックス）→ ソースを解析する
+                    info("[INFO] Root not found in call index, analyzing sources: " + userRoot);
+                    analysisIndex = null;
+                    rootFqns.clear();
+                    break;
+                }
+                if (!fqn.equals(userRoot)) {
+                    info("[INFO] Resolved root: " + userRoot + " -> " + fqn);
+                }
+                rootFqns.add(fqn);
+            }
         }
 
-        // 継承関係キャッシュを初期化（CHA高速化用）
-        Path cacheDir = cfg.workspace != null
-                ? cfg.workspace.resolve(".callcanvas-cache")
-                : cfg.outDir.resolve(".callcanvas-cache");
-        HierarchyCache hierarchyCache = new HierarchyCache(cacheDir, cfg.srcRoots);
-        hierarchyCache.initialize(cfg.rebuildCache);
-
-        // CHA用コンテキスト（キャッシュを使用して高速検索）
-        final ChaContext chaContext = new ChaContext(locator, hierarchyCache);
-
-        // 後方互換性のため（resolveRootMethodFqn等で使用）
-        final Map<String, String> finalMethodIndex = methodIndex;
-
-        // ルート解決（finalCallIndex は解析パス開始直後にロード済み）
-        for (String userRoot : cfg.roots) {
-            String resolvedRoot;
-
-            if (needsFullScan) {
-                // 曖昧マッチング対応（フルスキャン済み）
-                resolvedRoot = resolveRootMethodFqn(userRoot, methodIndex);
-                if (resolvedRoot == null) {
-                    System.err.println("[WARN] root not found: " + userRoot);
-                    continue;
-                }
-                if (!resolvedRoot.equals(userRoot)) {
-                    info("[INFO] Resolved root: " + userRoot + " -> " + resolvedRoot);
-                }
+        // インデックスが使えなければ、必要なファイルだけ JDT で解析してメモリ上のインデックスを作る
+        boolean onDemand = analysisIndex == null;
+        OnDemandIndexer onDemandIndexer = null;
+        if (onDemand) {
+            // インデックス構築と同じく、lombok.jar がクラスパスにあれば agent 付きで起動し直す
+            // （Lombok が生成するメンバーへの呼び出しを解決し、インデックス有りと同じ結果にするため）
+            if (LombokSupport.relaunchWithAgentIfNeeded(cfg, args)) {
+                return;
+            }
+            info("[INFO] Using language level: " + cfg.languageLevel);
+            long onDemandStart = startTiming("On-demand Analysis");
+            Path cacheDir = cfg.workspace != null
+                    ? cfg.workspace.resolve(".callcanvas-cache")
+                    : cfg.outDir.resolve(".callcanvas-cache");
+            HierarchyCache hierarchyCache = new HierarchyCache(cacheDir, cfg.srcRoots);
+            // 継承関係のキャッシュ（初回は全ソースの走査）は CHA で初めて使うので、ルートのファイルの JDT 解析と並行に作る
+            var hierarchyReady = CompletableFuture.runAsync(() -> hierarchyCache.initialize(cfg.rebuildCache));
+            var indexer = new OnDemandIndexer(cfg, new SourceLocator(cfg.srcRoots), hierarchyCache);
+            rootFqns = indexer.resolveRoots(cfg.roots);
+            hierarchyReady.join();
+            if (cfg.direction.equals("outgoing")) {
+                indexer.expandOutgoing(rootFqns, cfg.depth);
             } else {
-                // 遅延評価モード：完全修飾名をそのまま使用
-                resolvedRoot = userRoot;
+                indexer.prepareIncoming(rootFqns);
             }
+            analysisIndex = indexer.index;
+            endTiming("On-demand Analysis", onDemandStart);
+            onDemandIndexer = indexer;
+        }
+        final CallIndex bfsIndex = analysisIndex;
 
-            // インデックスがあればルートもインデックスから取得（パースなし）
-            if (finalCallIndex != null) {
-                MethodEntry rootEntry = finalCallIndex.getMethod(resolvedRoot);
-                if (rootEntry != null) {
-                    q.add(new Item(resolvedRoot, 0));
-                    createNodeFromEntry(graph, rootEntry);
-                    debug("Root from index: " + resolvedRoot);
-                    continue;  // パースをスキップ
-                }
-            }
-
-            // フォールバック：インデックスにない場合は従来の方法
-            var loc = locator.resolveMethod(resolvedRoot).orElse(null);
-            if (loc == null) {
-                System.err.println("[WARN] root source file not found: " + resolvedRoot);
-                continue;
-            }
-            q.add(new Item(resolvedRoot, 0));
-            ensureNodeFromDecl(graph, loc, facade);
-            debug("Root from parsing: " + resolvedRoot);
+        for (String root : rootFqns) {
+            createNodeFromEntry(graph, bfsIndex.getMethod(root));
+            debug("Root: " + root);
         }
 
         // 解析実行（BFS解析）
         long analysisStart = startTiming("BFS Analysis");
         if (cfg.direction.equals("outgoing")) {
-            // Outgoing calls: BFSで呼び出し先を追跡
-            int methodsFromIndex = 0;
-            int methodsFromParsing = 0;
-            
-            while (!q.isEmpty()) {
-                var it = q.removeFirst();
-                if (!visited.add(it.fqn) || it.depth > cfg.depth)
-                    continue;
-
-                // インデックスがあれば使用
-                if (finalCallIndex != null) {
-                    MethodEntry indexedMethod = finalCallIndex.getMethod(it.fqn);
-                    if (indexedMethod != null) {
-                        debug("Using index for: " + it.fqn);
-                        methodsFromIndex++;
-                        
-                        // インデックスから現在のノードを構築（メタデータ使用）
-                        createNodeFromEntry(graph, indexedMethod);
-                        
-                        // インデックスから呼び出し先を取得
-                        // 【順序前提】calleesリストは collectCallsForMethod により、
-                        // 非override callee → そのoverride callee群 の順序で格納されている。
-                        // この順序に依存して lastCallTargetFqn を追跡する。
-                        // 順序が崩れた場合は lastCallTargetFqn が null となり、
-                        // override callee は caller からの直接エッジにフォールバックする（フェイルセーフ）。
-                        String lastCallTargetFqn = null;
-                        
-                        for (CallRef calleeRef : indexedMethod.callees) {
-                            boolean isOverride = "override".equals(calleeRef.type);
-                            boolean accepted = acceptByFilter(calleeRef.fqn, cfg);
-
-                            // フィルタ通過した非override calleeのみlastCallTargetFqnに記録
-                            // フィルタ除外時はnullにリセット（overrideがcallerからのフォールバックエッジを使うように）
-                            if (!isOverride) {
-                                lastCallTargetFqn = accepted ? calleeRef.fqn : null;
-                            }
-
-                            if (!accepted) {
-                                continue;
-                            }
-                            
-                            // Create edge: override -> interface->implementation, others -> caller->callee
-                            if (isOverride && lastCallTargetFqn != null) {
-                                // Override: interface/parent method -> implementation
-                                MethodEntry interfaceEntry = finalCallIndex.getMethod(lastCallTargetFqn);
-                                int overrideCallLine = calleeRef.line;
-                                int overrideCallEndLine = calleeRef.endLine;
-                                if (interfaceEntry != null && interfaceEntry.lineStart > 0) {
-                                    overrideCallLine = interfaceEntry.lineStart;
-                                    overrideCallEndLine = interfaceEntry.lineEnd;
-                                }
-                                // CallCanvas Viewer の F12 は接続の callLine とウィンドウ内の行番号の一致でジャンプする。
-                                // SourceLocator がシグネチャ一致で宣言行を解決できた場合のみ上書き（誤フォールバックで悪化させない）。
-                                var ifaceDeclLoc = locator.resolveMethod(lastCallTargetFqn);
-                                if (ifaceDeclLoc.isPresent()) {
-                                    var range = ifaceDeclLoc.get().decl().getRange();
-                                    if (range.isPresent()) {
-                                        overrideCallLine = range.get().begin.line;
-                                        overrideCallEndLine = range.get().end.line;
-                                    }
-                                }
-                                graph.addEdge(lastCallTargetFqn, calleeRef.fqn, "override",
-                                            overrideCallLine, overrideCallEndLine);
-                            } else {
-                                // Normal call: caller -> callee
-                                graph.addEdge(it.fqn, calleeRef.fqn, calleeRef.type, 
-                                            calleeRef.line, calleeRef.endLine);
-                            }
-                            
-                            // 呼び出し先のノードを追加（メタデータ使用）
-                            MethodEntry calleeEntry = finalCallIndex.getMethod(calleeRef.fqn);
-                            if (calleeEntry != null) {
-                                createNodeFromEntry(graph, calleeEntry);
-                                
-                                if (!visited.contains(calleeRef.fqn) && it.depth < cfg.depth) {
-                                    q.add(new Item(calleeRef.fqn, it.depth + 1));
-                                }
-                            } else {
-                                // Indexにない場合はスタブノードを作成（パース回避）
-                                createStubNode(graph, calleeRef.fqn);
-                                // 探索キューには追加しない（詳細情報がないため）
-                            }
-                        }
-                        continue; // インデックスから取得できたのでcollectEdgesをスキップ
-                    }
-                }
-
-                // フォールバック: 従来の解析（インデックスがない場合）
-                var locOpt = locator.resolveMethod(it.fqn);
-                if (locOpt.isEmpty())
-                    continue;
-                var loc = locOpt.get();
-                var cu = parseCu(loc.file());
-                var md = findMethodDeclBySig(cu, it.fqn).orElse(null);
-                if (md == null)
-                    continue;
-
-                debug("Fallback to parsing for: " + it.fqn);
-                methodsFromParsing++;
-                collectEdges(md, it.fqn, cu, facade, graph, cfg, locator, chaContext, (callee) -> {
-                    if (!visited.contains(callee) && it.depth < cfg.depth) {
-                        q.add(new Item(callee, it.depth + 1));
-                    }
-                });
-            }
-            
+            int methodsFromIndex = collectOutgoingCalls(graph, cfg, bfsIndex, rootFqns);
             long analysisTime = System.currentTimeMillis() - analysisStart;
-            if (finalCallIndex != null) {
-                info("[INFO] Outgoing analysis: " + methodsFromIndex + " methods from index, " 
-                                 + methodsFromParsing + " methods from parsing");
+            if (!onDemand) {
+                info("[INFO] Outgoing analysis: " + methodsFromIndex + " methods from index");
             }
             if (DEBUG) {
-                debugTimed("BFS analysis completed in " + analysisTime + "ms (" + 
+                debugTimed("BFS analysis completed in " + analysisTime + "ms (" +
                           graph.nodes.size() + " nodes, " + graph.edges.size() + " edges)");
-                debugTimed("  - Methods from index: " + methodsFromIndex);
-                debugTimed("  - Methods from parsing: " + methodsFromParsing);
+                debugTimed("  - Methods expanded: " + methodsFromIndex);
             }
             endTiming("BFS Analysis", analysisStart);
         } else {
-            // Incoming calls: 全ソースファイルをスキャンしてターゲットメソッドへの呼び出しを検索
-            collectIncomingCalls(graph, cfg, locator, facade, chaContext, parsedFiles, finalCallIndex);
+            // BFS再帰の安全上限
+            final int MAX_INCOMING_DEPTH = 50;
+            int maxDepth = (cfg.depth == -1) ? MAX_INCOMING_DEPTH : cfg.depth;
+            if (onDemand) {
+                // インデックス無しでは 1 階層のみ（全階層の呼び出し元を求めるには全ファイルの解析が要る）
+                if (cfg.depth == -1) {
+                    System.err.println("[WARN] Index not found. BFS recursive incoming calls (--depth -1) is only supported with index (--build-index). Falling back to 1-level scan.");
+                }
+                maxDepth = 0;
+            }
+            collectIncomingCalls(graph, cfg, bfsIndex, maxDepth);
             long analysisTime = System.currentTimeMillis() - analysisStart;
             endTiming("BFS Analysis", analysisStart);
             if (DEBUG) {
-                debugTimed("Incoming analysis completed in " + analysisTime + "ms (" + 
+                debugTimed("Incoming analysis completed in " + analysisTime + "ms (" +
                           graph.nodes.size() + " nodes, " + graph.edges.size() + " edges)");
             }
         }
@@ -703,10 +474,23 @@ public class DepQueryCli {
         // CallCanvas 形式（コード付き JSON）
         if (cfg.formats.contains("callcanvas")) {
             long callcanvasStart = startTiming("CallCanvas Output");
+            // インデックス無しでは、フィールド参照の宣言が未解析のファイルにあれば解析しておく
+            if (onDemandIndexer != null) {
+                Set<String> fieldKeys = new HashSet<>();
+                for (var node : graph.nodes.values()) {
+                    if (node.lineStart <= 0) continue;
+                    for (String ref : node.fieldRefs) {
+                        var r = FieldRef.decode(ref);
+                        if (r != null) fieldKeys.add(r.field());
+                    }
+                }
+                onDemandIndexer.ensureFieldDeclarations(fieldKeys);
+            }
             // code は toCallCanvasJson 内でファイルから Javadoc 含めて取得するためここでは埋めない
             JSONObject callcanvasJson = toCallCanvasJson(graph, cfg.srcRoots, resolvedRoots, cfg.workspace,
                     cfg.windowWidth,
-                    finalCallIndex != null ? finalCallIndex.symbolIndex : null);
+                    onDemand ? null : bfsIndex.symbolIndex,
+                    bfsIndex::getField);
 
             // 動的ファイル名生成（rootClass 時は 0 件で既に exit しているため、この分岐では resolvedRoots を参照しない）
             String callcanvasFilename;
@@ -765,34 +549,4 @@ public class DepQueryCli {
             alwaysPrint(String.format("Total:        %.1fs", totalTime / 1000.0));
         }
     }
-
-
-    // ===== helpers =====
-
-    record Item(String fqn, int depth) {
-    }
-
-    private static List<Path> expandBootJarLibs(Path bootJar) {
-        List<Path> out = new ArrayList<>();
-        if (!Files.isRegularFile(bootJar) || !bootJar.toString().endsWith(".jar"))
-            return out;
-        try (ZipFile zf = new ZipFile(bootJar.toFile())) {
-            Enumeration<? extends ZipEntry> entries = zf.entries();
-            while (entries.hasMoreElements()) {
-                ZipEntry e = entries.nextElement();
-                String name = e.getName();
-                if (name.startsWith("BOOT-INF/lib/") && name.endsWith(".jar")) {
-                    Path tmp = Files.createTempFile("depq-bootlib-", ".jar");
-                    try (var in = zf.getInputStream(e)) {
-                        Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
-                    }
-                    out.add(tmp);
-                }
-            }
-        } catch (Throwable ignore) {
-        }
-        return out;
-    }
-
-
 }

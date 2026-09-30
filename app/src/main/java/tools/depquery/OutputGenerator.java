@@ -247,7 +247,8 @@ class OutputGenerator {
      */
     static JSONObject toCallCanvasJson(GraphModels.Graph g, List<Path> srcRoots, List<String> rootFqns,
             Path workspace, int windowWidth,
-            Map<String, CallIndexModels.ConstantEntry> symbolIndex) {
+            Map<String, CallIndexModels.ConstantEntry> symbolIndex,
+            java.util.function.Function<String, CallIndexModels.FieldEntry> fieldLookup) {
         long callcanvasStart = System.currentTimeMillis();
         var out = new JSONObject();
         out.put("autoLayout", true);
@@ -284,6 +285,8 @@ class OutputGenerator {
         int sourceCodeFileCount = 0;
         long sourceCodeStart = System.currentTimeMillis();
         Map<Path, List<String>> fileLinesCache = new HashMap<>();
+        // fieldRefs が参照するフィールドの宣言（キー順で出す）
+        Map<String, CallIndexModels.FieldEntry> usedFields = new TreeMap<>();
 
         // パス2: ノード（windows）を生成
         for (var node : g.nodes.values()) {
@@ -347,6 +350,7 @@ class OutputGenerator {
                 }
             }
             window.put("code", code);
+            putFieldRefs(window, node, code, fieldLookup, usedFields);
 
             // 位置は autoLayout で自動計算されるが、初期位置を設定
             // レベル間の間隔はウィンドウ幅 + 100pxのギャップ
@@ -410,6 +414,14 @@ class OutputGenerator {
         }
         out.put("connections", connections);
 
+        if (!usedFields.isEmpty()) {
+            var fieldsObj = new JSONObject();
+            for (var e : usedFields.entrySet()) {
+                fieldsObj.put(e.getKey(), fieldJson(e.getKey(), e.getValue(), srcRoots, workspace, fileLinesCache));
+            }
+            out.put("fields", fieldsObj);
+        }
+
         if (symbolIndex != null && !symbolIndex.isEmpty()) {
             var symObj = new JSONObject();
             symbolIndex.forEach((k, e) -> symObj.put(k, e.toJson()));
@@ -422,6 +434,74 @@ class OutputGenerator {
         }
 
         return out;
+    }
+
+    /**
+     * window の code の範囲内にあり、宣言が分かるフィールド参照を fieldRefs として付ける（無ければ付けない）。
+     * col はその行内の char offset なので、code の該当行の [col, col+len) が識別子になる。
+     */
+    private static void putFieldRefs(JSONObject window, GraphModels.Node node, String code,
+            java.util.function.Function<String, CallIndexModels.FieldEntry> fieldLookup,
+            Map<String, CallIndexModels.FieldEntry> usedFields) {
+        if (fieldLookup == null || node.fieldRefs == null || node.fieldRefs.isEmpty()) return;
+        int start = window.getInt("startLine");
+        int end = start + (int) code.chars().filter(c -> c == '\n').count();
+        List<CallIndexModels.FieldRef> refs = new ArrayList<>();
+        for (String s : node.fieldRefs) {
+            CallIndexModels.FieldRef r = CallIndexModels.FieldRef.decode(s);
+            if (r == null || r.line() < start || r.line() > end) continue;
+            CallIndexModels.FieldEntry f = usedFields.get(r.field());
+            if (f == null) {
+                f = fieldLookup.apply(r.field());
+                if (f == null) continue;
+                usedFields.put(r.field(), f);
+            }
+            refs.add(r);
+        }
+        if (refs.isEmpty()) return;
+        refs.sort(Comparator.comparingInt(CallIndexModels.FieldRef::line).thenComparingInt(CallIndexModels.FieldRef::col));
+        var arr = new JSONArray();
+        for (var r : refs) {
+            arr.put(new JSONObject().put("line", r.line()).put("col", r.col()).put("len", r.len()).put("field", r.field()));
+        }
+        window.put("fieldRefs", arr);
+    }
+
+    /** CallCanvas JSON の fields の 1 件（displayName・code は宣言の範囲の原文から作る） */
+    private static JSONObject fieldJson(String key, CallIndexModels.FieldEntry f, List<Path> srcRoots, Path workspace,
+            Map<Path, List<String>> fileLinesCache) {
+        String cls = f.declaringClass != null ? f.declaringClass : key.substring(0, Math.max(0, key.indexOf('#')));
+        String simple = cls.substring(cls.lastIndexOf('.') + 1);
+        String name = key.substring(key.indexOf('#') + 1);
+        var obj = new JSONObject();
+        obj.put("displayName", simple + " # " + name);
+        obj.put("filePath", toRelativePath(f.file, srcRoots, workspace));
+        obj.put("startLine", f.startLine);
+        obj.put("endLine", f.endLine);
+        String code = "// Source not available (file not found)";
+        Path abs = resolveAbsolutePath(f.file, srcRoots, workspace);
+        if (abs != null) {
+            List<String> lines = fileLinesCache.get(abs);
+            if (lines == null) {
+                try {
+                    lines = Files.readAllLines(abs);
+                    fileLinesCache.put(abs, lines);
+                } catch (IOException e) {
+                    // フォールバック（code は取得不可の表記のまま）
+                }
+            }
+            if (lines != null && f.startLine >= 1 && f.startLine <= f.endLine && f.endLine <= lines.size()) {
+                code = String.join("\n", lines.subList(f.startLine - 1, f.endLine));
+            }
+        }
+        obj.put("code", code);
+        obj.put("type", f.type);
+        obj.put("declaringClass", cls);
+        obj.put("static", f.isStatic);
+        obj.put("final", f.isFinal);
+        obj.put("enumConstant", f.enumConstant);
+        obj.put("value", f.value != null ? f.value : JSONObject.NULL);
+        return obj;
     }
 
     /**

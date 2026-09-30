@@ -6,6 +6,12 @@
   }},
   "windows": [
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 7,
+        "field": "com.example.core.component.ExternalApiComponent#SUCCESS",
+        "line": 38
+      }],
       "code": "    /**\n     * 結果コードが成功かどうかを判定する\n     *\n     * @param resultCode 結果コード\n     * @return true:成功 false:失敗\n     */\n    public boolean checkResultCode(String resultCode) {\n        return SUCCESS.equals(resultCode);\n    }",
       "displayName": "ExternalApiComponent # checkResultCode",
       "startLine": 31,
@@ -13,6 +19,12 @@
       "id": "window-6"
     },
     {
+      "fieldRefs": [{
+        "col": 29,
+        "len": 7,
+        "field": "com.example.core.component.ExternalApiComponent#SUCCESS",
+        "line": 25
+      }],
       "code": "    /**\n     * 注文を外部APIに送信する\n     *\n     * @param request 注文リクエスト\n     * @return 注文結果\n     */\n    public OrderResult submitOrder(OrderRequest request) {\n        // 外部APIへのHTTPリクエスト処理\n        OrderResult result = new OrderResult();\n        result.setResultCode(SUCCESS);\n        result.setReceptionNo(\"REC-\" + System.currentTimeMillis());\n        result.setMessage(\"注文受付完了\");\n        return result;\n    }",
       "displayName": "ExternalApiComponent # submitOrder",
       "startLine": 16,
@@ -20,6 +32,20 @@
       "id": "window-5"
     },
     {
+      "fieldRefs": [
+        {
+          "col": 29,
+          "len": 20,
+          "field": "com.example.front.service.FrontService#externalApiComponent",
+          "line": 38
+        },
+        {
+          "col": 13,
+          "len": 20,
+          "field": "com.example.front.service.FrontService#externalApiComponent",
+          "line": 42
+        }
+      ],
       "code": "    /**\n     * 注文処理を実行する\n     *\n     * ★ このメソッドを \"CallCanvas: Open Viewer with File\" で解析すると、\n     *   ExternalApiComponent#submitOrder() が解析されない（不具合）\n     *\n     * @param form      注文フォーム\n     * @param customerId 顧客ID\n     * @return 受付番号\n     */\n    public String processOrder(OrderFormDto form, String customerId) {\n        // リクエスト組み立て\n        OrderRequest request = new OrderRequest();\n        request.setCustomerId(customerId);\n        request.setItemCode(form.getItemCode());\n\n        // ★ ここで ExternalApiComponent#submitOrder() を呼び出す\n        // call-index.json には \"ExternalApiComponent#submitOrder(...)\" と不完全FQNで記録される\n        OrderResult result = externalApiComponent.submitOrder(request);\n\n        // 結果コードチェック\n        // call-index.json には \"ExternalApiComponent#checkResultCode(...)\" と不完全FQNで記録される\n        if (!externalApiComponent.checkResultCode(result.getResultCode())) {\n            throw new RuntimeException(\"API error: \" + result.getMessage());\n        }\n\n        // 後続処理\n        String receptionNo = result.getReceptionNo();\n        sendConfirmationMail(customerId, receptionNo);\n\n        return receptionNo;\n    }",
       "displayName": "FrontService # processOrder",
       "startLine": 20,
@@ -34,6 +60,12 @@
       "id": "window-10"
     },
     {
+      "fieldRefs": [{
+        "col": 41,
+        "len": 8,
+        "field": "com.example.front.dto.OrderFormDto#itemCode",
+        "line": 11
+      }],
       "code": "    public String getItemCode() { return itemCode; }",
       "displayName": "OrderFormDto # getItemCode",
       "startLine": 11,
@@ -41,6 +73,12 @@
       "id": "window-4"
     },
     {
+      "fieldRefs": [{
+        "col": 56,
+        "len": 10,
+        "field": "com.example.core.dto.OrderRequest#customerId",
+        "line": 15
+      }],
       "code": "    public void setCustomerId(String customerId) { this.customerId = customerId; }",
       "displayName": "OrderRequest # setCustomerId",
       "startLine": 15,
@@ -48,6 +86,12 @@
       "id": "window-2"
     },
     {
+      "fieldRefs": [{
+        "col": 52,
+        "len": 8,
+        "field": "com.example.core.dto.OrderRequest#itemCode",
+        "line": 18
+      }],
       "code": "    public void setItemCode(String itemCode) { this.itemCode = itemCode; }",
       "displayName": "OrderRequest # setItemCode",
       "startLine": 18,
@@ -55,6 +99,12 @@
       "id": "window-3"
     },
     {
+      "fieldRefs": [{
+        "col": 40,
+        "len": 7,
+        "field": "com.example.core.dto.OrderResult#message",
+        "line": 17
+      }],
       "code": "    public String getMessage() { return message; }",
       "displayName": "OrderResult # getMessage",
       "startLine": 17,
@@ -62,6 +112,12 @@
       "id": "window-8"
     },
     {
+      "fieldRefs": [{
+        "col": 44,
+        "len": 11,
+        "field": "com.example.core.dto.OrderResult#receptionNo",
+        "line": 14
+      }],
       "code": "    public String getReceptionNo() { return receptionNo; }",
       "displayName": "OrderResult # getReceptionNo",
       "startLine": 14,
@@ -69,6 +125,12 @@
       "id": "window-9"
     },
     {
+      "fieldRefs": [{
+        "col": 43,
+        "len": 10,
+        "field": "com.example.core.dto.OrderResult#resultCode",
+        "line": 11
+      }],
       "code": "    public String getResultCode() { return resultCode; }",
       "displayName": "OrderResult # getResultCode",
       "startLine": 11,
@@ -76,6 +138,12 @@
       "id": "window-7"
     },
     {
+      "fieldRefs": [{
+        "col": 50,
+        "len": 7,
+        "field": "com.example.core.dto.OrderResult#message",
+        "line": 18
+      }],
       "code": "    public void setMessage(String message) { this.message = message; }",
       "displayName": "OrderResult # setMessage",
       "startLine": 18,
@@ -83,6 +151,12 @@
       "id": "window-13"
     },
     {
+      "fieldRefs": [{
+        "col": 58,
+        "len": 11,
+        "field": "com.example.core.dto.OrderResult#receptionNo",
+        "line": 15
+      }],
       "code": "    public void setReceptionNo(String receptionNo) { this.receptionNo = receptionNo; }",
       "displayName": "OrderResult # setReceptionNo",
       "startLine": 15,
@@ -90,6 +164,12 @@
       "id": "window-12"
     },
     {
+      "fieldRefs": [{
+        "col": 56,
+        "len": 10,
+        "field": "com.example.core.dto.OrderResult#resultCode",
+        "line": 12
+      }],
       "code": "    public void setResultCode(String resultCode) { this.resultCode = resultCode; }",
       "displayName": "OrderResult # setResultCode",
       "startLine": 12,
@@ -97,6 +177,112 @@
       "id": "window-11"
     }
   ],
+  "fields": {
+    "com.example.core.dto.OrderResult#message": {
+      "endLine": 9,
+      "code": "    private String message;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderResult # message",
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "startLine": 9,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.core.dto.OrderResult"
+    },
+    "com.example.core.dto.OrderResult#resultCode": {
+      "endLine": 7,
+      "code": "    private String resultCode;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderResult # resultCode",
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "startLine": 7,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.core.dto.OrderResult"
+    },
+    "com.example.front.dto.OrderFormDto#itemCode": {
+      "endLine": 7,
+      "code": "    private String itemCode;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderFormDto # itemCode",
+      "filePath": "module-front/src/main/java/com/example/front/dto/OrderFormDto.java",
+      "startLine": 7,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.front.dto.OrderFormDto"
+    },
+    "com.example.core.dto.OrderRequest#itemCode": {
+      "endLine": 9,
+      "code": "    private String itemCode;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderRequest # itemCode",
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderRequest.java",
+      "startLine": 9,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.core.dto.OrderRequest"
+    },
+    "com.example.front.service.FrontService#externalApiComponent": {
+      "endLine": 18,
+      "code": "    private ExternalApiComponent externalApiComponent;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "FrontService # externalApiComponent",
+      "filePath": "module-front/src/main/java/com/example/front/service/FrontService.java",
+      "startLine": 18,
+      "final": false,
+      "type": "ExternalApiComponent",
+      "value": null,
+      "declaringClass": "com.example.front.service.FrontService"
+    },
+    "com.example.core.dto.OrderRequest#customerId": {
+      "endLine": 8,
+      "code": "    private String customerId;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderRequest # customerId",
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderRequest.java",
+      "startLine": 8,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.core.dto.OrderRequest"
+    },
+    "com.example.core.dto.OrderResult#receptionNo": {
+      "endLine": 8,
+      "code": "    private String receptionNo;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderResult # receptionNo",
+      "filePath": "module-core/src/main/java/com/example/core/dto/OrderResult.java",
+      "startLine": 8,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.core.dto.OrderResult"
+    },
+    "com.example.core.component.ExternalApiComponent#SUCCESS": {
+      "endLine": 14,
+      "code": "    private static final String SUCCESS = \"0000\";",
+      "static": true,
+      "enumConstant": false,
+      "displayName": "ExternalApiComponent # SUCCESS",
+      "filePath": "module-core/src/main/java/com/example/core/component/ExternalApiComponent.java",
+      "startLine": 14,
+      "final": true,
+      "type": "String",
+      "value": "\"0000\"",
+      "declaringClass": "com.example.core.component.ExternalApiComponent"
+    }
+  },
   "connections": [
     {
       "callLine": 48,

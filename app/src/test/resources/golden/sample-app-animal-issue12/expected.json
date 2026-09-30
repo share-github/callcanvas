@@ -5,28 +5,28 @@
       "displayName": "BaseController # helperMethod",
       "startLine": 8,
       "filePath": "src/main/java/com/example/animal/issue12/BaseController.java",
-      "id": "window-2"
+      "id": "window-3"
     },
     {
       "code": "    private void logAccess(RequestContext request) {\n        // アクセスログ記録\n    }",
       "displayName": "BaseController # logAccess",
       "startLine": 36,
       "filePath": "src/main/java/com/example/animal/issue12/BaseController.java",
-      "id": "window-9"
+      "id": "window-10"
     },
     {
       "code": "    private void processAuthentication(RequestContext request) {\n        // 認証処理\n    }",
       "displayName": "BaseController # processAuthentication",
       "startLine": 28,
       "filePath": "src/main/java/com/example/animal/issue12/BaseController.java",
-      "id": "window-7"
+      "id": "window-8"
     },
     {
       "code": "    private void processAuthorization(RequestContext request) {\n        // 認可処理\n    }",
       "displayName": "BaseController # processAuthorization",
       "startLine": 32,
       "filePath": "src/main/java/com/example/animal/issue12/BaseController.java",
-      "id": "window-8"
+      "id": "window-9"
     },
     {
       "code": "    public String handleRequest(String param) {\n        RequestContext request = new RequestContext(\"GET\", \"/endpoint/\" + param);\n        ResponseContext model = new ResponseContext();\n        \n        // ← L15: このメソッド呼び出しが検出されない\n        helperMethod(request, model);\n        \n        // ← L16: このメソッド呼び出しは検出される\n        return render(\"view/template\");\n    }",
@@ -40,89 +40,175 @@
       "displayName": "CoreController # render",
       "startLine": 8,
       "filePath": "src/main/java/com/example/animal/issue12/CoreController.java",
-      "id": "window-3"
+      "id": "window-4"
     },
     {
+      "fieldRefs": [
+        {
+          "col": 13,
+          "len": 6,
+          "field": "com.example.animal.issue12.RequestContext#method",
+          "line": 11
+        },
+        {
+          "col": 13,
+          "len": 4,
+          "field": "com.example.animal.issue12.RequestContext#path",
+          "line": 12
+        }
+      ],
+      "code": "    public RequestContext(String method, String path) {\n        this.method = method;\n        this.path = path;\n    }",
+      "displayName": "RequestContext # RequestContext",
+      "startLine": 10,
+      "filePath": "src/main/java/com/example/animal/issue12/RequestContext.java",
+      "id": "window-2"
+    },
+    {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 6,
+        "field": "com.example.animal.issue12.RequestContext#method",
+        "line": 16
+      }],
       "code": "    public String getMethod() {\n        return method;\n    }",
       "displayName": "RequestContext # getMethod",
       "startLine": 15,
       "filePath": "src/main/java/com/example/animal/issue12/RequestContext.java",
-      "id": "window-4"
+      "id": "window-5"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 4,
+        "field": "com.example.animal.issue12.RequestContext#path",
+        "line": 20
+      }],
       "code": "    public String getPath() {\n        return path;\n    }",
       "displayName": "RequestContext # getPath",
       "startLine": 19,
       "filePath": "src/main/java/com/example/animal/issue12/RequestContext.java",
-      "id": "window-5"
+      "id": "window-6"
     },
     {
+      "fieldRefs": [{
+        "col": 8,
+        "len": 10,
+        "field": "com.example.animal.issue12.ResponseContext#attributes",
+        "line": 13
+      }],
       "code": "    public void addAttribute(String key, Object value) {\n        attributes.put(key, value);\n    }",
       "displayName": "ResponseContext # addAttribute",
       "startLine": 12,
       "filePath": "src/main/java/com/example/animal/issue12/ResponseContext.java",
-      "id": "window-6"
+      "id": "window-7"
     }
   ],
+  "fields": {
+    "com.example.animal.issue12.RequestContext#method": {
+      "endLine": 7,
+      "code": "    private String method;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "RequestContext # method",
+      "filePath": "src/main/java/com/example/animal/issue12/RequestContext.java",
+      "startLine": 7,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.animal.issue12.RequestContext"
+    },
+    "com.example.animal.issue12.RequestContext#path": {
+      "endLine": 8,
+      "code": "    private String path;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "RequestContext # path",
+      "filePath": "src/main/java/com/example/animal/issue12/RequestContext.java",
+      "startLine": 8,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.animal.issue12.RequestContext"
+    },
+    "com.example.animal.issue12.ResponseContext#attributes": {
+      "endLine": 10,
+      "code": "    private Map<String, Object> attributes = new HashMap<>();",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "ResponseContext # attributes",
+      "filePath": "src/main/java/com/example/animal/issue12/ResponseContext.java",
+      "startLine": 10,
+      "final": false,
+      "type": "Map<String, Object>",
+      "value": null,
+      "declaringClass": "com.example.animal.issue12.ResponseContext"
+    }
+  },
   "connections": [
+    {
+      "callLine": 13,
+      "from": "window-1",
+      "callEndLine": 13,
+      "to": "window-2"
+    },
     {
       "callLine": 17,
       "from": "window-1",
       "callEndLine": 17,
-      "to": "window-2"
+      "to": "window-3"
     },
     {
       "callLine": 20,
       "from": "window-1",
       "callEndLine": 20,
-      "to": "window-3"
-    },
-    {
-      "callLine": 15,
-      "from": "window-2",
-      "callEndLine": 15,
       "to": "window-4"
     },
     {
-      "callLine": 16,
-      "from": "window-2",
-      "callEndLine": 16,
+      "callLine": 25,
+      "from": "window-3",
+      "callEndLine": 25,
+      "to": "window-10"
+    },
+    {
+      "callLine": 15,
+      "from": "window-3",
+      "callEndLine": 15,
       "to": "window-5"
     },
     {
+      "callLine": 16,
+      "from": "window-3",
+      "callEndLine": 16,
+      "to": "window-6"
+    },
+    {
       "callLine": 18,
-      "from": "window-2",
+      "from": "window-3",
       "callEndLine": 18,
-      "to": "window-6"
-    },
-    {
-      "callLine": 19,
-      "from": "window-2",
-      "callEndLine": 19,
-      "to": "window-6"
-    },
-    {
-      "callLine": 20,
-      "from": "window-2",
-      "callEndLine": 20,
-      "to": "window-6"
-    },
-    {
-      "callLine": 23,
-      "from": "window-2",
-      "callEndLine": 23,
       "to": "window-7"
     },
     {
-      "callLine": 24,
-      "from": "window-2",
-      "callEndLine": 24,
+      "callLine": 19,
+      "from": "window-3",
+      "callEndLine": 19,
+      "to": "window-7"
+    },
+    {
+      "callLine": 20,
+      "from": "window-3",
+      "callEndLine": 20,
+      "to": "window-7"
+    },
+    {
+      "callLine": 23,
+      "from": "window-3",
+      "callEndLine": 23,
       "to": "window-8"
     },
     {
-      "callLine": 25,
-      "from": "window-2",
-      "callEndLine": 25,
+      "callLine": 24,
+      "from": "window-3",
+      "callEndLine": 24,
       "to": "window-9"
     }
   ],

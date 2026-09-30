@@ -1,6 +1,12 @@
 {
   "windows": [
     {
+      "fieldRefs": [{
+        "col": 16,
+        "len": 15,
+        "field": "com.example.demo.issue13.ControllerWithService#serviceInstance",
+        "line": 34
+      }],
       "code": "    /**\n     * ターゲットメソッド - 解析対象\n     */\n    public String targetMethod(RequestData request, String param1, String param2) {\n        SessionData session = request.getSession();\n        DtoData dtoInfo = (DtoData) session.getAttribute(\"DTO_INFO\");\n        \n        if (dtoInfo != null && dtoInfo.getId() != null) {\n            try {\n                // ★ このパターンが問題\n                // 外側: serviceInstance.updateData(...) - 検出されるべき\n                // 内側: getHelperMethod(request) - 検出される\n                serviceInstance.updateData(session, dtoInfo, param2, getHelperMethod(request));\n            } catch (Exception e) {\n                session.removeAttribute(\"DTO_INFO\");\n                throw new RuntimeException(\"Error\", e);\n            }\n        }\n        return \"redirect:\" + param1;\n    }",
       "displayName": "ControllerWithService # targetMethod",
       "startLine": 22,
@@ -8,6 +14,12 @@
       "id": "window-1"
     },
     {
+      "fieldRefs": [{
+        "col": 26,
+        "len": 7,
+        "field": "com.example.demo.issue13.HelperEnum#DEFAULT",
+        "line": 12
+      }],
       "code": "    /**\n     * ヘルパーメソッド - 引数で使用される\n     */\n    public HelperEnum getHelperMethod(RequestData request) {\n        return HelperEnum.DEFAULT;\n    }",
       "displayName": "CoreController # getHelperMethod",
       "startLine": 8,
@@ -22,6 +34,12 @@
       "id": "window-5"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 2,
+        "field": "com.example.demo.issue13.DtoData#id",
+        "line": 20
+      }],
       "code": "    public String getId() {\n        return id;\n    }",
       "displayName": "DtoData # getId",
       "startLine": 19,
@@ -29,6 +47,12 @@
       "id": "window-4"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 7,
+        "field": "com.example.demo.issue13.RequestData#session",
+        "line": 15
+      }],
       "code": "    public SessionData getSession() {\n        return session;\n    }",
       "displayName": "RequestData # getSession",
       "startLine": 14,
@@ -36,6 +60,12 @@
       "id": "window-2"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 10,
+        "field": "com.example.demo.issue13.SessionData#attributes",
+        "line": 14
+      }],
       "code": "    public Object getAttribute(String name) {\n        return attributes.get(name);\n    }",
       "displayName": "SessionData # getAttribute",
       "startLine": 13,
@@ -43,6 +73,12 @@
       "id": "window-3"
     },
     {
+      "fieldRefs": [{
+        "col": 8,
+        "len": 10,
+        "field": "com.example.demo.issue13.SessionData#attributes",
+        "line": 22
+      }],
       "code": "    public void removeAttribute(String name) {\n        attributes.remove(name);\n    }",
       "displayName": "SessionData # removeAttribute",
       "startLine": 21,
@@ -50,6 +86,73 @@
       "id": "window-7"
     }
   ],
+  "fields": {
+    "com.example.demo.issue13.RequestData#session": {
+      "endLine": 8,
+      "code": "    private SessionData session;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "RequestData # session",
+      "filePath": "src/main/java/com/example/demo/issue13/RequestData.java",
+      "startLine": 8,
+      "final": false,
+      "type": "SessionData",
+      "value": null,
+      "declaringClass": "com.example.demo.issue13.RequestData"
+    },
+    "com.example.demo.issue13.SessionData#attributes": {
+      "endLine": 11,
+      "code": "    private Map<String, Object> attributes = new HashMap<String, Object>();",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "SessionData # attributes",
+      "filePath": "src/main/java/com/example/demo/issue13/SessionData.java",
+      "startLine": 11,
+      "final": false,
+      "type": "Map<String, Object>",
+      "value": null,
+      "declaringClass": "com.example.demo.issue13.SessionData"
+    },
+    "com.example.demo.issue13.HelperEnum#DEFAULT": {
+      "endLine": 7,
+      "code": "    DEFAULT,",
+      "static": true,
+      "enumConstant": true,
+      "displayName": "HelperEnum # DEFAULT",
+      "filePath": "src/main/java/com/example/demo/issue13/HelperEnum.java",
+      "startLine": 7,
+      "final": true,
+      "type": "HelperEnum",
+      "value": null,
+      "declaringClass": "com.example.demo.issue13.HelperEnum"
+    },
+    "com.example.demo.issue13.ControllerWithService#serviceInstance": {
+      "endLine": 20,
+      "code": "    private DataService serviceInstance;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "ControllerWithService # serviceInstance",
+      "filePath": "src/main/java/com/example/demo/issue13/ControllerWithService.java",
+      "startLine": 20,
+      "final": false,
+      "type": "DataService",
+      "value": null,
+      "declaringClass": "com.example.demo.issue13.ControllerWithService"
+    },
+    "com.example.demo.issue13.DtoData#id": {
+      "endLine": 8,
+      "code": "    private String id;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "DtoData # id",
+      "filePath": "src/main/java/com/example/demo/issue13/DtoData.java",
+      "startLine": 8,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.issue13.DtoData"
+    }
+  },
   "connections": [
     {
       "callLine": 26,

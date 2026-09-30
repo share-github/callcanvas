@@ -1,6 +1,12 @@
 {
   "windows": [
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 13,
+        "field": "com.example.animal.controller.AnimalController#animalService",
+        "line": 30
+      }],
       "code": "    /**\n     * すべての動物に鳴かせる\n     */\n    @GetMapping(\"/sounds\")\n    public List<String> getAllSounds() {\n        return animalService.makeAllAnimalsSound();\n    }",
       "displayName": "AnimalController # getAllSounds",
       "startLine": 25,
@@ -8,6 +14,12 @@
       "id": "window-3"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 13,
+        "field": "com.example.animal.controller.AnimalController#animalService",
+        "line": 118
+      }],
       "code": "    /**\n     * 複雑な行動をすべて実行（すべての階層のメソッド呼び出し）\n     */\n    @GetMapping(\"/complex-actions\")\n    public String performComplexActions() {\n        return animalService.performComplexActions();\n    }",
       "displayName": "AnimalController # performComplexActions",
       "startLine": 113,
@@ -15,6 +27,12 @@
       "id": "window-4"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 7,
+        "field": "com.example.animal.service.AnimalService#animals",
+        "line": 36
+      }],
       "code": "    /**\n     * すべての動物に鳴かせる（ポリモーフィズム）\n     */\n    public List<String> makeAllAnimalsSound() {\n        return animals.stream()\n                .map(Animal::makeSound)\n                .collect(Collectors.toList());\n    }",
       "displayName": "AnimalService # makeAllAnimalsSound",
       "startLine": 32,
@@ -29,6 +47,34 @@
       "id": "window-2"
     }
   ],
+  "fields": {
+    "com.example.animal.controller.AnimalController#animalService": {
+      "endLine": 19,
+      "code": "    private final AnimalService animalService;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "AnimalController # animalService",
+      "filePath": "src/main/java/com/example/animal/controller/AnimalController.java",
+      "startLine": 19,
+      "final": true,
+      "type": "AnimalService",
+      "value": null,
+      "declaringClass": "com.example.animal.controller.AnimalController"
+    },
+    "com.example.animal.service.AnimalService#animals": {
+      "endLine": 15,
+      "code": "    private final List<Animal> animals = new ArrayList<>();",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "AnimalService # animals",
+      "filePath": "src/main/java/com/example/animal/service/AnimalService.java",
+      "startLine": 15,
+      "final": true,
+      "type": "List<Animal>",
+      "value": null,
+      "declaringClass": "com.example.animal.service.AnimalService"
+    }
+  },
   "connections": [
     {
       "callLine": 180,

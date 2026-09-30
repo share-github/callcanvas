@@ -1,7 +1,5 @@
 package tools.depquery;
 
-import com.github.javaparser.ParserConfiguration.LanguageLevel;
-
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -27,9 +25,10 @@ class AnalyzerConfig {
      * （既存の解析結果・キャッシュと出力が変わらないようにする）。
      * Java 22〜25 のソースを解析する場合は --lang-level 25 のように明示指定する。
      */
-    static final LanguageLevel DEFAULT_LANGUAGE_LEVEL = LanguageLevel.JAVA_21;
+    static final String DEFAULT_LANGUAGE_LEVEL = "JAVA_21";
 
-    LanguageLevel languageLevel = DEFAULT_LANGUAGE_LEVEL;
+    /** 言語レベル（JAVA_8 .. JAVA_25）。JDT の compliance へは {@link JdtCallCollector#complianceOf} で変換する */
+    String languageLevel = DEFAULT_LANGUAGE_LEVEL;
     boolean debug = false;
     boolean quiet = false;
     boolean timing = false;
@@ -141,30 +140,15 @@ class AnalyzerConfig {
         return cfg;
     }
 
-    private static LanguageLevel parseLanguageLevel(String level) {
-        return switch (level.toUpperCase()) {
-            case "JAVA_8", "8" -> LanguageLevel.JAVA_8;
-            case "JAVA_9", "9" -> LanguageLevel.JAVA_9;
-            case "JAVA_10", "10" -> LanguageLevel.JAVA_10;
-            case "JAVA_11", "11" -> LanguageLevel.JAVA_11;
-            case "JAVA_12", "12" -> LanguageLevel.JAVA_12;
-            case "JAVA_13", "13" -> LanguageLevel.JAVA_13;
-            case "JAVA_14", "14" -> LanguageLevel.JAVA_14;
-            case "JAVA_15", "15" -> LanguageLevel.JAVA_15;
-            case "JAVA_16", "16" -> LanguageLevel.JAVA_16;
-            case "JAVA_17", "17" -> LanguageLevel.JAVA_17;
-            case "JAVA_18", "18" -> LanguageLevel.JAVA_18;
-            case "JAVA_19", "19" -> LanguageLevel.JAVA_19;
-            case "JAVA_20", "20" -> LanguageLevel.JAVA_20;
-            case "JAVA_21", "21" -> LanguageLevel.JAVA_21;
-            case "JAVA_22", "22" -> LanguageLevel.JAVA_22;
-            case "JAVA_23", "23" -> LanguageLevel.JAVA_23;
-            case "JAVA_24", "24" -> LanguageLevel.JAVA_24;
-            case "JAVA_25", "25" -> LanguageLevel.JAVA_25;
-            default -> {
-                System.err.println("[WARN] Unknown language level: " + level + ", using " + DEFAULT_LANGUAGE_LEVEL);
-                yield DEFAULT_LANGUAGE_LEVEL;
-            }
-        };
+    private static String parseLanguageLevel(String level) {
+        String v = level.toUpperCase();
+        if (v.startsWith("JAVA_")) v = v.substring("JAVA_".length());
+        try {
+            int n = Integer.parseInt(v);
+            if (n >= 8 && n <= 25) return "JAVA_" + n;
+        } catch (NumberFormatException ignored) {
+        }
+        System.err.println("[WARN] Unknown language level: " + level + ", using " + DEFAULT_LANGUAGE_LEVEL);
+        return DEFAULT_LANGUAGE_LEVEL;
     }
 }

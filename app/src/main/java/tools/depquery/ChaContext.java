@@ -1,6 +1,7 @@
 package tools.depquery;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static tools.depquery.DiagnosticLogger.*;
 
@@ -9,8 +10,12 @@ import static tools.depquery.DiagnosticLogger.*;
  * HierarchyCacheを使用して高速にサブクラスを検索
  */
 class ChaContext {
-    private final SourceLocator locator;
     private final HierarchyCache cache;
+    /**
+     * 候補 FQN（サブクラス/親クラス名 + "#" + name(params)）に対応するメソッドが実在するかを判定し、
+     * 実在すればそのメソッドの FQN を返す（無ければ null）。
+     */
+    private final Function<String, String> methodResolver;
     // findOverrides結果のメモ化キャッシュ（パフォーマンス最適化）
     private final Map<String, Set<String>> overrideCache = new HashMap<>();
     // findParentMethods結果のメモ化キャッシュ
@@ -23,14 +28,14 @@ class ChaContext {
     private long sumSubclassesOnCompute;
 
     /**
-     * CHA用のコンテキストを作成
+     * CHA用のコンテキストを作成（実在判定は JDT で解析済みの宣言メソッドの一覧から引く）
      *
-     * @param locator ソースロケータ
-     * @param cache   継承関係キャッシュ
+     * @param cache          継承関係キャッシュ
+     * @param methodResolver 候補 FQN → 実在するメソッドの FQN（無ければ null）
      */
-    ChaContext(SourceLocator locator, HierarchyCache cache) {
-        this.locator = locator;
+    ChaContext(HierarchyCache cache, Function<String, String> methodResolver) {
         this.cache = cache;
+        this.methodResolver = methodResolver;
     }
 
     /**
@@ -97,9 +102,10 @@ class ChaContext {
         // 各サブクラスでメソッドが存在するか確認
         for (String subclass : allSubclasses) {
             String candidateFqn = subclass + "#" + methodSig;
-            if (locator.resolveMethod(candidateFqn).isPresent()) {
-                result.add(candidateFqn);
-                debug("CHA cache: found override " + candidateFqn);
+            String found = methodResolver.apply(candidateFqn);
+            if (found != null) {
+                result.add(found);
+                debug("CHA cache: found override " + found);
             } else {
                 // サブクラスにメソッドがない場合、親クラスチェーンを遡って実装を探す
                 String inheritedImpl = findInheritedMethod(subclass, methodSig);
@@ -131,8 +137,9 @@ class ChaContext {
             visited.add(parent);
 
             String candidateFqn = parent + "#" + methodSig;
-            if (locator.resolveMethod(candidateFqn).isPresent()) {
-                return candidateFqn;
+            String found = methodResolver.apply(candidateFqn);
+            if (found != null) {
+                return found;
             }
 
             // さらに上の親クラスを探索
@@ -190,9 +197,10 @@ class ChaContext {
             visited.add(parent);
 
             String candidateFqn = parent + "#" + methodSig;
-            if (locator.resolveMethod(candidateFqn).isPresent()) {
-                result.add(candidateFqn);
-                debug("CHA parent search: found parent method " + candidateFqn);
+            String found = methodResolver.apply(candidateFqn);
+            if (found != null) {
+                result.add(found);
+                debug("CHA parent search: found parent method " + found);
             }
 
             // さらに上の親クラスも探索（再帰的）

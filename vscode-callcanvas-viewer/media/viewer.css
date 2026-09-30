@@ -757,6 +757,17 @@ body {
     }
 }
 
+/* Field reference (kind: "fieldRef"): dashed, own color. Declared before .on-path/.selected so those still win */
+.arrow.field-ref .arrow-line {
+    stroke: #c586c0;
+    stroke-width: 2;
+    animation: none;
+}
+
+.arrow.field-ref .arrow-head {
+    fill: #c586c0;
+}
+
 .arrow.arrow-1 {
     animation-delay: 0.3s;
 }
@@ -1292,6 +1303,21 @@ body {
 .constant-token {
     border-bottom: 1px dotted rgba(150, 150, 220, 0.6);
     cursor: help;
+}
+
+/* フィールド参照（fieldRefs）: ホバーで下線、Ctrl/⌘+クリックで宣言へ */
+.field-ref-token {
+    cursor: pointer;
+}
+
+.field-ref-token:hover {
+    text-decoration: underline;
+    text-decoration-color: #c586c0;
+}
+
+/* フィールド宣言ウィンドウ（windowType: "field"） */
+.code-window.field-window .title-bar {
+    box-shadow: inset 3px 0 0 #c586c0;
 }
 
 /* ホバーツールチップ */

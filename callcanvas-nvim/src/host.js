@@ -13,6 +13,19 @@ const { NvimClient } = require('./nvimClient');
 const { ViewerServer } = require('./server');
 const { createVscodeShim } = require('./vscodeShim');
 const { languageIdFor } = require('./types');
+
+const NVIM_WATCH_INTERVAL_MS = 1000;
+
+/** @param {number} pid */
+function isProcessAlive(pid) {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (error) {
+        // EPERM: the process exists but belongs to someone else.
+        return error.code === 'EPERM';
+    }
+}
 const { resolveExtensionDirs, activateExtensions } = require('./extensionHost');
 
 /** Entry command per language, as registered by the language extensions. */
@@ -101,6 +114,72 @@ function isAggregatorDir(dir) {
     }
 }
 
+/**
+ * Every module directory an aggregator declares, following nested <modules> and
+ * ':a:b' includes (same rules as the Java extension's moduleDiscovery.ts).
+ */
+function declaredModuleDirs(root) {
+    const dirs = new Set();
+    for (const name of ['settings.gradle', 'settings.gradle.kts']) {
+        let text;
+        try {
+            text = fs.readFileSync(path.join(root, name), 'utf8');
+        } catch {
+            continue;
+        }
+        text = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+        for (const match of text.matchAll(/\binclude\s*(\(([^)]*)\)|([^\n]*))/g)) {
+            for (const quoted of (match[2] ?? match[3] ?? '').matchAll(/['"]([^'"]+)['"]/g)) {
+                const segments = quoted[1].split(':').filter(Boolean);
+                for (let i = 1; i <= segments.length; i++) {
+                    dirs.add(path.resolve(root, ...segments.slice(0, i)));
+                }
+            }
+        }
+    }
+    const walk = (dir) => {
+        let text;
+        try {
+            text = fs.readFileSync(path.join(dir, 'pom.xml'), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
+        } catch {
+            return;
+        }
+        for (const match of text.matchAll(/<module>([^<]+)<\/module>/g)) {
+            let child = path.resolve(dir, match[1].trim());
+            if (/\.xml$/i.test(child)) {
+                child = path.dirname(child);
+            }
+            if (!dirs.has(child) && child !== path.resolve(root)) {
+                dirs.add(child);
+                walk(child);
+            }
+        }
+    };
+    walk(root);
+    return dirs;
+}
+
+/**
+ * Widen an aggregator to the outermost one that (transitively) declares it, up to
+ * `ceiling`. A submodule of ruoyi-modules must reach the top pom, or ruoyi-common and
+ * ruoyi-admin fall outside the workspace the extension is given.
+ */
+function outermostAggregator(dir, ceiling) {
+    let result = dir;
+    let current = dir;
+    while (current !== ceiling) {
+        const parent = path.dirname(current);
+        if (parent === current) {
+            break;
+        }
+        current = parent;
+        if (isAggregatorDir(current) && declaredModuleDirs(current).has(path.resolve(result))) {
+            result = current;
+        }
+    }
+    return result;
+}
+
 /** The text of a directory's Java build files, for spotting dependencies by name. */
 function buildFileText(dir) {
     let text = '';
@@ -171,7 +250,7 @@ function findMultiModuleRoot(module, gitRoot) {
     let dir = module;
     while (true) {
         if (isAggregatorDir(dir)) {
-            return dir;
+            return outermostAggregator(dir, ceiling);
         }
         const parent = path.dirname(dir);
         if (dir === ceiling || parent === dir) {
@@ -263,6 +342,11 @@ class CallCanvasHost {
          * real project, so the idle shutdown must not fire in the middle of one.
          */
         this.runningCommands = 0;
+        // Neovim processes this host serves (pid -> true). When every one of them is
+        // gone the host exits too: a host outliving its editor keeps holding the fixed
+        // port, and the next project's :CallCanvas fails with EADDRINUSE.
+        this.nvimPids = new Set();
+        this.nvimWatch = null;
         /** Last progress line pushed to Neovim, so the same text is not re-sent. */
         this.lastProgressText = null;
         this.lastProgressAt = 0;
@@ -434,6 +518,9 @@ class CallCanvasHost {
         }
         if (request.nvim) {
             this.nvim.setAddress(request.nvim);
+        }
+        if (request.nvimPid) {
+            this.watchNvim(Number(request.nvimPid));
         }
         const line = Math.max(1, Number(request.line) || 1);
         // A directory is a legitimate anchor for `callcanvas command` / `build-index`
@@ -929,6 +1016,39 @@ class CallCanvasHost {
             return;
         }
         this.scheduleIdleShutdown();
+    }
+
+    /**
+     * Follow the life of a Neovim process: once no watched Neovim is alive, shut down.
+     * Polling (not a socket) so a crash or kill -9 is noticed as well as :qa.
+     * @param {number} pid
+     */
+    watchNvim(pid) {
+        if (!Number.isInteger(pid) || pid <= 0) {
+            return;
+        }
+        this.nvimPids.add(pid);
+        if (this.nvimWatch) {
+            return;
+        }
+        this.nvimWatch = setInterval(() => {
+            for (const watched of this.nvimPids) {
+                if (!isProcessAlive(watched)) {
+                    this.nvimPids.delete(watched);
+                }
+            }
+            // An index build still running is left to finish: its result is on disk and
+            // is what the next session starts from.
+            if (this.nvimPids.size > 0 || this.runningCommands > 0) {
+                return;
+            }
+            clearInterval(this.nvimWatch);
+            this.nvimWatch = null;
+            this.log('Neovim exited — shutting down');
+            // Nobody is left to draw a progress line for.
+            this.nvim.address = null;
+            this.shutdown();
+        }, NVIM_WATCH_INTERVAL_MS);
     }
 
     /**

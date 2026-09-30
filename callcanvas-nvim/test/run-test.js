@@ -189,6 +189,32 @@ async function testBuildIndexCliFailure() {
 }
 
 // --- unit-ish checks that need no host ------------------------------------
+function testSavedCanvasData() {
+    section('reload: the served initialData comes from the canvas JSON on disk');
+    const { withSavedCanvasData } = require('../src/server');
+    const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'callcanvas-reload-'));
+    const jsonPath = path.join(dir, 'canvas.json');
+    const html = '<script>window.CALLCANVAS_CONFIG = {\n'
+        + '            initialData: {"windows":[{"id":"window-1"}],"connections":[]},\n'
+        + '            jsonFilePath: "x"\n        };</script>';
+    fs.writeFileSync(jsonPath, JSON.stringify({ windows: [{ id: 'window-1', code: 'a </script> b' }, { id: 'window-field-1', windowType: 'field' }] }));
+    const out = withSavedCanvasData(html, jsonPath);
+    const data = extractInitialData(out);
+    check('initialData replaced by the file (defaults filled in)',
+        !!data && data.windows.length === 2 && Array.isArray(data.connections) && data.autoLayout === true);
+    check('"<" is escaped so the JSON cannot close the script tag', !out.includes('</script> b') && data.windows[0].code === 'a </script> b');
+    check('the rest of the HTML is kept', out.startsWith('<script>window.CALLCANVAS_CONFIG') && out.includes('jsonFilePath: "x"'));
+    fs.writeFileSync(jsonPath, '{ not json');
+    check('broken JSON -> HTML unchanged', withSavedCanvasData(html, jsonPath) === html);
+    fs.writeFileSync(jsonPath, '');
+    check('empty file -> HTML unchanged', withSavedCanvasData(html, jsonPath) === html);
+    check('missing file / no path -> HTML unchanged',
+        withSavedCanvasData(html, path.join(dir, 'nope.json')) === html && withSavedCanvasData(html, '') === html);
+    fs.writeFileSync(jsonPath, '{"windows":[]}');
+    check('HTML without initialData -> unchanged', withSavedCanvasData('<p>x</p>', jsonPath) === '<p>x</p>');
+    fs.rmSync(dir, { recursive: true, force: true });
+}
+
 function testGlob() {
     section('glob translation (workspace.findFiles)');
     check('**/pom.xml matches a nested file', globToRegExp('**/pom.xml').test('a/b/pom.xml'));
@@ -668,6 +694,7 @@ async function main() {
     testConfig();
     testMultiModuleRoot();
     testBridgeKeys();
+    testSavedCanvasData();
     await testFilePanelRendering();
     await testCloseKey();
     await testBuildIndexCliFailure();
@@ -1077,6 +1104,24 @@ async function main() {
         await new Promise(resolve => setTimeout(resolve, 400));
         const after = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
         check('canvas JSON updated', after.windows[0].comment === 'callcanvas-nvim test marker');
+
+        section('a browser reload shows the saved canvas (not the HTML from open time)');
+        const reloadedFirst = extractInitialData((await get(base, `/c/${firstCanvasId}?t=${token}`)).body);
+        check('a reload of the canvas serves the saved edit',
+            !!reloadedFirst && reloadedFirst.windows[0].comment === 'callcanvas-nvim test marker');
+        // A second tab of the same canvas: its reload shows what the first tab saved
+        const otherTab = extractInitialData((await get(base, `/c/${firstCanvasId}?t=${token}`, { Cookie: '' })).body);
+        check('another tab of that canvas sees the edit on its reload',
+            !!otherTab && otherTab.windows[0].comment === 'callcanvas-nvim test marker');
+        const untouchedSecond = extractInitialData((await get(base, `/c/${second.canvasId}?t=${token}`)).body);
+        check('the other canvas is not affected',
+            !!untouchedSecond && untouchedSecond.windows[0].comment !== 'callcanvas-nvim test marker');
+        fs.writeFileSync(jsonPath, '{ broken', 'utf8');
+        const brokenPage = await get(base, `/c/${firstCanvasId}?t=${token}`);
+        const kept = extractInitialData(brokenPage.body);
+        check('a broken canvas JSON falls back to the HTML the host holds',
+            brokenPage.status === 200 && !!kept && kept.windows.length === extractInitialData(firstPage.body).windows.length
+            && kept.windows[0].comment !== 'callcanvas-nvim test marker');
         fs.writeFileSync(jsonPath, before, 'utf8');
 
         // Anchored at the project directory, which is what `callcanvas build-index`

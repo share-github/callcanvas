@@ -33,6 +33,7 @@ function parseArgs(argv) {
             case 'file': options.file = next(); break;
             case 'line': options.line = parseInt(next(), 10); break;
             case 'nvim': options.nvim = next(); break;
+            case 'nvim-pid': options.nvimPid = Number(next()); break;
             case 'root': options.root = next(); break;
             case 'host': options.host = next(); break;
             case 'port': options.port = parseInt(next(), 10); break;
@@ -69,7 +70,7 @@ function parseArgs(argv) {
 const USAGE = `callcanvas — CallCanvas viewer host for Neovim
 
 Usage:
-  callcanvas open --file <path> [--line N] [--nvim <servername>] [options]
+  callcanvas open --file <path> [--line N] [--nvim <servername>] [--nvim-pid <pid>] [options]
   callcanvas serve [--file <path>] [--line N] [options]
   callcanvas command <commandId> [--arg <json>] [--file <path> --line N]
   callcanvas build-index [--file <path>] [--root <dir>]
@@ -216,7 +217,8 @@ async function cmdOpen(options) {
     const result = await request(session, '/api/open', {
         file,
         line: options.line || 1,
-        nvim: options.nvim || process.env.NVIM || null
+        nvim: options.nvim || process.env.NVIM || null,
+        nvimPid: options.nvimPid || null
     });
     if (!result.ok) {
         throw new Error(`host request failed: ${result.error}`);

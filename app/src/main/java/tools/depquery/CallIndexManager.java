@@ -23,6 +23,7 @@ class CallIndexManager {
     private static final String DAT_FILE_NAME = "call-index.dat";   // 1 行 1 メソッドのコンパクト JSON
     private static final String OFF_FILE_NAME = "call-index.off";   // TSV: fqn \t offset \t length
     private static final String META_FILE_NAME = "call-index.meta"; // version/timestamp/symbolIndex
+    private static final String FIELDS_FILE_NAME = "call-index.fields"; // 1 行 1 フィールド: key \t JSON
 
     private final Path projectRoot;
     private final Path cacheDir;
@@ -30,6 +31,7 @@ class CallIndexManager {
     private final Path datFilePath;
     private final Path offFilePath;
     private final Path metaFilePath;
+    private final Path fieldsFilePath;
 
     CallIndexManager(Path projectRoot) {
         this.projectRoot = projectRoot;
@@ -38,6 +40,7 @@ class CallIndexManager {
         this.datFilePath = cacheDir.resolve(DAT_FILE_NAME);
         this.offFilePath = cacheDir.resolve(OFF_FILE_NAME);
         this.metaFilePath = cacheDir.resolve(META_FILE_NAME);
+        this.fieldsFilePath = cacheDir.resolve(FIELDS_FILE_NAME);
     }
 
     /**
@@ -95,6 +98,7 @@ class CallIndexManager {
                 Files.deleteIfExists(datFilePath);
                 Files.deleteIfExists(offFilePath);
                 Files.deleteIfExists(metaFilePath);
+                Files.deleteIfExists(fieldsFilePath);
             } catch (IOException ignore) {
             }
         }
@@ -136,6 +140,11 @@ class CallIndexManager {
             meta.put("symbolIndex", symObj);
         }
         Files.writeString(metaFilePath, meta.toString());
+
+        // フィールドの宣言は出力時に参照されたものだけ引くので、meta とは別に 1 行 1 件で置く
+        StringBuilder fields = new StringBuilder();
+        index.fields.forEach((k, v) -> fields.append(k).append('\t').append(v.toJson().toString()).append('\n'));
+        Files.writeString(fieldsFilePath, fields.toString());
         debug("Random-access sidecar saved: " + index.methods.size() + " methods");
     }
 
@@ -152,7 +161,7 @@ class CallIndexManager {
     CallIndex loadIndexForAnalysis(String direction) throws IOException {
         if ("outgoing".equals(direction) && sidecarExists()) {
             try {
-                return new LazyCallIndex(metaFilePath, offFilePath, datFilePath);
+                return new LazyCallIndex(metaFilePath, offFilePath, datFilePath, fieldsFilePath);
             } catch (Exception e) {
                 debug("Lazy index load failed, falling back to full load: " + e.getMessage());
             }

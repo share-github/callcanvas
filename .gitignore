@@ -54,3 +54,8 @@ vscode-*/*.vsix
 
 # collect-vsix.sh のアトミック配置用一時ファイル
 release/.*.vsix.*
+
+# jdtls (Eclipse/Buildship) がプロジェクトを取り込んだ時に生成するメタデータ
+.classpath
+.project
+.settings/

@@ -1,0 +1,241 @@
+[
+  {
+    "label": "new constants from the analysis become constant-tokens after merge and survive save → reload; existing key is not overwritten",
+    "input": {
+      "canvas": {
+        "symbolIndex": {
+          "MAX_ITEMS": {
+            "value": "50",
+            "qualifier": "OrderController",
+            "type": "int"
+          }
+        },
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "OrderController # handleNewOrder",
+            "filePath": "OrderController.java",
+            "startLine": 10,
+            "code": "int x = MAX_ITEMS;"
+          }
+        ],
+        "connections": []
+      },
+      "newData": {
+        "symbolIndex": {
+          "MAX_ITEMS": {
+            "value": "99",
+            "qualifier": "OtherClass",
+            "type": "int"
+          },
+          "PENDING": {
+            "qualifier": "OrderStatus",
+            "type": "OrderStatus"
+          },
+          "RETRY_LIMIT": {
+            "value": "3",
+            "qualifier": "OrderService",
+            "type": "int"
+          }
+        },
+        "windows": []
+      },
+      "newLine": "if (status == OrderStatus.PENDING && n < RETRY_LIMIT && n < MAX_ITEMS) {"
+    },
+    "expected": {
+      "added": [
+        "PENDING",
+        "RETRY_LIMIT"
+      ],
+      "symbolKeysRebuilt": true,
+      "symbolKeys": [
+        "RETRY_LIMIT",
+        "MAX_ITEMS",
+        "PENDING"
+      ],
+      "symbolIndex": {
+        "MAX_ITEMS": {
+          "value": "50",
+          "qualifier": "OrderController",
+          "type": "int"
+        },
+        "PENDING": {
+          "qualifier": "OrderStatus",
+          "type": "OrderStatus"
+        },
+        "RETRY_LIMIT": {
+          "value": "3",
+          "qualifier": "OrderService",
+          "type": "int"
+        }
+      },
+      "beforeMerge": "if (status == OrderStatus.PENDING && n < RETRY_LIMIT && n < <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span>) {",
+      "afterMerge": "if (status == OrderStatus.<span class=\"constant-token\" data-tip=\"PENDING%20%3A%20OrderStatus%20%20(OrderStatus)\">PENDING</span> && n < <span class=\"constant-token\" data-tip=\"RETRY_LIMIT%20%3D%203%20%20(OrderService)\">RETRY_LIMIT</span> && n < <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span>) {",
+      "savedSymbolIndex": {
+        "MAX_ITEMS": {
+          "value": "50",
+          "qualifier": "OrderController",
+          "type": "int"
+        },
+        "PENDING": {
+          "qualifier": "OrderStatus",
+          "type": "OrderStatus"
+        },
+        "RETRY_LIMIT": {
+          "value": "3",
+          "qualifier": "OrderService",
+          "type": "int"
+        }
+      },
+      "savedHasDerivedKeys": false,
+      "afterReload": "if (status == OrderStatus.<span class=\"constant-token\" data-tip=\"PENDING%20%3A%20OrderStatus%20%20(OrderStatus)\">PENDING</span> && n < <span class=\"constant-token\" data-tip=\"RETRY_LIMIT%20%3D%203%20%20(OrderService)\">RETRY_LIMIT</span> && n < <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span>) {"
+    }
+  },
+  {
+    "label": "canvas without symbolIndex adopts the analysis' symbolIndex",
+    "input": {
+      "canvas": {
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "a # b",
+            "filePath": "a.js",
+            "startLine": 1,
+            "code": "run();"
+          }
+        ],
+        "connections": []
+      },
+      "newData": {
+        "symbolIndex": {
+          "TIMEOUT_MS": {
+            "value": "1000",
+            "qualifier": "config",
+            "type": "number"
+          }
+        },
+        "windows": []
+      },
+      "newLine": "setTimeout(run, TIMEOUT_MS);"
+    },
+    "expected": {
+      "added": [
+        "TIMEOUT_MS"
+      ],
+      "symbolKeysRebuilt": true,
+      "symbolKeys": [
+        "TIMEOUT_MS"
+      ],
+      "symbolIndex": {
+        "TIMEOUT_MS": {
+          "value": "1000",
+          "qualifier": "config",
+          "type": "number"
+        }
+      },
+      "beforeMerge": "setTimeout(run, TIMEOUT_MS);",
+      "afterMerge": "setTimeout(run, <span class=\"constant-token\" data-tip=\"TIMEOUT_MS%20%3D%201000%20%20(config)\">TIMEOUT_MS</span>);",
+      "savedSymbolIndex": {
+        "TIMEOUT_MS": {
+          "value": "1000",
+          "qualifier": "config",
+          "type": "number"
+        }
+      },
+      "savedHasDerivedKeys": false,
+      "afterReload": "setTimeout(run, <span class=\"constant-token\" data-tip=\"TIMEOUT_MS%20%3D%201000%20%20(config)\">TIMEOUT_MS</span>);"
+    }
+  },
+  {
+    "label": "analysis without new keys: _symbolKeys kept (no cache rebuild), nothing added",
+    "input": {
+      "canvas": {
+        "symbolIndex": {
+          "MAX_ITEMS": {
+            "value": "50",
+            "qualifier": "OrderController",
+            "type": "int"
+          }
+        },
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "A # b",
+            "filePath": "A.java",
+            "startLine": 10,
+            "code": "int x = MAX_ITEMS;"
+          }
+        ],
+        "connections": []
+      },
+      "newData": {
+        "symbolIndex": {
+          "MAX_ITEMS": {
+            "value": "7",
+            "qualifier": "Elsewhere",
+            "type": "int"
+          }
+        },
+        "windows": []
+      },
+      "newLine": "return MAX_ITEMS;"
+    },
+    "expected": {
+      "added": [],
+      "symbolKeysRebuilt": false,
+      "symbolKeys": [
+        "MAX_ITEMS"
+      ],
+      "symbolIndex": {
+        "MAX_ITEMS": {
+          "value": "50",
+          "qualifier": "OrderController",
+          "type": "int"
+        }
+      },
+      "beforeMerge": "return <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span>;",
+      "afterMerge": "return <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span>;",
+      "savedSymbolIndex": {
+        "MAX_ITEMS": {
+          "value": "50",
+          "qualifier": "OrderController",
+          "type": "int"
+        }
+      },
+      "savedHasDerivedKeys": false,
+      "afterReload": "return <span class=\"constant-token\" data-tip=\"MAX_ITEMS%20%3D%2050%20%20(OrderController)\">MAX_ITEMS</span>;"
+    }
+  },
+  {
+    "label": "analysis without symbolIndex: canvas unchanged",
+    "input": {
+      "canvas": {
+        "windows": [
+          {
+            "id": "w1",
+            "displayName": "A # b",
+            "filePath": "A.java",
+            "startLine": 10,
+            "code": "int x = 1;"
+          }
+        ],
+        "connections": []
+      },
+      "newData": {
+        "windows": []
+      },
+      "newLine": "return LIMIT;"
+    },
+    "expected": {
+      "added": [],
+      "symbolKeysRebuilt": false,
+      "symbolKeys": [],
+      "symbolIndex": null,
+      "beforeMerge": "return LIMIT;",
+      "afterMerge": "return LIMIT;",
+      "savedSymbolIndex": null,
+      "savedHasDerivedKeys": false,
+      "afterReload": "return LIMIT;"
+    }
+  }
+]

@@ -1,166 +1,15 @@
 package tools.depquery;
 
-import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
-
-import java.nio.file.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static tools.depquery.DiagnosticLogger.*;
 import static tools.depquery.FqnUtils.*;
 
 /**
- * メソッド解決・検索ユーティリティ
- * - フィールド型のフォールバック解決
- * - クラス内メソッドFQN検索
- * - メソッド宣言のシグネチャマッチング
- * - グラフ/インデックスからのルート解決
+ * ルート解決ユーティリティ
+ * - グラフ/宣言済みメソッド一覧からのルート解決（曖昧マッチング対応）
  */
 class MethodResolver {
-
-    /**
-     * フィールドの型をソースファイルから解決（BFS解析フォールバック用）
-     */
-    static String resolveFieldTypeFallback(String currentClassFqn, String fieldName,
-            SourceLocator locator, JavaParserFacade facade) {
-        try {
-            Path sourceFile = locator.resolveClassFile(currentClassFqn);
-            if (sourceFile == null) return null;
-            CompilationUnit cu = locator.getCompilationUnit(sourceFile);
-            if (cu == null) return null;
-            for (var clazz : cu.findAll(ClassOrInterfaceDeclaration.class)) {
-                String classFqn = clazz.getFullyQualifiedName().orElse(null);
-                if (currentClassFqn.equals(classFqn)) {
-                    for (var field : clazz.getFields()) {
-                        for (var variable : field.getVariables()) {
-                            if (variable.getNameAsString().equals(fieldName)) {
-                                try {
-                                    return facade.getType(variable).describe();
-                                } catch (Throwable ex) {
-                                    return field.getElementType().asString();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Throwable ex) {
-            debugVerbose("resolveFieldTypeFallback failed: " + fieldName + " - " + ex.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * クラス内のメソッドFQNをソースファイルから検索（BFS解析フォールバック用）
-     * 引数個数が一致する最初の1件を返す（後方互換）。
-     */
-    static String findMethodFqnInClassFallback(String classFqn, String methodName, int argCount,
-            SourceLocator locator, JavaParserFacade facade) {
-        List<String> all = findAllMethodFqnsInClassFallback(classFqn, methodName, argCount, locator, facade);
-        return all.isEmpty() ? null : all.get(0);
-    }
-
-    /**
-     * クラス内の引数個数が一致する全オーバーロードのFQNを返す（BFS解析フォールバック用）。
-     * オーバーロードが複数ある場合に全候補を返すことで、偽陰性（欠落）を防ぐ。
-     */
-    static List<String> findAllMethodFqnsInClassFallback(String classFqn, String methodName, int argCount,
-            SourceLocator locator, JavaParserFacade facade) {
-        List<String> results = new ArrayList<>();
-        try {
-            Path sourceFile = locator.resolveClassFile(classFqn);
-            if (sourceFile == null) return results;
-            CompilationUnit cu = locator.getCompilationUnit(sourceFile);
-            if (cu == null) return results;
-            for (var clazz : cu.findAll(ClassOrInterfaceDeclaration.class)) {
-                String currentFqn = clazz.getFullyQualifiedName().orElse(null);
-                if (classFqn.equals(currentFqn)) {
-                    for (var md : clazz.getMethods()) {
-                        if (md.getNameAsString().equals(methodName) &&
-                                md.getParameters().size() == argCount) {
-                            results.add(buildMethodFqn(classFqn, md, facade));
-                        }
-                    }
-                }
-            }
-        } catch (Throwable ex) {
-            debugVerbose("findAllMethodFqnsInClassFallback failed: " + classFqn + "#" + methodName);
-        }
-        return results;
-    }
-
-    static Optional<MethodDeclaration> findMethodDeclBySig(CompilationUnit cu, String fqn) {
-        // fqn: pkg.Class#name(param,param)
-        int h = fqn.indexOf('#');
-        String className = fqn.substring(0, h);
-        String sig = fqn.substring(h + 1);
-        String mname = sig.substring(0, sig.indexOf('('));
-        String params = sig.substring(sig.indexOf('(') + 1, sig.lastIndexOf(')'));
-        var paramList = params.isBlank() ? List.<String>of() : splitParams(params);
-
-        debugVerbose("findMethodDeclBySig: fqn=" + fqn + " className=" + className + " mname=" + mname + " paramList="
-                + paramList);
-
-        return cu.findAll(ClassOrInterfaceDeclaration.class).stream()
-                .filter(c -> c.getFullyQualifiedName().orElse("").equals(className))
-                .findFirst()
-                .flatMap(c -> {
-                    debugVerbose("findMethodDeclBySig: found class, methods=" + c.getMethodsByName(mname).size());
-                    // パラメータ型も考慮してマッチング（オーバーロード対応）
-                    return c.getMethodsByName(mname).stream()
-                            .filter(md -> md.getParameters().size() == paramList.size())
-                            .filter(md -> {
-                                // パラメータ型の簡易マッチング（完全修飾名の末尾一致）
-                                if (paramList.isEmpty())
-                                    return true;
-
-                                var mdParams = md.getParameters();
-                                for (int i = 0; i < paramList.size(); i++) {
-                                    String expectedType = paramList.get(i);
-                                    String actualType = mdParams.get(i).getType().asString();
-
-                                    debugVerbose("findMethodDeclBySig: comparing param[" + i + "] expected="
-                                            + expectedType + " actual=" + actualType);
-
-                                    // 完全一致
-                                    if (actualType.equals(expectedType)) {
-                                        continue;
-                                    }
-
-                                    // まずジェネリクスを除去してから、末尾一致をチェック
-                                    // 例: "Map<Integer, Map<String, ProductInfo>>" -> "Map" -> 末尾一致チェック
-                                    String expectedBase = removeGenericsFromType(expectedType);
-                                    String actualBase = removeGenericsFromType(actualType);
-
-                                    debugVerbose("findMethodDeclBySig: after removeGenerics expectedBase="
-                                            + expectedBase + " actualBase=" + actualBase);
-
-                                    // 末尾一致（パッケージ省略対応）
-                                    // 例: "Integer" と "java.lang.Integer", "int" と "int"
-                                    String expectedSimple = expectedBase.contains(".")
-                                            ? expectedBase.substring(expectedBase.lastIndexOf('.') + 1)
-                                            : expectedBase;
-                                    String actualSimple = actualBase.contains(".")
-                                            ? actualBase.substring(actualBase.lastIndexOf('.') + 1)
-                                            : actualBase;
-
-                                    debugVerbose("findMethodDeclBySig: after processing expectedSimple="
-                                            + expectedSimple + " actualSimple=" + actualSimple);
-
-                                    if (!expectedSimple.equals(actualSimple)) {
-                                        debugVerbose("findMethodDeclBySig: type mismatch");
-                                        return false;
-                                    }
-                                }
-                                return true;
-                            })
-                            .findFirst();
-                });
-    }
 
     /**
      * ユーザー指定のroot文字列をグラフ内の実際のノードIDに解決する（曖昧マッチング対応）
@@ -249,77 +98,11 @@ class MethodResolver {
     }
 
     /**
-     * 全ソースファイルをスキャンして、メソッドシグネチャのインデックスを構築
-     * Key: 短縮形または完全修飾名のメソッドシグネチャ
-     * Value: 完全修飾名のメソッドシグネチャ
+     * ユーザー指定のメソッドシグネチャを、宣言済みメソッドの FQN 一覧から解決（曖昧マッチング対応）
      */
-    static Map<String, String> buildMethodIndex(List<Path> srcRoots, JavaParserFacade facade) {
-        Map<String, String> index = new HashMap<>();
-        // パースに失敗したファイル数。言語レベル不一致（例: Java 25 のソースを
-        // --lang-level 21 で解析）だと全滅するので、黙って 0 件にせず警告する。
-        var parseFailures = new java.util.concurrent.atomic.AtomicInteger();
-        var firstFailure = new java.util.concurrent.atomic.AtomicReference<Path>();
-
-        for (Path root : srcRoots) {
-            try (var stream = Files.walk(root)) {
-                stream.filter(p -> p.toString().endsWith(".java"))
-                        .forEach(javaFile -> {
-                            try {
-                                CompilationUnit cu = StaticJavaParser.parse(Files.readString(javaFile));
-                                cu.findAll(ClassOrInterfaceDeclaration.class).forEach(cls -> {
-                                    String classFqn = cls.getFullyQualifiedName().orElse(null);
-                                    String simpleClassName = cls.getNameAsString();
-                                    if (classFqn == null)
-                                        return;
-
-                                    cls.getMethods().forEach(md -> {
-                                        String methodName = md.getNameAsString();
-
-                                        // パラメータ型を取得（完全修飾名）
-                                        List<String> paramsFqn = md.getParameters().stream()
-                                                .map(p -> {
-                                                    try {
-                                                        return facade.getType(p).describe();
-                                                    } catch (Throwable t) {
-                                                        return p.getType().asString();
-                                                    }
-                                                })
-                                                .toList();
-
-                                        // 完全修飾名のシグネチャ
-                                        String fullSig = classFqn + "#" + methodName + "(" + String.join(",", paramsFqn)
-                                                + ")";
-
-                                        // インデックスに登録
-                                        index.put(fullSig, fullSig);
-                                    });
-                                });
-                            } catch (Throwable t) {
-                                // パースエラー自体は無視して走査を続ける（件数のみ記録）
-                                if (parseFailures.getAndIncrement() == 0) {
-                                    firstFailure.set(javaFile);
-                                }
-                            }
-                        });
-            } catch (Throwable ignored) {
-            }
-        }
-
-        if (parseFailures.get() > 0) {
-            info("[WARN] Failed to parse " + parseFailures.get() + " source file(s), e.g. " + firstFailure.get());
-            info("[WARN] If the project uses a newer Java syntax, set the language level"
-                    + " (--lang-level 25 / javaCallHierarchy.languageLevel).");
-        }
-
-        return index;
-    }
-
-    /**
-     * ユーザー指定のメソッドシグネチャを、メソッドインデックスから解決
-     */
-    static String resolveRootMethodFqn(String userRoot, Map<String, String> methodIndex) {
+    static String resolveRootMethodFqn(String userRoot, Collection<String> methodFqns) {
         // 1. 完全一致
-        if (methodIndex.containsKey(userRoot)) {
+        if (methodFqns.contains(userRoot)) {
             return userRoot;
         }
 
@@ -342,7 +125,7 @@ class MethodResolver {
         List<String> userParams = paramsPart.isBlank() ? List.of() : splitParams(paramsPart);
 
         // 3. インデックス内の全シグネチャと照合
-        for (String candidateFqn : methodIndex.keySet()) {
+        for (String candidateFqn : methodFqns) {
             if (!candidateFqn.contains("#"))
                 continue;
 

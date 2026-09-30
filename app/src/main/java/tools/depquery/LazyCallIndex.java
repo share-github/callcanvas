@@ -31,14 +31,19 @@ class LazyCallIndex extends CallIndex {
     /** fqn -> [byteOffset, byteLength]（.dat 内の位置）。 */
     private final Map<String, long[]> offsets = new HashMap<>();
     private final RandomAccessFile data;
+    private final Path fieldsFile;
+    /** key -> JSON（call-index.fields を初回の getField で読む。解析は引かれたものだけ） */
+    private Map<String, String> rawFields;
 
     /**
      * @param metaFile version/timestamp/symbolIndex を含む小さな JSON
      * @param offFile  TSV: fqn \t offset \t length（1 行 1 メソッド）
      * @param datFile  1 行 1 メソッドのコンパクト JSON（ランダムアクセス対象）
+     * @param fieldsFile 1 行 1 フィールド（key \t JSON）。無ければフィールドの宣言は無い扱い
      */
-    LazyCallIndex(Path metaFile, Path offFile, Path datFile) throws IOException {
+    LazyCallIndex(Path metaFile, Path offFile, Path datFile, Path fieldsFile) throws IOException {
         super();
+        this.fieldsFile = fieldsFile;
         // meta: version / timestamp / symbolIndex
         String metaContent = Files.readString(metaFile);
         JSONObject meta = new JSONObject(metaContent);
@@ -85,6 +90,35 @@ class LazyCallIndex extends CallIndex {
             return entry;
         } catch (Exception e) {
             debugVerbose("LazyCallIndex.getMethod failed for " + fqn + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    CallIndexModels.FieldEntry getField(String key) {
+        CallIndexModels.FieldEntry cached = fields.get(key);
+        if (cached != null) return cached;
+        if (rawFields == null) {
+            rawFields = new HashMap<>();
+            try {
+                if (fieldsFile != null && Files.exists(fieldsFile)) {
+                    for (String line : Files.readAllLines(fieldsFile, StandardCharsets.UTF_8)) {
+                        int t = line.indexOf('\t');
+                        if (t > 0) rawFields.put(line.substring(0, t), line.substring(t + 1));
+                    }
+                }
+            } catch (IOException e) {
+                debugVerbose("LazyCallIndex: failed to read fields: " + e.getMessage());
+            }
+        }
+        String raw = rawFields.get(key);
+        if (raw == null) return null;
+        try {
+            CallIndexModels.FieldEntry entry = CallIndexModels.FieldEntry.fromJson(new JSONObject(raw));
+            fields.put(key, entry);
+            return entry;
+        } catch (Exception e) {
+            debugVerbose("LazyCallIndex.getField failed for " + key + ": " + e.getMessage());
             return null;
         }
     }

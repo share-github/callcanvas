@@ -100,8 +100,9 @@ export function pickRootWindow(windows: any[], connections: any[], rootWindowId?
             }
         }
     }
+    // Field declaration windows (added by the Viewer) are never a method root.
     function isEntry(w: any): boolean {
-        return !incoming.has(w.id);
+        return !incoming.has(w.id) && w.windowType !== 'field';
     }
 
     if (isEntry(windows[0])) {
@@ -129,7 +130,8 @@ export function computeGraphDepth(connections: any[], rootId: string): number {
     }
     const adjacency: Map<string, string[]> = new Map();
     for (const conn of connections) {
-        if (!conn || conn.from === conn.to) {
+        // fieldRef edges point at field declarations, not callees: they are not call depth
+        if (!conn || conn.from === conn.to || conn.kind === 'fieldRef') {
             continue;
         }
         const children = adjacency.get(conn.from);
@@ -362,6 +364,133 @@ export function preserveLineComments(oldJson: any, newData: any): any {
         if (Object.keys(kept).length > 0) {
             w.lineComments = Object.assign({}, kept, w.lineComments || {});
         }
+    }
+    return newData;
+}
+
+/**
+ * Carry the field declaration windows the user opened (windowType 'field', added by the Viewer)
+ * into the freshly analysed canvas. A declaration window survives when a window that referenced
+ * it (fieldRef connection) is reproduced (same windowKey) and still has a fieldRef to that field;
+ * its code is refreshed from the new `fields` entry (old entry as fallback) and the connection is
+ * re-pointed at the reference line in the new analysis. Position is dropped so auto layout places it.
+ */
+export function preserveFieldWindows(oldJson: any, newData: any): any {
+    const oldWindows = (oldJson && Array.isArray(oldJson.windows)) ? oldJson.windows : [];
+    const oldConnections = (oldJson && Array.isArray(oldJson.connections)) ? oldJson.connections : [];
+    if (!newData || !Array.isArray(newData.windows) || newData.windows.length === 0) {
+        return newData;
+    }
+    const fieldWindows: any[] = [];
+    for (const w of oldWindows) {
+        if (w && w.windowType === 'field' && w.field) {
+            fieldWindows.push(w);
+        }
+    }
+    if (fieldWindows.length === 0) {
+        return newData;
+    }
+
+    const oldById: Map<string, any> = new Map();
+    for (const w of oldWindows) {
+        oldById.set(w.id, w);
+    }
+    const newByKey: Map<string, any> = new Map();
+    const usedIds: Set<string> = new Set();
+    for (const w of newData.windows) {
+        usedIds.add(w.id);
+        if (w.windowType !== 'field' && !newByKey.has(windowKey(w))) {
+            newByKey.set(windowKey(w), w);
+        }
+    }
+    const oldFields = (oldJson && oldJson.fields) ? oldJson.fields : {};
+    const newFields = (newData.fields && typeof newData.fields === 'object') ? newData.fields : {};
+    if (!Array.isArray(newData.connections)) {
+        newData.connections = [];
+    }
+
+    for (const fw of fieldWindows) {
+        const entry = newFields[fw.field] || oldFields[fw.field];
+        if (!entry) {
+            continue;
+        }
+        let carriedId = fw.id;
+        for (let n = 2; usedIds.has(carriedId); n++) {
+            carriedId = fw.id + '-' + n;
+        }
+        const carried: any[] = [];
+        for (const conn of oldConnections) {
+            if (!conn || conn.kind !== 'fieldRef' || conn.to !== fw.id) {
+                continue;
+            }
+            const oldSource = oldById.get(conn.from);
+            // (no `cond ? f(x) : y` here: the golden harness strips `) : ...{` as a return type)
+            let newSource: any = undefined;
+            if (oldSource) {
+                newSource = newByKey.get(windowKey(oldSource));
+            }
+            const refLines: number[] = [];
+            if (newSource && Array.isArray(newSource.fieldRefs)) {
+                for (const r of newSource.fieldRefs) {
+                    if (r && r.field === fw.field && typeof r.line === 'number') {
+                        refLines.push(r.line);
+                    }
+                }
+            }
+            if (refLines.length === 0) {
+                continue;
+            }
+            const line = refLines.indexOf(conn.callLine) >= 0 ? conn.callLine : refLines[0];
+            let duplicate = false;
+            for (const c of carried) {
+                if (c.from === newSource.id && c.callLine === line) {
+                    duplicate = true;
+                }
+            }
+            if (!duplicate) {
+                carried.push({ from: newSource.id, to: carriedId, callLine: line, callEndLine: line, kind: 'fieldRef' });
+            }
+        }
+        if (carried.length === 0) {
+            continue;
+        }
+        if (!newFields[fw.field]) {
+            newFields[fw.field] = entry;
+        }
+        const win: any = {
+            id: carriedId,
+            windowType: 'field',
+            field: fw.field,
+            displayName: entry.displayName || fw.displayName || fw.field,
+            filePath: entry.filePath,
+            startLine: entry.startLine || 1,
+            code: entry.code || '',
+            collapsed: fw.collapsed === true,
+            visible: fw.visible !== false,
+            fullHeight: fw.fullHeight === true
+        };
+        if (fw.lineComments) {
+            // Same rule as preserveLineComments: drop comments that fall outside the refreshed code
+            const range = windowLineRange(win);
+            const kept: any = {};
+            for (const lineKey of Object.keys(fw.lineComments)) {
+                const lineNumber = parseInt(lineKey, 10);
+                if (!isNaN(lineNumber) && lineNumber >= range[0] && lineNumber <= range[1]) {
+                    kept[lineKey] = fw.lineComments[lineKey];
+                }
+            }
+            if (Object.keys(kept).length > 0) {
+                win.lineComments = kept;
+            }
+        }
+        newData.windows.push(win);
+        usedIds.add(carriedId);
+        for (const c of carried) {
+            newData.connections.push(c);
+        }
+    }
+    if (Object.keys(newFields).length > 0) {
+        newData.fields = newFields;
     }
     return newData;
 }

@@ -22,6 +22,12 @@
       "id": "window-3"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 16,
+        "field": "com.example.app.controller.OrderController#inventoryService",
+        "line": 46
+      }],
       "code": "    /**\n     * Process inventory with nested generics - test case for Map<Integer,\n     * Map<String, ProductInfo>>\n     */\n    public int processInventory(Map<Integer, Map<String, ProductInfo>> inventoryData, String warehouseId) {\n        return inventoryService.processInventoryMap(inventoryData, warehouseId);\n    }",
       "displayName": "OrderController # processInventory",
       "startLine": 41,
@@ -29,6 +35,12 @@
       "id": "window-1"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 8,
+        "field": "com.example.domain.ProductInfo#quantity",
+        "line": 22
+      }],
       "code": "    public int getQuantity() {\n        return quantity;\n    }",
       "displayName": "ProductInfo # getQuantity",
       "startLine": 21,
@@ -36,6 +48,34 @@
       "id": "window-4"
     }
   ],
+  "fields": {
+    "com.example.domain.ProductInfo#quantity": {
+      "endLine": 8,
+      "code": "    private int quantity;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "ProductInfo # quantity",
+      "filePath": "src/main/java/com/example/domain/ProductInfo.java",
+      "startLine": 8,
+      "final": false,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.domain.ProductInfo"
+    },
+    "com.example.app.controller.OrderController#inventoryService": {
+      "endLine": 17,
+      "code": "    private final InventoryService inventoryService;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderController # inventoryService",
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "startLine": 17,
+      "final": true,
+      "type": "InventoryService",
+      "value": null,
+      "declaringClass": "com.example.app.controller.OrderController"
+    }
+  },
   "connections": [
     {
       "callLine": 46,

@@ -99,7 +99,7 @@ window.addEventListener('DOMContentLoaded', function () {
     document.body.appendChild(tip);
 
     document.addEventListener('mouseover', e => {
-        const el = e.target.closest('.constant-token');
+        const el = e.target.closest('.field-ref-token, .constant-token');
         if (!el) return;
         const encoded = el.dataset.tip || '';
         try {
@@ -117,7 +117,7 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     });
     document.addEventListener('mouseout', e => {
-        if (e.target.closest('.constant-token')) {
+        if (e.target.closest('.field-ref-token, .constant-token')) {
             tip.style.display = 'none';
         }
     });
@@ -430,6 +430,10 @@ function analyzeSelectedWindowNextLevel() {
         showToast('ウィンドウが見つかりません', 'error');
         return;
     }
+    if (windowData.windowType === 'field') {
+        showToast('フィールド宣言ウィンドウは解析対象外です', 'warning');
+        return;
+    }
 
     // Check if it's an analyzable file
     const lang = detectLanguage(windowData.filePath);
@@ -463,6 +467,10 @@ function analyzeSelectedWindowIncomingCalls() {
     
     if (!windowData) {
         showToast('ウィンドウが見つかりません', 'error');
+        return;
+    }
+    if (windowData.windowType === 'field') {
+        showToast('フィールド宣言ウィンドウは解析対象外です', 'warning');
         return;
     }
 
@@ -502,6 +510,10 @@ function analyzeSelectedWindowToRoot() {
 
     if (!windowData) {
         showToast('ウィンドウが見つかりません', 'error');
+        return;
+    }
+    if (windowData.windowType === 'field') {
+        showToast('フィールド宣言ウィンドウは解析対象外です', 'warning');
         return;
     }
 
@@ -584,6 +596,10 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
             currentData.metadata = { ...contextMeta };
         }
     }
+
+    // Adopt the result's constants before any window is (re)rendered below, so windows added by this
+    // merge get constant-tokens too (resets _symbolKeys → wrapConstantTokens rebuilds its cache).
+    const addedSymbols = mergeSymbolIndex(currentData, newData);
 
     const container = document.querySelector('.container');
     
@@ -724,10 +740,32 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
                     from: fromId, 
                     to: toId,
                     callLine: conn.callLine,
-                    callEndLine: conn.callEndLine
+                    callEndLine: conn.callEndLine,
+                    ...(conn.kind ? { kind: conn.kind } : {})
                 });
             }
         });
+    }
+
+    // Merge field declarations; windows already on the canvas adopt the result's fieldRefs
+    const fieldIdMapping = {};
+    newData.windows.forEach((newWindow, index) => {
+        if (index === 0) {
+            if (sourceWindow) fieldIdMapping[newWindow.id] = sourceWindow.id;
+            return;
+        }
+        const key = `${newWindow.filePath}:${newWindow.startLine}`;
+        const existingWindow = currentData.windows.find(w =>
+            `${w.filePath}:${w.code[0]?.line || w.startLine}` === key
+        );
+        if (existingWindow) fieldIdMapping[newWindow.id] = existingWindow.id;
+    });
+    const fieldMerge = mergeFieldData(currentData, newData, fieldIdMapping);
+    if (addedSymbols.length > 0 && addedCount === 0) {
+        // No auto-layout re-render follows: refresh windows already on the canvas for the new constants
+        rerenderCodeAreas(() => true);
+    } else if (fieldMerge.fieldsChanged || fieldMerge.updatedWindowIds.length > 0) {
+        rerenderFieldRefWindows();
     }
 
     // Update arrows and container
@@ -808,6 +846,52 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
     }
 }
 
+/** Re-render rendered code areas that carry fieldRefs (after `fields` / fieldRefs changed). */
+function rerenderFieldRefWindows() {
+    rerenderCodeAreas(w => Array.isArray(w.fieldRefs) && w.fieldRefs.length > 0);
+}
+
+/** Re-render the already-rendered code areas of windows matching `predicate`. */
+function rerenderCodeAreas(predicate) {
+    if (!currentData) return;
+    currentData.windows.forEach(w => {
+        if (!predicate(w)) return;
+        const el = document.getElementById(w.id);
+        const ca = el && el.querySelector('.code-area');
+        if (!ca || ca.dataset.rendered !== 'true') return;
+        delete ca.dataset.hljsApplied;
+        rerenderCodeArea(ca, w);
+    });
+}
+
+/**
+ * Ctrl/⌘+click or context menu on a field-ref token: select the field's declaration window if the
+ * canvas already has one, otherwise create it next to the source window with a fieldRef connection.
+ */
+function goToFieldDeclaration(sourceWindowId, lineNumber, fieldKey) {
+    if (!currentData || !fieldKey) return;
+    const plan = planFieldDeclaration(currentData, sourceWindowId, lineNumber, fieldKey, 'window-field-' + Date.now());
+    if (plan.action === 'missing') {
+        showToast('フィールド宣言が見つかりません: ' + fieldKey, 'warning');
+        return;
+    }
+    if (plan.action === 'create') {
+        const normalized = normalizeWindowData(plan.window);
+        currentData.windows.push(normalized);
+        if (!currentData.connections) currentData.connections = [];
+        currentData.connections.push(plan.connection);
+        const container = document.querySelector('.container');
+        container.appendChild(createWindow(normalized));
+        adjustColumnOverlaps(normalized.id);
+        updateArrows();
+        updateContainerSize();
+        saveData();
+        jumpToWindowWithOrigin(normalized.id, sourceWindowId, lineNumber);
+        return;
+    }
+    jumpToWindowWithOrigin(plan.windowId, sourceWindowId, lineNumber);
+}
+
 function buildSaveData() {
     if (!currentData) return null;
     const payload = {
@@ -847,6 +931,9 @@ function buildSaveData() {
                 collapsed: w.collapsed === true,
                 visible: w.visible !== false,
                 fullHeight: w.fullHeight === true,
+                ...(w.windowType ? { windowType: w.windowType } : {}),
+                ...(w.field ? { field: w.field } : {}),
+                ...(Array.isArray(w.fieldRefs) && w.fieldRefs.length ? { fieldRefs: w.fieldRefs } : {}),
                 ...(Object.keys(lineComments).length ? { lineComments } : {}),
                 ...(diffState ? { diffState } : {}),
                 ...(savedDiffComments ? { savedDiffComments } : {})
@@ -854,6 +941,14 @@ function buildSaveData() {
         }),
         connections: currentData.connections || []
     };
+    // symbolIndex drives constant-token rendering; without it the tokens vanish after the first save
+    // and in Export HTML (both rebuild the canvas from this payload). _symbolKeys is derived, not saved.
+    if (currentData.symbolIndex && typeof currentData.symbolIndex === 'object' && Object.keys(currentData.symbolIndex).length > 0) {
+        payload.symbolIndex = currentData.symbolIndex;
+    }
+    if (currentData.fields && typeof currentData.fields === 'object' && Object.keys(currentData.fields).length > 0) {
+        payload.fields = currentData.fields;
+    }
     const meta = currentData.metadata;
     if (meta && typeof meta === 'object' && !Array.isArray(meta) && Object.keys(meta).length > 0) {
         payload.metadata = meta;
@@ -1492,70 +1587,20 @@ function updateArrows() {
 function deleteWindow(windowId) {
     if (!currentData) return;
 
-    // Collect all windows to delete (cascade delete)
-    const windowsToDelete = new Set([windowId]);
-    
-    // Build a map of child -> parents from connections
-    const childToParents = new Map();
-    if (currentData.connections) {
-        currentData.connections.forEach(conn => {
-            if (!childToParents.has(conn.to)) {
-                childToParents.set(conn.to, new Set());
-            }
-            childToParents.get(conn.to).add(conn.from);
-        });
-    }
+    // Cascade delete: children whose parents are all deleted go too (call and fieldRef connections)
+    const deletion = computeWindowDeletion(currentData.connections, [windowId]);
+    const windowsToDelete = new Set(deletion.deleteIds);
 
-    // Find all windows that should be cascade deleted
-    let changed = true;
-    while (changed) {
-        changed = false;
-        
-        // For each connection, check if the child should be deleted
-        if (currentData.connections) {
-            currentData.connections.forEach(conn => {
-                // If the parent is being deleted
-                if (windowsToDelete.has(conn.from) && !windowsToDelete.has(conn.to)) {
-                    // Get all parents of this child
-                    const parents = childToParents.get(conn.to);
-                    
-                    if (parents) {
-                        // Check if ALL parents are in the delete set
-                        let allParentsDeleted = true;
-                        for (const parentId of parents) {
-                            if (!windowsToDelete.has(parentId)) {
-                                allParentsDeleted = false;
-                                break;
-                            }
-                        }
-                        
-                        // If all parents will be deleted, add this child to delete set
-                        if (allParentsDeleted) {
-                            windowsToDelete.add(conn.to);
-                            changed = true;
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-    // Remove all windows in the delete set
     windowsToDelete.forEach(id => {
         const windowElement = document.getElementById(id);
-    if (windowElement) {
-        windowElement.remove();
-    }
+        if (windowElement) {
+            windowElement.remove();
+        }
     });
 
-    // Remove windows from data
     currentData.windows = currentData.windows.filter(w => !windowsToDelete.has(w.id));
-
-    // Remove connections related to deleted windows
     if (currentData.connections) {
-        currentData.connections = currentData.connections.filter(
-            conn => !windowsToDelete.has(conn.from) && !windowsToDelete.has(conn.to)
-        );
+        currentData.connections = deletion.connections;
     }
 
     // Adjust positions in all columns (close gaps left by deleted windows)
@@ -2350,55 +2395,10 @@ function updatePathHighlight() {
 function deleteSelectedWindows() {
     if (!currentData || selectedWindows.size === 0) return;
 
-    // Collect all windows to delete (including cascade)
-    const windowsToDelete = new Set(selectedWindows);
-    
-    // Build a map of child -> parents from connections
-    const childToParents = new Map();
-    if (currentData.connections) {
-        currentData.connections.forEach(conn => {
-            if (!childToParents.has(conn.to)) {
-                childToParents.set(conn.to, new Set());
-            }
-            childToParents.get(conn.to).add(conn.from);
-        });
-    }
+    // Cascade delete: children whose parents are all deleted go too (call and fieldRef connections)
+    const deletion = computeWindowDeletion(currentData.connections, [...selectedWindows]);
+    const windowsToDelete = new Set(deletion.deleteIds);
 
-    // Find all windows that should be cascade deleted
-    let changed = true;
-    while (changed) {
-        changed = false;
-        
-        // For each connection, check if the child should be deleted
-        if (currentData.connections) {
-            currentData.connections.forEach(conn => {
-                // If the parent is being deleted
-                if (windowsToDelete.has(conn.from) && !windowsToDelete.has(conn.to)) {
-                    // Get all parents of this child
-                    const parents = childToParents.get(conn.to);
-                    
-                    if (parents) {
-                        // Check if ALL parents are in the delete set
-                        let allParentsDeleted = true;
-                        for (const parentId of parents) {
-                            if (!windowsToDelete.has(parentId)) {
-                                allParentsDeleted = false;
-                                break;
-                            }
-                        }
-                        
-                        // If all parents will be deleted, add this child to delete set
-                        if (allParentsDeleted) {
-                            windowsToDelete.add(conn.to);
-                            changed = true;
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-    // Remove all windows in the delete set
     windowsToDelete.forEach(id => {
         const windowElement = document.getElementById(id);
         if (windowElement) {
@@ -2406,14 +2406,9 @@ function deleteSelectedWindows() {
         }
     });
 
-    // Remove windows from data
     currentData.windows = currentData.windows.filter(w => !windowsToDelete.has(w.id));
-
-    // Remove connections related to deleted windows
     if (currentData.connections) {
-        currentData.connections = currentData.connections.filter(
-            conn => !windowsToDelete.has(conn.from) && !windowsToDelete.has(conn.to)
-        );
+        currentData.connections = deletion.connections;
     }
 
     // Clear selection
@@ -2467,7 +2462,7 @@ function collectCallOriginLineKeys(data) {
     const sep = String.fromCharCode(31);
     if (!data || !data.connections) return set;
     for (const conn of data.connections) {
-        if (!conn.from || conn.callLine == null) continue;
+        if (!conn.from || conn.callLine == null || isFieldRefConnection(conn)) continue;
         const startLine = conn.callLine;
         const endLine = conn.callEndLine != null ? conn.callEndLine : conn.callLine;
         for (let L = startLine; L <= endLine; L++) {
@@ -2522,7 +2517,7 @@ function findConnectionsAtLine(windowId, lineNumber, omitEndLine) {
     const rangeEnd = omitEndLine != null && Number.isFinite(omitEndLine) ? omitEndLine : lineNumber;
 
     return currentData.connections.filter(conn => {
-        if (conn.from !== windowId) return false;
+        if (conn.from !== windowId || isFieldRefConnection(conn)) return false;
         const startLine = conn.callLine;
         const endLine = conn.callEndLine != null ? conn.callEndLine : conn.callLine;
         // Overlap [rangeStart, rangeEnd] with [startLine, endLine] (inclusive)
@@ -2555,7 +2550,7 @@ function handleF12Jump(focusedRow) {
         // No connection at this line - try to analyze if it's a Java file
         const targetWindow = currentData.windows.find(w => w.id === windowId);
         
-        if (targetWindow && targetWindow.filePath && detectLanguage(targetWindow.filePath)) {
+        if (targetWindow && targetWindow.windowType !== 'field' && targetWindow.filePath && detectLanguage(targetWindow.filePath)) {
             // Store pending F12 jump info
             pendingF12Jump = { windowId, lineNumber, omitEndLine };
             
@@ -2697,6 +2692,21 @@ function showLineContextMenu(e, lineRow, windowId, lineNumber) {
     const menu = document.createElement('div');
     menu.id = 'line-context-menu';
     menu.className = 'line-context-menu';
+
+    // Go to Field Declaration (only when right-clicking a field reference token)
+    const fieldToken = e.target && e.target.closest ? e.target.closest('.field-ref-token') : null;
+    if (fieldToken) {
+        const fieldKey = fieldToken.getAttribute('data-field');
+        const fieldItem = document.createElement('div');
+        fieldItem.className = 'line-context-menu-item';
+        fieldItem.textContent = 'Go to Field Declaration';
+        fieldItem.addEventListener('click', function(clickEvent) {
+            clickEvent.stopPropagation();
+            menu.remove();
+            goToFieldDeclaration(windowId, lineNumber, fieldKey);
+        });
+        menu.appendChild(fieldItem);
+    }
     
     // Highlight item
     const item = document.createElement('div');
@@ -4026,6 +4036,7 @@ function _rerenderCodeAreaCore(codeArea, windowData, highlightedLines) {
         : {};
 
     const coverageLineMap = currentCoverage ? findCoverageForWindow(windowData) : null;
+    const fieldRefsByLine = currentData?.fields ? groupFieldRefsByLine(windowData.fieldRefs) : null;
 
     codeArea.innerHTML = windowData.code.map((line, index) => {
         let classes = 'code-line';
@@ -4067,8 +4078,12 @@ function _rerenderCodeAreaCore(codeArea, windowData, highlightedLines) {
             content = applySyntaxHighlighting(content, line.isComment);
         }
 
-        if (currentData?._symbolKeys?.length > 0 && !line.nestedOmitCard) {
-            content = wrapConstantTokens(content, currentData.symbolIndex, currentData._symbolKeys);
+        // Field refs are skipped on comment lines and on diff-removed lines (old line numbers)
+        const lineFieldRefs = (fieldRefsByLine && !line.isComment && line.diffType !== 'removed')
+            ? fieldRefsByLine.get(line.line) : null;
+        if (!line.nestedOmitCard && (lineFieldRefs || currentData?._symbolKeys?.length > 0)) {
+            content = decorateCodeLineTokens(content, lineFieldRefs, currentData.fields,
+                currentData.symbolIndex, currentData._symbolKeys || []);
         }
 
         const commentBubbleHtml = line.comment
@@ -5496,7 +5511,7 @@ function updateBracketGuide(focusedRow) {
 
 function createWindow(windowData) {
     const windowDiv = document.createElement('div');
-    windowDiv.className = 'code-window';
+    windowDiv.className = windowData.windowType === 'field' ? 'code-window field-window' : 'code-window';
     windowDiv.id = windowData.id;
 
     // Apply position
@@ -5663,6 +5678,18 @@ function createWindow(windowData) {
             }, 0);
         });
     }
+
+    // Ctrl/⌘+click on a field reference → its declaration window (also in export mode)
+    codeArea.addEventListener('click', function(e) {
+        if (!(e.ctrlKey || e.metaKey)) return;
+        const token = e.target.closest('.field-ref-token');
+        const lineRow = token && token.closest('.code-line-row');
+        if (!lineRow) return;
+        e.preventDefault();
+        e.stopPropagation();
+        goToFieldDeclaration(lineRow.getAttribute('data-window-id'),
+            parseInt(lineRow.getAttribute('data-line-number'), 10), token.getAttribute('data-field'));
+    });
 
     // Add right-click context menu via event delegation on codeArea (not in export mode)
     // 個別行ではなく codeArea に1つ登録することで、rerenderCodeArea() 後も動作する
@@ -5961,6 +5988,282 @@ function wrapConstantTokens(htmlContent, symbolIndex, sortedKeys) {
     });
 }
 
+// ---- Field references (fieldRefs → declaration windows) ----
+// JSON contract: top-level `fields` { "<FQN>#<name>": { displayName, filePath, startLine, endLine, code,
+// type, declaringClass, static, final, enumConstant, value } }, window.fieldRefs [{ line, col, len, field }]
+// (col = UTF-16 index in the raw source line, tab = 1), declaration windows { windowType: 'field', field },
+// and connections { ..., kind: 'fieldRef' }.
+
+function isFieldRefConnection(conn) {
+    return !!conn && conn.kind === 'fieldRef';
+}
+
+function escapeHtmlAttr(text) {
+    // split/join instead of a regex literal with a double quote (the golden-test extractor scans quotes)
+    return String(text).replace(/&/g, '&amp;').split('"').join('&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** Plain-text tooltip for a field reference: modifiers, type, name, constant value, declaring class. */
+function buildFieldTip(fieldKey, entry) {
+    const hashIdx = fieldKey.lastIndexOf('#');
+    const name = hashIdx >= 0 ? fieldKey.slice(hashIdx + 1) : fieldKey;
+    const declaringClass = (entry && entry.declaringClass) || (hashIdx >= 0 ? fieldKey.slice(0, hashIdx) : '');
+    if (!entry) return name;
+    const mods = [];
+    if (entry.enumConstant) {
+        mods.push('enum constant');
+    } else {
+        if (entry.static) mods.push('static');
+        if (entry.final) mods.push('final');
+    }
+    let tip = (mods.length ? mods.join(' ') + ' ' : '') + (entry.type ? entry.type + ' ' : '') + name;
+    if (entry.value != null && String(entry.value).length > 0) {
+        tip += ' = ' + entry.value;
+    }
+    if (declaringClass) tip += '  (' + declaringClass + ')';
+    return tip;
+}
+
+/** Group a window's fieldRefs by absolute line number (sorted by col). */
+function groupFieldRefsByLine(fieldRefs) {
+    const byLine = new Map();
+    if (!Array.isArray(fieldRefs)) return byLine;
+    for (const ref of fieldRefs) {
+        if (!ref || typeof ref.line !== 'number' || typeof ref.col !== 'number' || !(ref.len > 0) || !ref.field) continue;
+        if (!byLine.has(ref.line)) byLine.set(ref.line, []);
+        byLine.get(ref.line).push(ref);
+    }
+    byLine.forEach(list => list.sort((a, b) => a.col - b.col));
+    return byLine;
+}
+
+/**
+ * Wrap the [col, col+len) text ranges of one highlighted line in field-ref-token spans.
+ * Walks the HTML counting text characters (an entity counts as one character), so it works on
+ * hljs output, the fallback highlighter and plain escaped text alike. The token span only ever
+ * contains text: if a range crosses a tag it is closed before the tag and reopened after it.
+ * Ranges inside a comment span (hljs-comment / comment) are left alone. Refs whose field is not
+ * in `fields` are skipped (nothing to jump to).
+ */
+function wrapFieldRefTokens(htmlContent, lineRefs, fields) {
+    if (!htmlContent || !Array.isArray(lineRefs) || lineRefs.length === 0 || !fields) return htmlContent;
+    const refs = lineRefs
+        .filter(r => r && r.len > 0 && typeof r.col === 'number' && r.field && fields[r.field])
+        .sort((a, b) => a.col - b.col);
+    if (refs.length === 0) return htmlContent;
+
+    const openTagFor = ref => '<span class="field-ref-token" data-field="' + escapeHtmlAttr(ref.field)
+        + '" data-tip="' + encodeURIComponent(buildFieldTip(ref.field, fields[ref.field])) + '">';
+    const commentClassRe = /class="[^"]*\bcomment\b/;
+    const tagStack = [];
+    let commentDepth = 0;
+    let out = '';
+    let i = 0;
+    let col = 0;
+    let refIdx = 0;
+    let openRef = null;
+
+    while (i < htmlContent.length) {
+        const ch = htmlContent[i];
+        if (ch === '<') {
+            const end = htmlContent.indexOf('>', i);
+            if (end < 0) { out += htmlContent.slice(i); break; }
+            const tag = htmlContent.slice(i, end + 1);
+            if (openRef) { out += '</span>'; openRef = null; }
+            if (tag.startsWith('</')) {
+                const popped = tagStack.pop();
+                if (popped) commentDepth--;
+            } else if (!tag.endsWith('/>')) {
+                const isComment = commentClassRe.test(tag);
+                tagStack.push(isComment);
+                if (isComment) commentDepth++;
+            }
+            out += tag;
+            i = end + 1;
+            continue;
+        }
+
+        let charHtml = ch;
+        let units = 1;
+        if (ch === '&') {
+            const m = /^&(?:#(\d+)|#x([0-9a-fA-F]+)|[a-zA-Z][a-zA-Z0-9]*);/.exec(htmlContent.slice(i, i + 12));
+            if (m) {
+                charHtml = m[0];
+                const cp = m[1] ? parseInt(m[1], 10) : (m[2] ? parseInt(m[2], 16) : 0);
+                units = cp > 0xFFFF ? 2 : 1;
+            }
+        }
+
+        while (refIdx < refs.length && refs[refIdx].col + refs[refIdx].len <= col) refIdx++;
+        const ref = refs[refIdx];
+        const inRef = !!ref && col >= ref.col && commentDepth === 0;
+        if (inRef && openRef !== ref) {
+            if (openRef) out += '</span>';
+            out += openTagFor(ref);
+            openRef = ref;
+        } else if (!inRef && openRef) {
+            out += '</span>';
+            openRef = null;
+        }
+        out += charHtml;
+        i += charHtml.length;
+        col += units;
+    }
+    if (openRef) out += '</span>';
+    return out;
+}
+
+/**
+ * Field-ref tokens first, then constant tokens (symbolIndex name match) only outside them,
+ * so a position covered by both becomes a field-ref token.
+ */
+function decorateCodeLineTokens(htmlContent, lineRefs, fields, symbolIndex, sortedKeys) {
+    const html = wrapFieldRefTokens(htmlContent, lineRefs, fields);
+    if (!symbolIndex || !Array.isArray(sortedKeys) || sortedKeys.length === 0) return html;
+    if (html.indexOf('field-ref-token') < 0) {
+        return wrapConstantTokens(html, symbolIndex, sortedKeys);
+    }
+    return html
+        .split(/(<span class="field-ref-token"[^>]*>[^<]*<\/span>)/)
+        .map((part, idx) => (idx % 2 === 1 ? part : wrapConstantTokens(part, symbolIndex, sortedKeys)))
+        .join('');
+}
+
+/**
+ * Decide what "Go to Field Declaration" does (pure; DOM side is goToFieldDeclaration).
+ * Returns { action: 'select', windowId } when a declaration window for the field already exists,
+ * { action: 'create', window, connection } for a new one next to the source window,
+ * or { action: 'missing', reason } when the field / source window is unknown.
+ */
+function planFieldDeclaration(data, sourceWindowId, lineNumber, fieldKey, newId) {
+    const windows = (data && Array.isArray(data.windows)) ? data.windows : [];
+    const existing = windows.find(w => w.windowType === 'field' && w.field === fieldKey);
+    if (existing) {
+        return { action: 'select', windowId: existing.id };
+    }
+    const entry = data && data.fields ? data.fields[fieldKey] : null;
+    if (!entry) return { action: 'missing', reason: 'field' };
+    const source = windows.find(w => w.id === sourceWindowId);
+    if (!source) return { action: 'missing', reason: 'source' };
+
+    const srcPos = source.position || {};
+    const srcFirstLine = (Array.isArray(source.code) && source.code[0] && source.code[0].line) || source.startLine || 1;
+    const lineOffset = Math.max(0, (lineNumber || srcFirstLine) - srcFirstLine);
+    const GAP = 80;
+    const left = (srcPos.left || 0) + (srcPos.width || SETTINGS.windowWidth) + GAP;
+    // Don't land inside a window of that column that starts above (adjustColumnOverlaps only pushes
+    // the windows below the new one down): go just below its bottom instead.
+    let top = (srcPos.top || 0) + lineOffset * LINE_HEIGHT;
+    for (const w of windows.slice().sort((a, b) => ((a.position || {}).top || 0) - ((b.position || {}).top || 0))) {
+        const p = w.position || {};
+        if (w.visible === false || Math.abs((p.left || 0) - left) >= 50 || (p.top || 0) > top) continue;
+        const height = w.collapsed === true ? TITLE_BAR_HEIGHT : (p.height || SETTINGS.minWindowHeight);
+        const bottom = (p.top || 0) + height + 20;
+        if (bottom > top) top = bottom;
+    }
+    const win = {
+        id: newId,
+        windowType: 'field',
+        field: fieldKey,
+        displayName: entry.displayName || fieldKey,
+        filePath: entry.filePath,
+        startLine: entry.startLine || 1,
+        code: entry.code || '',
+        position: {
+            top,
+            left,
+            width: SETTINGS.windowWidth,
+            height: SETTINGS.minWindowHeight
+        },
+        collapsed: false,
+        visible: true,
+        fullHeight: false
+    };
+    const connection = { from: sourceWindowId, to: newId, callLine: lineNumber, callEndLine: lineNumber, kind: 'fieldRef' };
+    return { action: 'create', window: win, connection };
+}
+
+/**
+ * Windows removed when `initialIds` are deleted: a child goes too once all of its parents are
+ * deleted (same rule for call and fieldRef connections). Returns { deleteIds (sorted), connections }.
+ */
+function computeWindowDeletion(connections, initialIds) {
+    const toDelete = new Set(initialIds);
+    const conns = Array.isArray(connections) ? connections : [];
+    const childToParents = new Map();
+    conns.forEach(conn => {
+        if (!childToParents.has(conn.to)) childToParents.set(conn.to, new Set());
+        childToParents.get(conn.to).add(conn.from);
+    });
+    let changed = true;
+    while (changed) {
+        changed = false;
+        conns.forEach(conn => {
+            if (toDelete.has(conn.from) && !toDelete.has(conn.to)) {
+                const parents = childToParents.get(conn.to);
+                if (parents && [...parents].every(p => toDelete.has(p))) {
+                    toDelete.add(conn.to);
+                    changed = true;
+                }
+            }
+        });
+    }
+    return {
+        deleteIds: [...toDelete].sort(),
+        connections: conns.filter(conn => !toDelete.has(conn.from) && !toDelete.has(conn.to))
+    };
+}
+
+/**
+ * Merge `fields` and `fieldRefs` of an analysis result into the canvas data (in place).
+ * idMapping: analysis window id → canvas window id (root → source window, duplicates → existing).
+ * An existing window adopts the analysis' fieldRefs only when it has none (never overwrites).
+ * Returns { fieldsChanged, updatedWindowIds }.
+ */
+function mergeFieldData(data, newData, idMapping) {
+    const result = { fieldsChanged: false, updatedWindowIds: [] };
+    if (!data || !newData) return result;
+    if (newData.fields && typeof newData.fields === 'object' && Object.keys(newData.fields).length > 0) {
+        data.fields = Object.assign({}, data.fields || {}, newData.fields);
+        result.fieldsChanged = true;
+    }
+    const mapping = idMapping || {};
+    (newData.windows || []).forEach(nw => {
+        if (!Array.isArray(nw.fieldRefs) || nw.fieldRefs.length === 0) return;
+        const targetId = mapping[nw.id];
+        if (!targetId) return;
+        const target = (data.windows || []).find(w => w.id === targetId);
+        if (!target || (Array.isArray(target.fieldRefs) && target.fieldRefs.length > 0)) return;
+        target.fieldRefs = nw.fieldRefs.map(r => ({ ...r }));
+        result.updatedWindowIds.push(target.id);
+    });
+    return result;
+}
+
+/**
+ * Merge the analysis result's `symbolIndex` (constant name → qualifier/type/value) into the canvas
+ * data (in place). Existing keys win: same-named constants from another class are ambiguous and the
+ * canvas' entry is what its windows were already rendered with. Rebuilds `_symbolKeys` (new array →
+ * wrapConstantTokens drops its regex cache) only when keys were added. Returns the added keys.
+ */
+function mergeSymbolIndex(data, newData) {
+    const added = [];
+    if (!data || !newData) return added;
+    const incoming = newData.symbolIndex;
+    if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) return added;
+    const current = (data.symbolIndex && typeof data.symbolIndex === 'object') ? data.symbolIndex : {};
+    Object.keys(incoming).forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(current, key)) return;
+        current[key] = incoming[key];
+        added.push(key);
+    });
+    if (added.length > 0 || !Array.isArray(data._symbolKeys)) {
+        data.symbolIndex = current;
+        data._symbolKeys = Object.keys(current).sort((a, b) => b.length - a.length);
+    }
+    return added;
+}
+
 function applySyntaxHighlighting(code, isComment) {
     if (isComment) {
         return `<span class="comment">${escapeHtml(code)}</span>`;
@@ -6052,11 +6355,19 @@ function renderArrows(data, container, noAnimation = false) {
         if (fromWindow.visible === false || toWindow.visible === false) return;
 
         // Self-reference (recursive call) - draw a loop arrow
-        if (conn.from === conn.to) {
-            fragment.appendChild(calculateSelfReferenceArrow(fromWindow, index, noAnimation, conn.from, elementMap));
-        } else {
-            fragment.appendChild(calculateArrow(fromWindow, toWindow, index, noAnimation, conn.from, conn.to, elementMap));
+        const svg = conn.from === conn.to
+            ? calculateSelfReferenceArrow(fromWindow, index, noAnimation, conn.from, elementMap)
+            : calculateArrow(fromWindow, toWindow, index, noAnimation, conn.from, conn.to, elementMap);
+        if (isFieldRefConnection(conn)) {
+            // Field reference: dashed + own color (CSS .arrow.field-ref), no draw-in animation
+            svg.classList.add('field-ref');
+            const lineEl = svg.querySelector('.arrow-line');
+            if (lineEl) {
+                lineEl.style.strokeDasharray = '6 4';
+                lineEl.style.strokeDashoffset = '0';
+            }
         }
+        fragment.appendChild(svg);
     });
     container.appendChild(fragment);
 }

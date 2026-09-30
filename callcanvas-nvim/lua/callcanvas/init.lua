@@ -174,6 +174,8 @@ local function open_args(file, line)
     '--file', file,
     '--line', tostring(line),
     '--nvim', vim.v.servername,
+    -- The host exits together with this Neovim (quit, crash or kill).
+    '--nvim-pid', tostring(vim.fn.getpid()),
     '--json',
   }
   if M.config.host then

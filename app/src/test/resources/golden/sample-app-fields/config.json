@@ -1,0 +1,8 @@
+{
+  "description": "sample-app-fields: フィールド参照（fieldRefs / fields）の出力テスト（インデックス使用）",
+  "projectPath": "sample-project/sample-app-fields",
+  "src": "src/main/java",
+  "root": "Counter#all(Point)",
+  "depth": 2,
+  "buildIndex": true
+}

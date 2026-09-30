@@ -91,5 +91,23 @@
       "rootId": "a"
     },
     "expected": 0
+  },
+  {
+    "label": "fieldRef edges (field declarations) do not add call depth",
+    "input": {
+      "connections": [
+        {
+          "from": "a",
+          "to": "b"
+        },
+        {
+          "from": "b",
+          "to": "f",
+          "kind": "fieldRef"
+        }
+      ],
+      "rootId": "a"
+    },
+    "expected": 1
   }
 ]

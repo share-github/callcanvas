@@ -15,6 +15,12 @@
       "id": "window-4"
     },
     {
+      "fieldRefs": [{
+        "col": 12,
+        "len": 11,
+        "field": "com.example.animal.issue11.MailAction#mailService",
+        "line": 21
+      }],
       "code": "    /**\n     * 自己参照パターン1: 再帰呼び出し（リトライ処理）\n     * 実際に自分自身を呼び出すパターン - これはcall解析で正しく検出されるべき\n     */\n    public void sendWithRetry(int maxRetries) {\n        try {\n            mailService.sendMail();\n        } catch (Exception e) {\n            if (maxRetries > 0) {\n                // 再帰呼び出し: 自分自身を呼び出す\n                sendWithRetry(maxRetries - 1);\n            }\n        }\n    }",
       "displayName": "MailAction # sendWithRetry",
       "startLine": 15,
@@ -29,6 +35,19 @@
       "id": "window-2"
     }
   ],
+  "fields": {"com.example.animal.issue11.MailAction#mailService": {
+    "endLine": 5,
+    "code": "    private MailServiceInterface mailService;",
+    "static": false,
+    "enumConstant": false,
+    "displayName": "MailAction # mailService",
+    "filePath": "src/main/java/com/example/animal/issue11/MailAction.java",
+    "startLine": 5,
+    "final": false,
+    "type": "MailServiceInterface",
+    "value": null,
+    "declaringClass": "com.example.animal.issue11.MailAction"
+  }},
   "connections": [
     {
       "callLine": 25,

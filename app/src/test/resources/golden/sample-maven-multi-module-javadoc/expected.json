@@ -5,49 +5,132 @@
       "displayName": "DefaultOrderProcessor # executeProcessing",
       "startLine": 26,
       "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
-      "id": "window-21"
+      "id": "window-22"
     },
     {
+      "fieldRefs": [
+        {
+          "col": 36,
+          "len": 10,
+          "field": "com.example.domain.OrderStatus#PROCESSING",
+          "line": 21
+        },
+        {
+          "col": 36,
+          "len": 9,
+          "field": "com.example.domain.OrderStatus#COMPLETED",
+          "line": 23
+        }
+      ],
       "code": "    @Override\n    public void process(Order order) {\n        order.setStatus(OrderStatus.PROCESSING);\n        executeProcessing(order);\n        order.setStatus(OrderStatus.COMPLETED);\n    }",
       "displayName": "DefaultOrderProcessor # process",
       "startLine": 19,
       "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
-      "id": "window-20"
+      "id": "window-13"
     },
     {
+      "fieldRefs": [{
+        "col": 36,
+        "len": 9,
+        "field": "com.example.domain.OrderStatus#VALIDATED",
+        "line": 16
+      }],
       "code": "    @Override\n    public void validate(Order order) {\n        if (order.getProductName() == null || order.getProductName().isBlank()) {\n            throw new IllegalArgumentException(\"Product name is required\");\n        }\n        if (order.getAmount() == null || order.getAmount().signum() <= 0) {\n            throw new IllegalArgumentException(\"Amount must be positive\");\n        }\n        order.setStatus(OrderStatus.VALIDATED);\n    }",
       "displayName": "DefaultOrderProcessor # validate",
       "startLine": 8,
       "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
-      "id": "window-12"
+      "id": "window-7"
     },
     {
+      "fieldRefs": [
+        {
+          "col": 13,
+          "len": 2,
+          "field": "com.example.domain.Order#id",
+          "line": 16
+        },
+        {
+          "col": 13,
+          "len": 11,
+          "field": "com.example.domain.Order#productName",
+          "line": 17
+        },
+        {
+          "col": 13,
+          "len": 6,
+          "field": "com.example.domain.Order#amount",
+          "line": 18
+        },
+        {
+          "col": 13,
+          "len": 6,
+          "field": "com.example.domain.Order#status",
+          "line": 19
+        },
+        {
+          "col": 34,
+          "len": 7,
+          "field": "com.example.domain.OrderStatus#PENDING",
+          "line": 19
+        }
+      ],
+      "code": "    public Order(Long id, String productName, BigDecimal amount) {\n        this.id = id;\n        this.productName = productName;\n        this.amount = amount;\n        this.status = OrderStatus.PENDING;\n    }",
+      "displayName": "Order # Order",
+      "startLine": 15,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "id": "window-5"
+    },
+    {
+      "fieldRefs": [{
+        "col": 43,
+        "len": 6,
+        "field": "com.example.domain.Order#amount",
+        "line": 26
+      }],
       "code": "    public BigDecimal getAmount() { return amount; }",
       "displayName": "Order # getAmount",
       "startLine": 26,
       "filePath": "src/main/java/com/example/domain/Order.java",
-      "id": "window-14"
+      "id": "window-16"
     },
     {
+      "fieldRefs": [{
+        "col": 33,
+        "len": 2,
+        "field": "com.example.domain.Order#id",
+        "line": 22
+      }],
       "code": "    public Long getId() { return id; }",
       "displayName": "Order # getId",
       "startLine": 22,
       "filePath": "src/main/java/com/example/domain/Order.java",
-      "id": "window-22"
+      "id": "window-23"
     },
     {
+      "fieldRefs": [{
+        "col": 44,
+        "len": 11,
+        "field": "com.example.domain.Order#productName",
+        "line": 24
+      }],
       "code": "    public String getProductName() { return productName; }",
       "displayName": "Order # getProductName",
       "startLine": 24,
       "filePath": "src/main/java/com/example/domain/Order.java",
-      "id": "window-13"
+      "id": "window-15"
     },
     {
+      "fieldRefs": [{
+        "col": 53,
+        "len": 6,
+        "field": "com.example.domain.Order#status",
+        "line": 29
+      }],
       "code": "    public void setStatus(OrderStatus status) { this.status = status; }",
       "displayName": "Order # setStatus",
       "startLine": 29,
       "filePath": "src/main/java/com/example/domain/Order.java",
-      "id": "window-8"
+      "id": "window-10"
     },
     {
       "code": "    private Order createOrder(String productName, String amount) {\n        return new Order(null, productName, new BigDecimal(amount));\n    }",
@@ -57,6 +140,12 @@
       "id": "window-3"
     },
     {
+      "fieldRefs": [{
+        "col": 15,
+        "len": 12,
+        "field": "com.example.app.controller.OrderController#orderService",
+        "line": 33
+      }],
       "code": "    public Order handleNewOrder(String productName, String amount, String paymentMethod) {\n        Order order = createOrder(productName, amount);\n        return orderService.createAndProcessOrder(order, paymentMethod);\n    }",
       "displayName": "OrderController # handleNewOrder",
       "startLine": 31,
@@ -75,16 +164,42 @@
       "displayName": "OrderProcessor # process",
       "startLine": 7,
       "filePath": "src/main/java/com/example/service/OrderProcessor.java",
-      "id": "window-10"
+      "id": "window-12"
     },
     {
       "code": "    void validate(Order order);",
       "displayName": "OrderProcessor # validate",
       "startLine": 6,
       "filePath": "src/main/java/com/example/service/OrderProcessor.java",
-      "id": "window-5"
+      "id": "window-6"
     },
     {
+      "fieldRefs": [
+        {
+          "col": 8,
+          "len": 14,
+          "field": "com.example.service.OrderService#orderProcessor",
+          "line": 22
+        },
+        {
+          "col": 38,
+          "len": 14,
+          "field": "com.example.service.OrderService#paymentService",
+          "line": 25
+        },
+        {
+          "col": 40,
+          "len": 6,
+          "field": "com.example.domain.OrderStatus#FAILED",
+          "line": 27
+        },
+        {
+          "col": 8,
+          "len": 14,
+          "field": "com.example.service.OrderService#orderProcessor",
+          "line": 32
+        }
+      ],
       "code": "    /**\n     * Validates the order, processes payment, runs order processing, then notifies completion.\n     * Used by golden file test to verify Javadoc on callee methods.\n     */\n    public Order createAndProcessOrder(Order order, String paymentMethod) {\n        // Validate\n        orderProcessor.validate(order);\n\n        // Process payment\n        PaymentResult paymentResult = paymentService.processPayment(order, paymentMethod);\n        if (!paymentResult.isSuccess()) {\n            order.setStatus(OrderStatus.FAILED);\n            throw new RuntimeException(\"Payment failed: \" + paymentResult.getMessage());\n        }\n\n        // Process order\n        orderProcessor.process(order);\n\n        notifyCompletion(order);\n        return order;\n    }",
       "displayName": "OrderService # createAndProcessOrder",
       "startLine": 16,
@@ -96,65 +211,282 @@
       "displayName": "OrderService # notifyCompletion",
       "startLine": 38,
       "filePath": "src/main/java/com/example/service/OrderService.java",
-      "id": "window-11"
+      "id": "window-14"
+    },
+    {
+      "fieldRefs": [
+        {
+          "col": 13,
+          "len": 7,
+          "field": "com.example.domain.PaymentResult#success",
+          "line": 8
+        },
+        {
+          "col": 13,
+          "len": 7,
+          "field": "com.example.domain.PaymentResult#message",
+          "line": 9
+        }
+      ],
+      "code": "    private PaymentResult(boolean success, String message) {\n        this.success = success;\n        this.message = message;\n    }",
+      "displayName": "PaymentResult # PaymentResult",
+      "startLine": 7,
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "id": "window-24"
     },
     {
       "code": "    public static PaymentResult failure(String reason) {\n        return new PaymentResult(false, reason);\n    }",
       "displayName": "PaymentResult # failure",
       "startLine": 16,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
-      "id": "window-16"
+      "id": "window-18"
     },
     {
+      "fieldRefs": [{
+        "col": 40,
+        "len": 7,
+        "field": "com.example.domain.PaymentResult#message",
+        "line": 21
+      }],
       "code": "    public String getMessage() { return message; }",
       "displayName": "PaymentResult # getMessage",
       "startLine": 21,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
-      "id": "window-9"
+      "id": "window-11"
     },
     {
+      "fieldRefs": [{
+        "col": 40,
+        "len": 7,
+        "field": "com.example.domain.PaymentResult#success",
+        "line": 20
+      }],
       "code": "    public boolean isSuccess() { return success; }",
       "displayName": "PaymentResult # isSuccess",
       "startLine": 20,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
-      "id": "window-7"
+      "id": "window-9"
     },
     {
       "code": "    public static PaymentResult success() {\n        return new PaymentResult(true, \"Payment processed successfully\");\n    }",
       "displayName": "PaymentResult # success",
       "startLine": 12,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
-      "id": "window-19"
+      "id": "window-21"
     },
     {
       "code": "    private boolean checkFunds(BigDecimal amount) {\n        return amount.compareTo(new BigDecimal(\"10000\")) <= 0;\n    }",
       "displayName": "PaymentService # checkFunds",
       "startLine": 26,
       "filePath": "src/main/java/com/example/service/PaymentService.java",
-      "id": "window-17"
+      "id": "window-19"
     },
     {
       "code": "    private void executePayment(Order order, String method) {\n        System.out.println(\"Payment executed for order \" + order.getId() + \" via \" + method);\n    }",
       "displayName": "PaymentService # executePayment",
       "startLine": 30,
       "filePath": "src/main/java/com/example/service/PaymentService.java",
-      "id": "window-18"
+      "id": "window-20"
     },
     {
       "code": "    public PaymentResult processPayment(Order order, String paymentMethod) {\n        if (!validatePaymentMethod(paymentMethod)) {\n            return PaymentResult.failure(\"Invalid payment method\");\n        }\n\n        if (!checkFunds(order.getAmount())) {\n            return PaymentResult.failure(\"Insufficient funds\");\n        }\n\n        executePayment(order, paymentMethod);\n        return PaymentResult.success();\n    }",
       "displayName": "PaymentService # processPayment",
       "startLine": 9,
       "filePath": "src/main/java/com/example/service/PaymentService.java",
-      "id": "window-6"
+      "id": "window-8"
     },
     {
       "code": "    private boolean validatePaymentMethod(String method) {\n        return method != null && !method.isBlank();\n    }",
       "displayName": "PaymentService # validatePaymentMethod",
       "startLine": 22,
       "filePath": "src/main/java/com/example/service/PaymentService.java",
-      "id": "window-15"
+      "id": "window-17"
     }
   ],
+  "fields": {
+    "com.example.domain.Order#amount": {
+      "endLine": 8,
+      "code": "    private BigDecimal amount;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "Order # amount",
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "startLine": 8,
+      "final": false,
+      "type": "BigDecimal",
+      "value": null,
+      "declaringClass": "com.example.domain.Order"
+    },
+    "com.example.domain.Order#id": {
+      "endLine": 6,
+      "code": "    private Long id;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "Order # id",
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "startLine": 6,
+      "final": false,
+      "type": "Long",
+      "value": null,
+      "declaringClass": "com.example.domain.Order"
+    },
+    "com.example.domain.OrderStatus#FAILED": {
+      "endLine": 8,
+      "code": "    FAILED(94);",
+      "static": true,
+      "enumConstant": true,
+      "displayName": "OrderStatus # FAILED",
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "startLine": 8,
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.OrderStatus#VALIDATED": {
+      "endLine": 5,
+      "code": "    VALIDATED(91),",
+      "static": true,
+      "enumConstant": true,
+      "displayName": "OrderStatus # VALIDATED",
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "startLine": 5,
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.service.OrderService#orderProcessor": {
+      "endLine": 8,
+      "code": "    private final OrderProcessor orderProcessor;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderService # orderProcessor",
+      "filePath": "src/main/java/com/example/service/OrderService.java",
+      "startLine": 8,
+      "final": true,
+      "type": "OrderProcessor",
+      "value": null,
+      "declaringClass": "com.example.service.OrderService"
+    },
+    "com.example.domain.OrderStatus#PENDING": {
+      "endLine": 4,
+      "code": "    PENDING(90),",
+      "static": true,
+      "enumConstant": true,
+      "displayName": "OrderStatus # PENDING",
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "startLine": 4,
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.Order#productName": {
+      "endLine": 7,
+      "code": "    private String productName;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "Order # productName",
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "startLine": 7,
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.domain.Order"
+    },
+    "com.example.domain.OrderStatus#COMPLETED": {
+      "endLine": 7,
+      "code": "    COMPLETED(93),",
+      "static": true,
+      "enumConstant": true,
+      "displayName": "OrderStatus # COMPLETED",
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "startLine": 7,
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.OrderStatus#PROCESSING": {
+      "endLine": 6,
+      "code": "    PROCESSING(92),",
+      "static": true,
+      "enumConstant": true,
+      "displayName": "OrderStatus # PROCESSING",
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "startLine": 6,
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.PaymentResult#success": {
+      "endLine": 4,
+      "code": "    private final boolean success;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "PaymentResult # success",
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "startLine": 4,
+      "final": true,
+      "type": "boolean",
+      "value": null,
+      "declaringClass": "com.example.domain.PaymentResult"
+    },
+    "com.example.domain.Order#status": {
+      "endLine": 9,
+      "code": "    private OrderStatus status;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "Order # status",
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "startLine": 9,
+      "final": false,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.Order"
+    },
+    "com.example.app.controller.OrderController#orderService": {
+      "endLine": 16,
+      "code": "    private final OrderService orderService;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderController # orderService",
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "startLine": 16,
+      "final": true,
+      "type": "OrderService",
+      "value": null,
+      "declaringClass": "com.example.app.controller.OrderController"
+    },
+    "com.example.domain.PaymentResult#message": {
+      "endLine": 5,
+      "code": "    private final String message;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "PaymentResult # message",
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "startLine": 5,
+      "final": true,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.domain.PaymentResult"
+    },
+    "com.example.service.OrderService#paymentService": {
+      "endLine": 9,
+      "code": "    private final PaymentService paymentService;",
+      "static": false,
+      "enumConstant": false,
+      "displayName": "OrderService # paymentService",
+      "filePath": "src/main/java/com/example/service/OrderService.java",
+      "startLine": 9,
+      "final": true,
+      "type": "PaymentService",
+      "value": null,
+      "declaringClass": "com.example.service.OrderService"
+    }
+  },
   "connections": [
     {
       "callLine": 122,
@@ -164,39 +496,39 @@
     },
     {
       "callLine": 7,
-      "from": "window-10",
-      "callEndLine": 7,
-      "to": "window-20"
-    },
-    {
-      "callLine": 39,
-      "from": "window-11",
-      "callEndLine": 39,
-      "to": "window-22"
-    },
-    {
-      "callLine": 10,
       "from": "window-12",
-      "callEndLine": 10,
+      "callEndLine": 7,
       "to": "window-13"
     },
     {
-      "callLine": 13,
-      "from": "window-12",
-      "callEndLine": 13,
-      "to": "window-14"
+      "callLine": 21,
+      "from": "window-13",
+      "callEndLine": 21,
+      "to": "window-10"
     },
     {
-      "callLine": 16,
-      "from": "window-12",
-      "callEndLine": 16,
-      "to": "window-8"
+      "callLine": 23,
+      "from": "window-13",
+      "callEndLine": 23,
+      "to": "window-10"
     },
     {
-      "callLine": 31,
-      "from": "window-18",
-      "callEndLine": 31,
+      "callLine": 22,
+      "from": "window-13",
+      "callEndLine": 22,
       "to": "window-22"
+    },
+    {
+      "callLine": 39,
+      "from": "window-14",
+      "callEndLine": 39,
+      "to": "window-23"
+    },
+    {
+      "callLine": 17,
+      "from": "window-18",
+      "callEndLine": 17,
+      "to": "window-24"
     },
     {
       "callLine": 32,
@@ -211,118 +543,136 @@
       "to": "window-4"
     },
     {
-      "callLine": 22,
+      "callLine": 31,
       "from": "window-20",
-      "callEndLine": 22,
-      "to": "window-21"
+      "callEndLine": 31,
+      "to": "window-23"
     },
     {
-      "callLine": 21,
-      "from": "window-20",
-      "callEndLine": 21,
-      "to": "window-8"
-    },
-    {
-      "callLine": 23,
-      "from": "window-20",
-      "callEndLine": 23,
-      "to": "window-8"
+      "callLine": 13,
+      "from": "window-21",
+      "callEndLine": 13,
+      "to": "window-24"
     },
     {
       "callLine": 27,
-      "from": "window-21",
+      "from": "window-22",
       "callEndLine": 27,
-      "to": "window-22"
+      "to": "window-23"
     },
     {
-      "callLine": 32,
-      "from": "window-4",
-      "callEndLine": 32,
-      "to": "window-10"
-    },
-    {
-      "callLine": 34,
-      "from": "window-4",
-      "callEndLine": 34,
-      "to": "window-11"
-    },
-    {
-      "callLine": 22,
-      "from": "window-4",
-      "callEndLine": 22,
+      "callLine": 67,
+      "from": "window-3",
+      "callEndLine": 67,
       "to": "window-5"
     },
     {
-      "callLine": 25,
-      "from": "window-4",
-      "callEndLine": 25,
-      "to": "window-6"
-    },
-    {
-      "callLine": 26,
-      "from": "window-4",
-      "callEndLine": 26,
-      "to": "window-7"
-    },
-    {
       "callLine": 27,
       "from": "window-4",
       "callEndLine": 27,
-      "to": "window-8"
+      "to": "window-10"
     },
     {
       "callLine": 28,
       "from": "window-4",
       "callEndLine": 28,
+      "to": "window-11"
+    },
+    {
+      "callLine": 32,
+      "from": "window-4",
+      "callEndLine": 32,
+      "to": "window-12"
+    },
+    {
+      "callLine": 34,
+      "from": "window-4",
+      "callEndLine": 34,
+      "to": "window-14"
+    },
+    {
+      "callLine": 22,
+      "from": "window-4",
+      "callEndLine": 22,
+      "to": "window-6"
+    },
+    {
+      "callLine": 25,
+      "from": "window-4",
+      "callEndLine": 25,
+      "to": "window-8"
+    },
+    {
+      "callLine": 26,
+      "from": "window-4",
+      "callEndLine": 26,
       "to": "window-9"
     },
     {
       "callLine": 6,
-      "from": "window-5",
+      "from": "window-6",
       "callEndLine": 6,
-      "to": "window-12"
+      "to": "window-7"
     },
     {
-      "callLine": 14,
-      "from": "window-6",
-      "callEndLine": 14,
-      "to": "window-14"
+      "callLine": 16,
+      "from": "window-7",
+      "callEndLine": 16,
+      "to": "window-10"
     },
     {
       "callLine": 10,
-      "from": "window-6",
+      "from": "window-7",
       "callEndLine": 10,
       "to": "window-15"
     },
     {
-      "callLine": 11,
-      "from": "window-6",
-      "callEndLine": 11,
-      "to": "window-16"
-    },
-    {
-      "callLine": 15,
-      "from": "window-6",
-      "callEndLine": 15,
+      "callLine": 13,
+      "from": "window-7",
+      "callEndLine": 13,
       "to": "window-16"
     },
     {
       "callLine": 14,
-      "from": "window-6",
+      "from": "window-8",
       "callEndLine": 14,
+      "to": "window-16"
+    },
+    {
+      "callLine": 10,
+      "from": "window-8",
+      "callEndLine": 10,
       "to": "window-17"
     },
     {
-      "callLine": 18,
-      "from": "window-6",
-      "callEndLine": 18,
+      "callLine": 11,
+      "from": "window-8",
+      "callEndLine": 11,
       "to": "window-18"
     },
     {
-      "callLine": 19,
-      "from": "window-6",
-      "callEndLine": 19,
+      "callLine": 15,
+      "from": "window-8",
+      "callEndLine": 15,
+      "to": "window-18"
+    },
+    {
+      "callLine": 14,
+      "from": "window-8",
+      "callEndLine": 14,
       "to": "window-19"
+    },
+    {
+      "callLine": 18,
+      "from": "window-8",
+      "callEndLine": 18,
+      "to": "window-20"
+    },
+    {
+      "callLine": 19,
+      "from": "window-8",
+      "callEndLine": 19,
+      "to": "window-21"
     }
   ],
   "autoLayout": true

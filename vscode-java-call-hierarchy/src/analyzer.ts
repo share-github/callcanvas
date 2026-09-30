@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import { spawn } from 'child_process';
+import { findMultiModuleRoot, findSubModules } from './moduleDiscovery';
 
 // 出力チャンネル（デバッグ出力用）
 let outputChannel: vscode.OutputChannel | null = null;
@@ -777,170 +778,6 @@ async function detectProjectStructure(projectRoot: string, debug: boolean = fals
 }
 
 /**
- * Find the root of a multi-module project by looking for settings.gradle or pom.xml with modules.
- * @param workspaceBoundary If provided, do not traverse above this directory.
- * @param allowImplicitMultiModule If false, do not treat parent with sibling projects as multi-module root.
- */
-function findMultiModuleRoot(startPath: string, workspaceBoundary?: string, allowImplicitMultiModule: boolean = true): string | null {
-    let current = startPath;
-    const root = path.parse(current).root;
-    const boundary = workspaceBoundary ? path.normalize(workspaceBoundary) : null;
-    
-    // Implicit multi-module: only check the immediate parent of startPath.
-    // Climbing further would match unrelated projects (e.g. /workspace/app when
-    // the project is deep under /workspace/issue/.../java-src).
-    if (allowImplicitMultiModule) {
-        const parentDir = path.dirname(startPath);
-        if (parentDir !== startPath) {
-            const normalizedParent = path.normalize(parentDir);
-            const isAboveBoundary = boundary && !normalizedParent.startsWith(boundary);
-            if (!isAboveBoundary) {
-                const siblings = countBuildSiblings(parentDir, startPath);
-                if (siblings >= 1) {
-                    return parentDir;
-                }
-            }
-        }
-    }
-
-    while (current !== root) {
-        // Check for Gradle multi-module (settings.gradle with 'include')
-        const settingsGradle = path.join(current, 'settings.gradle');
-        const settingsGradleKts = path.join(current, 'settings.gradle.kts');
-        
-        for (const settingsFile of [settingsGradle, settingsGradleKts]) {
-            if (fs.existsSync(settingsFile)) {
-                const content = fs.readFileSync(settingsFile, 'utf-8');
-                if (content.includes('include')) {
-                    return current;
-                }
-            }
-        }
-        
-        // Check for Maven multi-module (pom.xml with <modules>)
-        const pomXml = path.join(current, 'pom.xml');
-        if (fs.existsSync(pomXml)) {
-            const content = fs.readFileSync(pomXml, 'utf-8');
-            if (content.includes('<modules>')) {
-                return current;
-            }
-        }
-        
-        if (boundary && path.normalize(current) === boundary) {
-            break;
-        }
-        
-        current = path.dirname(current);
-    }
-    
-    return null;
-}
-
-/**
- * Count sibling directories that have pom.xml or build.gradle (Maven or Gradle).
- */
-function countBuildSiblings(parentDir: string, excludePath: string): number {
-    try {
-        const entries = fs.readdirSync(parentDir, { withFileTypes: true });
-        let count = 0;
-        for (const entry of entries) {
-            if (entry.isDirectory()) {
-                const siblingPath = path.join(parentDir, entry.name);
-                if (siblingPath !== excludePath) {
-                    const hasPom = fs.existsSync(path.join(siblingPath, 'pom.xml'));
-                    const hasGradle = fs.existsSync(path.join(siblingPath, 'build.gradle')) ||
-                        fs.existsSync(path.join(siblingPath, 'build.gradle.kts'));
-                    if (hasPom || hasGradle) {
-                        // Skip non-Java siblings (e.g. migration, config modules) —
-                        // they don't disqualify the parent as a multi-module root.
-                        const hasSrc = fs.existsSync(path.join(siblingPath, 'src', 'main', 'java'));
-                        if (!hasSrc) {
-                            continue;
-                        }
-                        count++;
-                    }
-                }
-            }
-        }
-        return count;
-    } catch {
-        return 0;
-    }
-}
-
-/**
- * Find all submodule paths in a multi-module project.
- */
-function findSubModules(multiModuleRoot: string): string[] {
-    const modules: string[] = [];
-    
-    // Try Gradle settings.gradle
-    const settingsGradle = path.join(multiModuleRoot, 'settings.gradle');
-    const settingsGradleKts = path.join(multiModuleRoot, 'settings.gradle.kts');
-    
-    for (const settingsFile of [settingsGradle, settingsGradleKts]) {
-        if (fs.existsSync(settingsFile)) {
-            const content = fs.readFileSync(settingsFile, 'utf-8');
-            // Match include 'module-name' or include('module-name') or include ':module-name'
-            const includeMatches = content.matchAll(/include\s*[('"][:']?([^'")\s]+)['")\s]/g);
-            for (const match of includeMatches) {
-                const moduleName = match[1].replace(/^:/, '');
-                const modulePath = path.join(multiModuleRoot, moduleName);
-                if (fs.existsSync(modulePath)) {
-                    modules.push(modulePath);
-                }
-            }
-        }
-    }
-    
-    // Try Maven pom.xml with <modules>
-    const pomXml = path.join(multiModuleRoot, 'pom.xml');
-    if (fs.existsSync(pomXml) && modules.length === 0) {
-        const content = fs.readFileSync(pomXml, 'utf-8');
-        const moduleMatches = content.matchAll(/<module>([^<]+)<\/module>/g);
-        for (const match of moduleMatches) {
-            const modulePath = path.join(multiModuleRoot, match[1]);
-            if (fs.existsSync(modulePath)) {
-                modules.push(modulePath);
-            }
-        }
-    }
-    
-    // If no modules found via pom.xml <modules>, scan for directories with pom.xml or build.gradle
-    if (modules.length === 0) {
-        try {
-            const entries = fs.readdirSync(multiModuleRoot, { withFileTypes: true });
-            for (const entry of entries) {
-                if (entry.isDirectory()) {
-                    const modulePath = path.join(multiModuleRoot, entry.name);
-                    const modulePom = path.join(modulePath, 'pom.xml');
-                    const moduleBuildGradle = path.join(modulePath, 'build.gradle');
-                    const moduleBuildGradleKts = path.join(modulePath, 'build.gradle.kts');
-                    const moduleSrc = path.join(modulePath, 'src', 'main', 'java');
-                    // Include if it has (pom.xml or build.gradle) and src/main/java
-                    const hasBuildFile = fs.existsSync(modulePom) || 
-                                         fs.existsSync(moduleBuildGradle) || 
-                                         fs.existsSync(moduleBuildGradleKts);
-                    if (hasBuildFile && fs.existsSync(moduleSrc)) {
-                        modules.push(modulePath);
-                    }
-                }
-            }
-        } catch {
-            // Ignore errors
-        }
-    }
-    
-    // Also include the root if it has src/main/java
-    const rootSrc = path.join(multiModuleRoot, 'src', 'main', 'java');
-    if (fs.existsSync(rootSrc)) {
-        modules.unshift(multiModuleRoot);
-    }
-    
-    return modules;
-}
-
-/**
  * Collect dependency directories for classpath resolution.
  * Searches for Maven repository cache, Gradle cache, and local dependency directories.
  */
@@ -1013,9 +850,10 @@ function findBuildToolExecutable(projectRoot: string, multiModuleRoot: string | 
 }
 
 /**
- * Run a command and return its stdout. Rejects on non-zero exit or timeout (10 s).
+ * Run a command and collect its output, whatever the exit code. Rejects only when the
+ * command cannot start or runs past `timeoutMs`.
  */
-function execCommand(cmd: string, args: string[], cwd: string): Promise<string> {
+function runCommand(cmd: string, args: string[], cwd: string, timeoutMs: number): Promise<{ code: number; stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
         const child = spawn(cmd, args, { cwd, shell: false });
         let stdout = '';
@@ -1025,22 +863,49 @@ function execCommand(cmd: string, args: string[], cwd: string): Promise<string> 
 
         const timer = setTimeout(() => {
             child.kill();
-            reject(new Error(`Command timed out after 10 s: ${cmd} ${args.join(' ')}`));
-        }, 10000);
+            reject(new Error(`Command timed out after ${timeoutMs / 1000} s: ${cmd} ${args.join(' ')}`));
+        }, timeoutMs);
 
         child.on('close', (code: number) => {
             clearTimeout(timer);
-            if (code === 0) {
-                resolve(stdout);
-            } else {
-                reject(new Error(`Exit ${code}: ${stderr.trim().slice(0, 200)}`));
-            }
+            resolve({ code, stdout, stderr });
         });
         child.on('error', (err: Error) => {
             clearTimeout(timer);
             reject(err);
         });
     });
+}
+
+/**
+ * Run a command and return its stdout. Rejects on non-zero exit or timeout (10 s).
+ */
+async function execCommand(cmd: string, args: string[], cwd: string): Promise<string> {
+    const { code, stdout, stderr } = await runCommand(cmd, args, cwd, 10000);
+    if (code !== 0) {
+        throw new Error(`Exit ${code}: ${stderr.trim().slice(0, 200)}`);
+    }
+    return stdout;
+}
+
+/** The build file that decides how a module's classpath is resolved, and its mtime (cache key). */
+function moduleBuildFile(projectRoot: string): { kind: 'maven' | 'gradle'; file: string; mtime: number } | null {
+    const candidates: Array<['maven' | 'gradle', string]> = [
+        ['maven', 'pom.xml'], ['gradle', 'build.gradle'], ['gradle', 'build.gradle.kts']
+    ];
+    for (const [kind, name] of candidates) {
+        const file = path.join(projectRoot, name);
+        if (fs.existsSync(file)) {
+            let mtime = 0;
+            try {
+                mtime = fs.statSync(file).mtimeMs;
+            } catch {
+                // ignore
+            }
+            return { kind, file, mtime };
+        }
+    }
+    return null;
 }
 
 /**
@@ -1137,6 +1002,197 @@ export async function resolveBuildToolClasspath(
         log(`[resolveBuildToolClasspath] failed (will skip): ${msg}`);
         return null;
     }
+}
+
+/** The artifactId a pom declares for itself (not its parent's). */
+function pomArtifactId(moduleDir: string): string | null {
+    try {
+        const pom = fs.readFileSync(path.join(moduleDir, 'pom.xml'), 'utf-8')
+            .replace(/<!--[\s\S]*?-->/g, '')
+            .replace(/<parent>[\s\S]*?<\/parent>/, '');
+        const match = pom.match(/<artifactId>\s*([^<\s]+)\s*<\/artifactId>/);
+        return match ? match[1] : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Split the log of one reactor-wide `dependency:build-classpath` run into a classpath
+ * per module directory. Maven 3.9 names each project's pom (`from a/b/pom.xml`);
+ * older versions only print the artifactId, which is mapped back via each module's pom.
+ */
+function parseMavenReactorClasspaths(output: string, root: string, modules: string[]): Map<string, string[]> {
+    const byArtifact = new Map<string, string>();
+    for (const modulePath of modules) {
+        const artifactId = pomArtifactId(modulePath);
+        if (artifactId) {
+            byArtifact.set(artifactId, path.resolve(modulePath));
+        }
+    }
+    const result = new Map<string, string[]>();
+    let currentDir: string | null = null;
+    const lines = output.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const from = line.match(/^\[INFO\]\s+from\s+(.+?pom\.xml)\s*$/);
+        if (from) {
+            currentDir = path.dirname(path.resolve(root, from[1]));
+            continue;
+        }
+        const goal = line.match(/build-classpath \([^)]*\) @ (\S+) ---/);
+        if (goal) {
+            currentDir = currentDir ?? byArtifact.get(goal[1]) ?? null;
+            continue;
+        }
+        if (/^\[INFO\] Building /.test(line)) {
+            currentDir = null;
+            continue;
+        }
+        if (currentDir && /Dependencies classpath:\s*$/.test(line)) {
+            const raw = (lines[i + 1] ?? '').trim();
+            result.set(currentDir, raw.split(path.delimiter).filter(Boolean));
+            currentDir = null;
+            i++;
+        }
+    }
+    return result;
+}
+
+/**
+ * Resolve every module's classpath with one Maven reactor or one Gradle run at the
+ * build root. Returns the modules it resolved; the rest are left to the per-module
+ * fallback. Results go into `classpathCache`, so later single-module lookups hit it.
+ */
+async function resolveClasspathsInOneRun(
+    modules: string[],
+    buildRoot: string,
+    multiModuleRoot: string | null
+): Promise<Map<string, string[]>> {
+    const resolved = new Map<string, string[]>();
+    const rootPom = path.join(buildRoot, 'pom.xml');
+    const hasReactor = fs.existsSync(rootPom) && fs.readFileSync(rootPom, 'utf-8').includes('<modules>');
+    const hasSettings = ['settings.gradle', 'settings.gradle.kts'].some(f => fs.existsSync(path.join(buildRoot, f)));
+    if (!hasReactor && !hasSettings) {
+        return resolved;
+    }
+
+    const executables = findBuildToolExecutable(buildRoot, multiModuleRoot);
+    const started = Date.now();
+    // One run covers every module, so it gets far longer than a per-module call.
+    const timeoutMs = 120000;
+    let perModule: Map<string, string[]>;
+    try {
+        if (hasReactor && executables.maven) {
+            // --fail-at-end: a module that cannot resolve must not hide the others.
+            const { stdout } = await runCommand(
+                executables.maven,
+                ['-B', '-fae', '-Dstyle.color=never', '-f', rootPom,
+                 'dependency:build-classpath', '-DincludeScope=compile'],
+                buildRoot, timeoutMs
+            );
+            perModule = parseMavenReactorClasspaths(stdout, buildRoot, modules);
+        } else if (hasSettings && executables.gradle) {
+            // Every line carries its project dir, so output from parallel projects can interleave.
+            const initScript = path.join(os.tmpdir(), 'callcanvas-cp-all.gradle');
+            fs.writeFileSync(initScript,
+                `allprojects {\n` +
+                `    task('callcanvasPrintClasspaths') {\n` +
+                `        doLast {\n` +
+                `            println "CALLCANVAS-CP\\t\${project.projectDir}\\t"\n` +
+                `            def cp = configurations.findByName('compileClasspath')\n` +
+                `            if (cp) { cp.files.each { println "CALLCANVAS-CP\\t\${project.projectDir}\\t\${it}" } }\n` +
+                `        }\n` +
+                `    }\n` +
+                `}\n`
+            );
+            const { stdout } = await runCommand(
+                executables.gradle,
+                ['-q', '--continue', '--init-script', initScript, 'callcanvasPrintClasspaths', '--project-dir', buildRoot],
+                buildRoot, timeoutMs
+            );
+            perModule = new Map();
+            for (const line of stdout.split(/\r?\n/)) {
+                const parts = line.split('\t');
+                if (parts.length !== 3 || parts[0] !== 'CALLCANVAS-CP') {
+                    continue;
+                }
+                const dir = path.resolve(parts[1]);
+                const entries = perModule.get(dir) ?? [];
+                if (parts[2].trim().endsWith('.jar')) {
+                    entries.push(parts[2].trim());
+                }
+                perModule.set(dir, entries);
+            }
+        } else {
+            return resolved;
+        }
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log(`[resolveClasspathForModules] one-run resolution failed (falling back per module): ${msg}`);
+        return resolved;
+    }
+
+    for (const modulePath of modules) {
+        const entries = perModule.get(path.resolve(modulePath));
+        if (!entries) {
+            continue;
+        }
+        resolved.set(modulePath, entries);
+        const buildFile = moduleBuildFile(modulePath);
+        if (buildFile && entries.length > 0) {
+            classpathCache.set(modulePath, { classpath: entries.join(','), mtime: buildFile.mtime });
+        }
+    }
+    log(`[resolveClasspathForModules] resolved ${resolved.size}/${modules.length} module(s) in one run (${Date.now() - started} ms)`);
+    return resolved;
+}
+
+/**
+ * Resolve classpath for each module and merge the results.
+ * This ensures --cp is populated correctly for all project structures:
+ * single-module, parent-pom multi-module, and cross-module without parent pom.
+ *
+ * With several modules under one Maven reactor / Gradle build, they are resolved in a
+ * single run at `buildRoot` so the cost does not grow with the module count
+ * (RuoYi-Vue-Plus: 35 serial Maven runs took minutes, one reactor run ~4 s). Modules
+ * that run did not resolve fall back to one call each, as before.
+ */
+export async function resolveClasspathForModules(
+    modules: string[],
+    multiModuleRoot: string | null,
+    buildRoot: string | null = multiModuleRoot
+): Promise<{ classpath: string | null; depDirs: string[] }> {
+    const allCpEntries = new Set<string>();
+    const allDepDirs = new Set<string>();
+
+    const uncached = modules.filter(m => {
+        const buildFile = moduleBuildFile(m);
+        const cached = classpathCache.get(m);
+        return buildFile && !(cached && cached.mtime === buildFile.mtime);
+    });
+    const batch = uncached.length > 1 && buildRoot
+        ? await resolveClasspathsInOneRun(uncached, buildRoot, multiModuleRoot)
+        : new Map<string, string[]>();
+
+    for (const modulePath of modules) {
+        const cp = batch.has(modulePath)
+            ? batch.get(modulePath)!.join(',')
+            : await resolveBuildToolClasspath(modulePath, multiModuleRoot);
+        if (cp) {
+            for (const entry of cp.split(',').filter(Boolean)) {
+                allCpEntries.add(entry);
+            }
+        }
+        for (const dir of collectDependencyDirs(modulePath, [])) {
+            allDepDirs.add(dir);
+        }
+    }
+
+    return {
+        classpath: allCpEntries.size > 0 ? [...allCpEntries].join(',') : null,
+        depDirs: [...allDepDirs]
+    };
 }
 
 // ─── End build-tool classpath resolution ─────────────────────────────────────

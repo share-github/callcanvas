@@ -2,205 +2,12 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { resolveMethodAtCursor, resolveClassAtCursor, resolveClassAtCursorOrNextLines } from './methodResolver';
-import { analyzeCallHierarchy, analyzeCallHierarchyForClass, setOutputChannel, resolveBuildToolClasspath, collectDependencyDirs } from './analyzer';
+import { analyzeCallHierarchy, analyzeCallHierarchyForClass, setOutputChannel, resolveClasspathForModules } from './analyzer';
 import { renderAsMarkdown } from './outputRenderer';
+import { findMultiModuleRoot, findSubModules } from './moduleDiscovery';
 
 // 出力チャンネルを作成（デバッグ情報表示用）
 let outputChannel: vscode.OutputChannel;
-
-/**
- * Find the multi-module root directory (contains settings.gradle or pom.xml with <modules>).
- * @param workspaceBoundary If provided, do not traverse above this directory.
- * @param allowImplicitMultiModule If false, do not treat a parent with sibling projects as multi-module root (avoids wrong root when workspace is a parent folder).
- */
-function findMultiModuleRoot(startPath: string, workspaceBoundary?: string, allowImplicitMultiModule: boolean = true): string | null {
-    let current = startPath;
-    const root = path.parse(current).root;
-    const boundary = workspaceBoundary ? path.normalize(workspaceBoundary) : null;
-    
-    // Implicit multi-module: only check the immediate parent of startPath.
-    // Climbing further would match unrelated projects (e.g. /workspace/app when
-    // the project is deep under /workspace/issue/.../java-src).
-    if (allowImplicitMultiModule) {
-        const parentDir = path.dirname(startPath);
-        if (parentDir !== startPath) {
-            const normalizedParent = path.normalize(parentDir);
-            const isAboveBoundary = boundary && !normalizedParent.startsWith(boundary);
-            if (!isAboveBoundary) {
-                const siblings = countBuildSiblings(parentDir, startPath);
-                if (siblings >= 1) {
-                    return parentDir;
-                }
-            }
-        }
-    }
-
-    while (current !== root) {
-        // Check for Gradle multi-module (settings.gradle with 'include')
-        const settingsGradle = path.join(current, 'settings.gradle');
-        const settingsGradleKts = path.join(current, 'settings.gradle.kts');
-        
-        for (const settingsFile of [settingsGradle, settingsGradleKts]) {
-            if (fs.existsSync(settingsFile)) {
-                const content = fs.readFileSync(settingsFile, 'utf-8');
-                if (content.includes('include')) {
-                    return current;
-                }
-            }
-        }
-        
-        // Check for Maven multi-module (pom.xml with <modules>)
-        // Note: We check for '<modules>' only (not '<module>') to avoid false positives
-        // from strings like '<artifactId>module-something</artifactId>'
-        const pomXml = path.join(current, 'pom.xml');
-        if (fs.existsSync(pomXml)) {
-            const content = fs.readFileSync(pomXml, 'utf-8');
-            if (content.includes('<modules>')) {
-                return current;
-            }
-        }
-        
-        // Stop traversal at workspace boundary
-        if (boundary && path.normalize(current) === boundary) {
-            break;
-        }
-        
-        current = path.dirname(current);
-    }
-    
-    return null;
-}
-
-/**
- * Count sibling directories that have pom.xml or build.gradle
- */
-function countBuildSiblings(parentDir: string, excludePath: string): number {
-    try {
-        const entries = fs.readdirSync(parentDir, { withFileTypes: true });
-        let count = 0;
-        for (const entry of entries) {
-            if (entry.isDirectory()) {
-                const siblingPath = path.join(parentDir, entry.name);
-                if (siblingPath !== excludePath) {
-                    const hasPom = fs.existsSync(path.join(siblingPath, 'pom.xml'));
-                    const hasBuildGradle = fs.existsSync(path.join(siblingPath, 'build.gradle'));
-                    const hasBuildGradleKts = fs.existsSync(path.join(siblingPath, 'build.gradle.kts'));
-                    if (hasPom || hasBuildGradle || hasBuildGradleKts) {
-                        // Skip non-Java siblings (e.g. migration, config modules) —
-                        // they don't disqualify the parent as a multi-module root.
-                        const hasSrc = fs.existsSync(path.join(siblingPath, 'src', 'main', 'java'));
-                        if (!hasSrc) {
-                            continue;
-                        }
-                        count++;
-                    }
-                }
-            }
-        }
-        return count;
-    } catch {
-        return 0;
-    }
-}
-
-/**
- * Find all submodule paths in a multi-module project
- */
-function findSubModules(multiModuleRoot: string): string[] {
-    const modules: string[] = [];
-    
-    // Try Gradle settings.gradle
-    const settingsGradle = path.join(multiModuleRoot, 'settings.gradle');
-    const settingsGradleKts = path.join(multiModuleRoot, 'settings.gradle.kts');
-    
-    for (const settingsFile of [settingsGradle, settingsGradleKts]) {
-        if (fs.existsSync(settingsFile)) {
-            const content = fs.readFileSync(settingsFile, 'utf-8');
-            const includeMatches = content.matchAll(/include\s*[('"][:']?([^'")\s]+)['")\s]/g);
-            for (const match of includeMatches) {
-                const moduleName = match[1].replace(/^:/, '');
-                const modulePath = path.join(multiModuleRoot, moduleName);
-                if (fs.existsSync(modulePath)) {
-                    modules.push(modulePath);
-                }
-            }
-        }
-    }
-    
-    // Try Maven pom.xml with <modules>
-    const pomXml = path.join(multiModuleRoot, 'pom.xml');
-    if (fs.existsSync(pomXml) && modules.length === 0) {
-        const content = fs.readFileSync(pomXml, 'utf-8');
-        const moduleMatches = content.matchAll(/<module>([^<]+)<\/module>/g);
-        for (const match of moduleMatches) {
-            const modulePath = path.join(multiModuleRoot, match[1]);
-            if (fs.existsSync(modulePath)) {
-                modules.push(modulePath);
-            }
-        }
-    }
-    
-    // If no modules found, scan for directories with pom.xml or build.gradle
-    if (modules.length === 0) {
-        try {
-            const entries = fs.readdirSync(multiModuleRoot, { withFileTypes: true });
-            for (const entry of entries) {
-                if (entry.isDirectory()) {
-                    const modulePath = path.join(multiModuleRoot, entry.name);
-                    const modulePom = path.join(modulePath, 'pom.xml');
-                    const moduleBuildGradle = path.join(modulePath, 'build.gradle');
-                    const moduleBuildGradleKts = path.join(modulePath, 'build.gradle.kts');
-                    const moduleSrc = path.join(modulePath, 'src', 'main', 'java');
-                    
-                    if ((fs.existsSync(modulePom) || fs.existsSync(moduleBuildGradle) || fs.existsSync(moduleBuildGradleKts)) 
-                        && fs.existsSync(moduleSrc)) {
-                        modules.push(modulePath);
-                    }
-                }
-            }
-        } catch {
-            // Ignore errors
-        }
-    }
-    
-    // Also include the root if it has src/main/java
-    const rootSrc = path.join(multiModuleRoot, 'src', 'main', 'java');
-    if (fs.existsSync(rootSrc)) {
-        modules.unshift(multiModuleRoot);
-    }
-    
-    return modules;
-}
-
-/**
- * Resolve classpath for each module independently and merge the results.
- * This ensures --cp is populated correctly for all project structures:
- * single-module, parent-pom multi-module, and cross-module without parent pom.
- */
-async function resolveClasspathForModules(
-    modules: string[],
-    multiModuleRoot: string | null
-): Promise<{ classpath: string | null; depDirs: string[] }> {
-    const allCpEntries = new Set<string>();
-    const allDepDirs = new Set<string>();
-
-    for (const modulePath of modules) {
-        const cp = await resolveBuildToolClasspath(modulePath, multiModuleRoot);
-        if (cp) {
-            for (const entry of cp.split(',').filter(Boolean)) {
-                allCpEntries.add(entry);
-            }
-        }
-        for (const dir of collectDependencyDirs(modulePath, [])) {
-            allDepDirs.add(dir);
-        }
-    }
-
-    return {
-        classpath: allCpEntries.size > 0 ? [...allCpEntries].join(',') : null,
-        depDirs: [...allDepDirs]
-    };
-}
 
 /**
  * Get the workspace folder path that contains the given file/directory path.
@@ -720,7 +527,7 @@ export function activate(context: vscode.ExtensionContext) {
         const classDirsStr = classDirs.length > 0 ? classDirs.join(',') : 'build/classes/java/main,target/classes';
 
         // Resolve dependency classpath via Maven/Gradle for accurate type resolution
-        const { classpath: resolvedClasspath, depDirs } = await resolveClasspathForModules(modules, multiModuleRoot);
+        const { classpath: resolvedClasspath, depDirs } = await resolveClasspathForModules(modules, multiModuleRoot, finalProjectRoot);
         
         // Build args array for spawn
         const args = [
@@ -1577,7 +1384,7 @@ export function activate(context: vscode.ExtensionContext) {
                         const classDirsStr = classDirs.length > 0 ? classDirs.join(',') : 'build/classes/java/main,target/classes';
 
                         // Resolve dependency classpath via Maven/Gradle for accurate type resolution
-                        const { classpath: resolvedClasspath, depDirs } = await resolveClasspathForModules(modules, multiModuleRoot);
+                        const { classpath: resolvedClasspath, depDirs } = await resolveClasspathForModules(modules, multiModuleRoot, effectiveProjectRoot);
                         
                         outputChannel.appendLine(`Project root: ${effectiveProjectRoot}`);
                         outputChannel.appendLine(`Source directories: ${srcDirsStr}`);

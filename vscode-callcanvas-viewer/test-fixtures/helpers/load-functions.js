@@ -406,6 +406,7 @@ function loadExtensionHostFunctions() {
         'resolveDeclarationLine',
         'buildReanalysisPlan',
         'preserveLineComments',
+        'preserveFieldWindows',
         'withAnalysisMetadata',
         'summarizeReanalysis',
     ];
@@ -559,6 +560,17 @@ function loadWebviewFunctions(settingsOverride) {
         'normalizeDisplayNameToClassMethod',
         'wrapConstantTokens',
         'extractMethodName',
+        // Field references (fieldRefs / declaration windows)
+        'isFieldRefConnection',
+        'escapeHtmlAttr',
+        'buildFieldTip',
+        'groupFieldRefsByLine',
+        'wrapFieldRefTokens',
+        'decorateCodeLineTokens',
+        'planFieldDeclaration',
+        'computeWindowDeletion',
+        'mergeFieldData',
+        'mergeSymbolIndex',
     ];
 
     const codeFragments = [];

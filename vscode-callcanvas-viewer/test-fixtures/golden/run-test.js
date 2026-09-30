@@ -187,6 +187,145 @@ const testRegistry = {
         fn: ext.summarizeReanalysis,
         args: (input) => [input.oldJson, input.newData],
     },
+    // ---- Field references (fieldRefs → declaration windows) ----
+    'decorate-code-line-tokens': {
+        fn: wv.decorateCodeLineTokens,
+        args: (input) => {
+            const sym = input.symbolIndex || null;
+            const sortedKeys = sym ? Object.keys(sym).sort((a, b) => b.length - a.length) : [];
+            return [input.html, input.refs, input.fields, sym, sortedKeys];
+        },
+    },
+    'plan-field-declaration': {
+        fn: wv.planFieldDeclaration,
+        args: (input) => [input.data, input.sourceWindowId, input.lineNumber, input.fieldKey, input.newId],
+        clone: true,
+    },
+    'compute-window-deletion': {
+        fn: wv.computeWindowDeletion,
+        args: (input) => [input.connections, input.ids],
+        clone: true,
+    },
+    'merge-field-data': {
+        fn: (data, newData, idMapping) => {
+            const result = wv.mergeFieldData(data, newData, idMapping);
+            return { result, data };
+        },
+        args: (input) => [input.data, input.newData, input.idMapping],
+        clone: true,
+    },
+    'preserve-field-windows': {
+        fn: ext.preserveFieldWindows,
+        args: (input) => [input.oldJson, input.newData],
+        clone: true,
+    },
+    // Click → create declaration window + connection, 2nd click selects it, save → reload restores
+    // it (and the tokens), deleting the declaration window drops its connection.
+    'field-ref-flow': {
+        fn: (input) => {
+            const data = {
+                ...input.canvas,
+                windows: input.canvas.windows.map(w => wv.normalizeWindowData(w)),
+                connections: input.canvas.connections.slice(),
+            };
+            const steps = input.clicks.map(click => {
+                const plan = wv.planFieldDeclaration(data, click.sourceWindowId, click.lineNumber, click.fieldKey, click.newId);
+                if (plan.action === 'create') {
+                    data.windows.push(wv.normalizeWindowData(plan.window));
+                    data.connections.push(plan.connection);
+                    return { action: plan.action, windowId: plan.window.id, connection: plan.connection };
+                }
+                return plan;
+            });
+            const saved = wv.buildSaveData(data);
+            const reloaded = { ...saved, windows: saved.windows.map(w => wv.normalizeWindowData(w)) };
+            const src = reloaded.windows.find(w => w.id === 'window-1');
+            const refsByLine = wv.groupFieldRefsByLine(src.fieldRefs);
+            const line36 = src.code.find(l => l.line === 36).content;
+            const html36 = wv.decorateCodeLineTokens(line36, refsByLine.get(36), reloaded.fields, null, []);
+            const deletion = wv.computeWindowDeletion(reloaded.connections, [input.deleteId]);
+            return {
+                steps,
+                saved: {
+                    fieldKeys: Object.keys(saved.fields || {}),
+                    fieldWindows: saved.windows
+                        .filter(w => w.windowType === 'field')
+                        .map(w => ({ id: w.id, windowType: w.windowType, field: w.field, displayName: w.displayName, filePath: w.filePath, startLine: w.startLine, code: w.code })),
+                    sourceFieldRefCount: (saved.windows.find(w => w.id === 'window-1').fieldRefs || []).length,
+                    connections: saved.connections,
+                },
+                afterReload: {
+                    goToAgain: wv.planFieldDeclaration(reloaded, 'window-1', 36, input.clicks[0].fieldKey, 'window-field-Z'),
+                    tokenizedLine36: html36,
+                },
+                afterDeleteDeclaration: {
+                    deleteIds: deletion.deleteIds,
+                    windowsLeft: reloaded.windows.filter(w => !deletion.deleteIds.includes(w.id)).map(w => w.id),
+                    connections: deletion.connections,
+                },
+            };
+        },
+        args: (input) => [input],
+        clone: true,
+    },
+    // Analyze Next Level / incoming / toRoot merge: the result's symbolIndex is adopted (existing keys
+    // win), _symbolKeys is rebuilt so wrapConstantTokens drops its cached regex, and the merged
+    // constants survive save → reload.
+    'merge-symbol-index-flow': {
+        fn: (input) => {
+            const data = {
+                ...input.canvas,
+                windows: input.canvas.windows.map(w => wv.normalizeWindowData(w)),
+            };
+            data._symbolKeys = Object.keys(data.symbolIndex || {}).sort((a, b) => b.length - a.length);
+            const keysBefore = data._symbolKeys;
+            const render = (d, line) => wv.wrapConstantTokens(line, d.symbolIndex || {}, d._symbolKeys || []);
+            const beforeMerge = render(data, input.newLine);
+            const added = wv.mergeSymbolIndex(data, input.newData);
+            const afterMerge = render(data, input.newLine);
+            const saved = wv.buildSaveData(data);
+            const reloaded = { ...saved, windows: saved.windows.map(w => wv.normalizeWindowData(w)) };
+            reloaded._symbolKeys = Object.keys(reloaded.symbolIndex || {}).sort((a, b) => b.length - a.length);
+            return {
+                added,
+                symbolKeysRebuilt: data._symbolKeys !== keysBefore,
+                symbolKeys: data._symbolKeys,
+                symbolIndex: data.symbolIndex || null,
+                beforeMerge,
+                afterMerge,
+                savedSymbolIndex: saved.symbolIndex || null,
+                savedHasDerivedKeys: '_symbolKeys' in saved,
+                afterReload: render(reloaded, input.newLine),
+            };
+        },
+        args: (input) => [input],
+        clone: true,
+    },
+    // Save → reload keeps symbolIndex, so constant tokens still render after the first save / in Export HTML
+    'save-reload-symbol-index': {
+        fn: (input) => {
+            const data = {
+                ...input.canvas,
+                windows: input.canvas.windows.map(w => wv.normalizeWindowData(w)),
+            };
+            data._symbolKeys = Object.keys(data.symbolIndex || {}).sort((a, b) => b.length - a.length);
+            const saved = wv.buildSaveData(data);
+            const reloaded = { ...saved, windows: saved.windows.map(w => wv.normalizeWindowData(w)) };
+            const keys = reloaded.symbolIndex
+                ? Object.keys(reloaded.symbolIndex).sort((a, b) => b.length - a.length)
+                : [];
+            const line = reloaded.windows[0].code.find(l => l.line === input.line).content;
+            return {
+                savedHasSymbolIndex: 'symbolIndex' in saved,
+                savedHasDerivedKeys: '_symbolKeys' in saved,
+                savedFieldKeys: Object.keys(saved.fields || {}),
+                symbolIndexAfterReload: reloaded.symbolIndex || null,
+                renderedLine: keys.length > 0 ? wv.wrapConstantTokens(line, reloaded.symbolIndex, keys) : line,
+            };
+        },
+        args: (input) => [input],
+        clone: true,
+    },
     'wrap-constant-tokens': {
         fn: wv.wrapConstantTokens,
         args: (input) => {

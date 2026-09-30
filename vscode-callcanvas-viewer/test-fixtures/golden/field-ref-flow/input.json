@@ -1,0 +1,129 @@
+{
+  "canvas": {
+    "symbolIndex": {
+      "MAX_ITEMS": {
+        "value": "50",
+        "qualifier": "OrderController",
+        "type": "int"
+      }
+    },
+    "fields": {
+      "com.example.app.controller.OrderController#MAX_ITEMS": {
+        "displayName": "OrderController # MAX_ITEMS",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 16,
+        "endLine": 16,
+        "code": "    private static final int MAX_ITEMS = 50;",
+        "type": "int",
+        "declaringClass": "com.example.app.controller.OrderController",
+        "static": true,
+        "final": true,
+        "enumConstant": false,
+        "value": "50"
+      },
+      "com.example.app.controller.OrderController#orderService": {
+        "displayName": "OrderController # orderService",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 17,
+        "endLine": 18,
+        "code": "    /** 注文サービス */\n    private final OrderService orderService;",
+        "type": "OrderService",
+        "declaringClass": "com.example.app.controller.OrderController",
+        "static": false,
+        "final": true,
+        "enumConstant": false,
+        "value": null
+      },
+      "com.example.app.domain.PaymentType#CARD": {
+        "displayName": "PaymentType # CARD",
+        "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+        "startLine": 5,
+        "endLine": 5,
+        "code": "    CARD(\"card\"),",
+        "type": "PaymentType",
+        "declaringClass": "com.example.app.domain.PaymentType",
+        "static": true,
+        "final": true,
+        "enumConstant": true,
+        "value": null
+      }
+    },
+    "windows": [
+      {
+        "id": "window-1",
+        "displayName": "OrderController # place",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 31,
+        "code": "    public Order place(OrderRequest req) {\n\tif (req.items().size() > MAX_ITEMS) { // MAX_ITEMS guard\n\t\tthrow new IllegalArgumentException(\"max \" + MAX_ITEMS);\n    }\n    // orderService is injected\n    return orderService.place(req, this.orderService.defaultType(), PaymentType.CARD);\n}",
+        "fieldRefs": [
+          {
+            "line": 32,
+            "col": 26,
+            "len": 9,
+            "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+          },
+          {
+            "line": 33,
+            "col": 46,
+            "len": 9,
+            "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+          },
+          {
+            "line": 36,
+            "col": 11,
+            "len": 12,
+            "field": "com.example.app.controller.OrderController#orderService"
+          },
+          {
+            "line": 36,
+            "col": 40,
+            "len": 12,
+            "field": "com.example.app.controller.OrderController#orderService"
+          },
+          {
+            "line": 36,
+            "col": 80,
+            "len": 4,
+            "field": "com.example.app.domain.PaymentType#CARD"
+          }
+        ]
+      },
+      {
+        "id": "window-2",
+        "displayName": "OrderService # place",
+        "filePath": "module-app/src/main/java/com/example/app/service/OrderService.java",
+        "startLine": 22,
+        "code": "    public Order place(OrderRequest req, PaymentType type) {\n        return repository.save(new Order(req, type));\n    }"
+      }
+    ],
+    "connections": [
+      {
+        "from": "window-1",
+        "to": "window-2",
+        "callLine": 36,
+        "callEndLine": 36
+      }
+    ]
+  },
+  "clicks": [
+    {
+      "sourceWindowId": "window-1",
+      "lineNumber": 36,
+      "fieldKey": "com.example.app.controller.OrderController#orderService",
+      "newId": "window-field-A"
+    },
+    {
+      "sourceWindowId": "window-1",
+      "lineNumber": 36,
+      "fieldKey": "com.example.app.controller.OrderController#orderService",
+      "newId": "window-field-B"
+    },
+    {
+      "sourceWindowId": "window-1",
+      "lineNumber": 32,
+      "fieldKey": "com.example.app.controller.OrderController#MAX_ITEMS",
+      "newId": "window-field-C"
+    }
+  ],
+  "deleteId": "window-field-A"
+}

@@ -1,0 +1,112 @@
+{
+  "steps": [
+    {
+      "action": "create",
+      "windowId": "window-field-A",
+      "connection": {
+        "from": "window-1",
+        "to": "window-field-A",
+        "callLine": 36,
+        "callEndLine": 36,
+        "kind": "fieldRef"
+      }
+    },
+    {
+      "action": "select",
+      "windowId": "window-field-A"
+    },
+    {
+      "action": "create",
+      "windowId": "window-field-C",
+      "connection": {
+        "from": "window-1",
+        "to": "window-field-C",
+        "callLine": 32,
+        "callEndLine": 32,
+        "kind": "fieldRef"
+      }
+    }
+  ],
+  "saved": {
+    "fieldKeys": [
+      "com.example.app.controller.OrderController#MAX_ITEMS",
+      "com.example.app.controller.OrderController#orderService",
+      "com.example.app.domain.PaymentType#CARD"
+    ],
+    "fieldWindows": [
+      {
+        "id": "window-field-A",
+        "windowType": "field",
+        "field": "com.example.app.controller.OrderController#orderService",
+        "displayName": "OrderController # orderService",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 17,
+        "code": "    /** 注文サービス */\n    private final OrderService orderService;"
+      },
+      {
+        "id": "window-field-C",
+        "windowType": "field",
+        "field": "com.example.app.controller.OrderController#MAX_ITEMS",
+        "displayName": "OrderController # MAX_ITEMS",
+        "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+        "startLine": 16,
+        "code": "    private static final int MAX_ITEMS = 50;"
+      }
+    ],
+    "sourceFieldRefCount": 5,
+    "connections": [
+      {
+        "from": "window-1",
+        "to": "window-2",
+        "callLine": 36,
+        "callEndLine": 36
+      },
+      {
+        "from": "window-1",
+        "to": "window-field-A",
+        "callLine": 36,
+        "callEndLine": 36,
+        "kind": "fieldRef"
+      },
+      {
+        "from": "window-1",
+        "to": "window-field-C",
+        "callLine": 32,
+        "callEndLine": 32,
+        "kind": "fieldRef"
+      }
+    ]
+  },
+  "afterReload": {
+    "goToAgain": {
+      "action": "select",
+      "windowId": "window-field-A"
+    },
+    "tokenizedLine36": "    return <span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">orderService</span>.place(req, this.<span class=\"field-ref-token\" data-field=\"com.example.app.controller.OrderController#orderService\" data-tip=\"final%20OrderService%20orderService%20%20(com.example.app.controller.OrderController)\">orderService</span>.defaultType(), PaymentType.<span class=\"field-ref-token\" data-field=\"com.example.app.domain.PaymentType#CARD\" data-tip=\"enum%20constant%20PaymentType%20CARD%20%20(com.example.app.domain.PaymentType)\">CARD</span>);"
+  },
+  "afterDeleteDeclaration": {
+    "deleteIds": [
+      "window-field-A"
+    ],
+    "windowsLeft": [
+      "window-1",
+      "window-2",
+      "window-field-C"
+    ],
+    "connections": [
+      {
+        "from": "window-1",
+        "to": "window-2",
+        "callLine": 36,
+        "callEndLine": 36
+      },
+      {
+        "from": "window-1",
+        "to": "window-field-C",
+        "callLine": 32,
+        "callEndLine": 32,
+        "kind": "fieldRef"
+      }
+    ]
+  }
+}

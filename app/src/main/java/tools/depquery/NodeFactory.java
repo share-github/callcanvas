@@ -1,81 +1,13 @@
 package tools.depquery;
 
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.resolution.declarations.ResolvedConstructorDeclaration;
-import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
-import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import tools.depquery.CallIndexModels.*;
 
-import java.nio.file.Path;
 import java.util.List;
-
-import static java.util.stream.Collectors.joining;
-import static tools.depquery.DiagnosticLogger.*;
-import static tools.depquery.FqnUtils.*;
 
 /**
  * GraphModels.Node 生成ユーティリティ
  */
 class NodeFactory {
-
-    static String ensureNodeFromDecl(GraphModels.Graph g, SourceLocator.MethodLoc loc,
-            JavaParserFacade facade) {
-        var md = loc.decl();
-        var clazzDecl = md.findAncestor(ClassOrInterfaceDeclaration.class).orElse(null);
-        String classFqn = clazzDecl != null ? clazzDecl.getFullyQualifiedName().orElse("Unknown") : "Unknown";
-        String simpleClass = clazzDecl != null ? clazzDecl.getNameAsString() : "Unknown";
-        String name = md.getNameAsString();
-        var paramsFqn = md.getParameters().stream()
-                .map(p -> {
-                    try {
-                        return facade.getType(p).describe();
-                    } catch (Throwable t) {
-                        return p.getType().asString();
-                    }
-                })
-                .toList();
-        String id = classFqn + "#" + name + "(" + String.join(",", paramsFqn) + ")";
-        int ls = md.getRange().map(r -> r.begin.line).orElse(-1);
-        int le = md.getRange().map(r -> r.end.line).orElse(-1);
-        String display = simpleClass + "." + name + "("
-                + paramsFqn.stream().map(FqnUtils::shortType).collect(joining(", ")) + ")  L" + ls + "\u2013" + le;
-
-        String stereotype = stereotypeOf(clazzDecl);
-        var anns = md.getAnnotations().stream().map(a -> "@" + a.getNameAsString()).toList();
-        g.addOrUpdateNode(new GraphModels.Node(id, display, classFqn, name, paramsFqn, loc.file().toString(), ls, le,
-                anns, stereotype));
-        return id;
-    }
-
-    static void ensureNodeStubIfMissing(GraphModels.Graph g, ResolvedMethodDeclaration decl,
-            SourceLocator locator) {
-        String id = toMethodFqn(decl);
-        if (g.nodes.containsKey(id))
-            return;
-        String classFqn = decl.getPackageName() + "." + decl.getClassName();
-        String simpleClass = decl.getClassName();
-        String display = simpleClass + "." + decl.getName() + "("
-                + paramTypeDescs(decl).stream().map(FqnUtils::shortType).collect(joining(", ")) + ")  L?-?";
-        var anns = List.<String>of();
-        var file = locator.resolveMethod(id).map(SourceLocator.MethodLoc::file).map(Path::toString).orElse("-");
-        g.addOrUpdateNode(new GraphModels.Node(id, display, classFqn, decl.getName(),
-                paramTypeDescs(decl), file, -1, -1, anns, "Component"));
-    }
-
-    static void ensureNodeStubIfMissing(GraphModels.Graph g, ResolvedConstructorDeclaration decl,
-            SourceLocator locator) {
-        String id = toCtorFqn(decl);
-        if (g.nodes.containsKey(id))
-            return;
-        String classFqn = decl.getPackageName() + "." + decl.getClassName();
-        String simpleClass = decl.getClassName();
-        String display = simpleClass + "." + decl.getClassName() + "("
-                + paramTypeDescs(decl).stream().map(FqnUtils::shortType).collect(joining(", ")) + ")  L?-?";
-        var anns = List.<String>of();
-        var file = locator.resolveMethod(id).map(SourceLocator.MethodLoc::file).map(Path::toString).orElse("-");
-        g.addOrUpdateNode(new GraphModels.Node(id, display, classFqn, decl.getClassName(),
-                paramTypeDescs(decl), file, -1, -1, anns, "Component"));
-    }
 
     /**
      * インデックスのMethodEntryから直接Nodeを構築（パースなし・型解決なし）
@@ -105,6 +37,7 @@ class NodeFactory {
             annotations,
             stereotype
         );
+        if (entry.fieldRefs != null) node.fieldRefs = entry.fieldRefs;
         g.addOrUpdateNode(node);
     }
 

@@ -1,0 +1,122 @@
+[
+  {
+    "label": "delete the declaration window: its fieldRef connection goes, source stays",
+    "input": {
+      "connections": [
+        {
+          "from": "window-1",
+          "to": "window-2",
+          "callLine": 36,
+          "callEndLine": 36
+        },
+        {
+          "from": "window-1",
+          "to": "window-field-1",
+          "callLine": 36,
+          "callEndLine": 36,
+          "kind": "fieldRef"
+        }
+      ],
+      "ids": [
+        "window-field-1"
+      ]
+    },
+    "expected": {
+      "deleteIds": [
+        "window-field-1"
+      ],
+      "connections": [
+        {
+          "from": "window-1",
+          "to": "window-2",
+          "callLine": 36,
+          "callEndLine": 36
+        }
+      ]
+    }
+  },
+  {
+    "label": "delete the source: declaration window referenced only from it cascades",
+    "input": {
+      "connections": [
+        {
+          "from": "window-1",
+          "to": "window-2",
+          "callLine": 36,
+          "callEndLine": 36
+        },
+        {
+          "from": "window-1",
+          "to": "window-field-1",
+          "callLine": 36,
+          "callEndLine": 36,
+          "kind": "fieldRef"
+        }
+      ],
+      "ids": [
+        "window-1"
+      ]
+    },
+    "expected": {
+      "deleteIds": [
+        "window-1",
+        "window-2",
+        "window-field-1"
+      ],
+      "connections": []
+    }
+  },
+  {
+    "label": "declaration referenced from two windows survives deleting one of them",
+    "input": {
+      "connections": [
+        {
+          "from": "window-1",
+          "to": "window-field-1",
+          "callLine": 36,
+          "callEndLine": 36,
+          "kind": "fieldRef"
+        },
+        {
+          "from": "window-2",
+          "to": "window-field-1",
+          "callLine": 23,
+          "callEndLine": 23,
+          "kind": "fieldRef"
+        }
+      ],
+      "ids": [
+        "window-1"
+      ]
+    },
+    "expected": {
+      "deleteIds": [
+        "window-1"
+      ],
+      "connections": [
+        {
+          "from": "window-2",
+          "to": "window-field-1",
+          "callLine": 23,
+          "callEndLine": 23,
+          "kind": "fieldRef"
+        }
+      ]
+    }
+  },
+  {
+    "label": "no connections",
+    "input": {
+      "connections": [],
+      "ids": [
+        "a"
+      ]
+    },
+    "expected": {
+      "deleteIds": [
+        "a"
+      ],
+      "connections": []
+    }
+  }
+]

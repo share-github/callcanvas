@@ -5,16 +5,27 @@ plugins {
 }
 
 group = 'tools.depquery'
-version = '0.9.0'
+version = '0.11.0'
 archivesBaseName = 'java-call-hierarchy-analyzer'
 
 repositories { mavenCentral() }
 
 dependencies {
-  implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.28.2'
   implementation 'org.json:json:20240303'
   implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+  // インデックス構築の解析・型解決（ASTParser.createASTs + resolveBindings）。
+  // 推移依存のうち DOM AST の構築に不要なものは外す（試作で出力が変わらないことを確認した 10 JAR 構成）
+  implementation('org.eclipse.jdt:org.eclipse.jdt.core:3.47.0') {
+    exclude group: 'org.eclipse.platform', module: 'org.eclipse.core.commands'
+    exclude group: 'org.eclipse.platform', module: 'org.eclipse.core.expressions'
+    exclude group: 'org.eclipse.platform', module: 'org.eclipse.core.filesystem'
+    exclude group: 'org.eclipse.platform', module: 'org.eclipse.equinox.app'
+    exclude group: 'org.eclipse.platform', module: 'org.eclipse.equinox.registry'
+    exclude group: 'org.eclipse.platform', module: 'org.eclipse.text'
+    exclude group: 'net.java.dev.jna'
+    exclude group: 'org.osgi', module: 'osgi.annotation'
+  }
   testImplementation 'com.tngtech.archunit:archunit-junit5:1.3.0' // 任意（規約テスト）
   testImplementation 'org.junit.jupiter:junit-jupiter:5.10.3'
   testImplementation 'org.json:json:20240303' // GoldenFileTest用
@@ -30,6 +41,8 @@ shadowJar {
   archiveBaseName.set('java-call-hierarchy-analyzer')
   archiveVersion.set(version)
   archiveClassifier.set('')  // 'all' を削除してシンプルに
+  // Eclipse の JAR は署名付き。署名ファイルを残すとマージ後の JAR で検証エラーになる
+  exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/*.EC'
   manifest {
     attributes 'Main-Class': 'tools.depquery.DepQueryCli'
   }

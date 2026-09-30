@@ -54,6 +54,49 @@ function escapeHtml(value) {
     }[c]));
 }
 
+/**
+ * The viewer HTML embeds the canvas data as of the moment the panel was opened, but
+ * the viewer keeps saving edits to the canvas JSON file (saveData). Serve what is on
+ * disk now so a browser reload — in any tab of that canvas — shows the saved edits.
+ * Anything unexpected (no path, unreadable/empty/broken JSON, no initialData in the
+ * HTML) keeps the HTML as it was.
+ */
+function withSavedCanvasData(html, jsonPath) {
+    if (!jsonPath) {
+        return html;
+    }
+    let data;
+    try {
+        const raw = fs.readFileSync(jsonPath, 'utf8').trim();
+        if (!raw) {
+            return html;
+        }
+        data = JSON.parse(raw);
+    } catch {
+        return html;
+    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return html;
+    }
+    // Same defaults the viewer extension applies when it opens a JSON file
+    if (!data.windows) data.windows = [];
+    if (!data.connections) data.connections = [];
+    if (data.autoLayout === undefined) data.autoLayout = true;
+
+    // `initialData: <one-line JSON>,\n<indent>jsonFilePath:` — JSON.stringify has no raw newline
+    const start = html.indexOf('initialData: ');
+    if (start < 0) {
+        return html;
+    }
+    const valueStart = start + 'initialData: '.length;
+    const end = html.slice(valueStart).search(/,\r?\n\s*jsonFilePath: /);
+    if (end < 0) {
+        return html;
+    }
+    const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
+    return html.slice(0, valueStart) + dataJson + html.slice(valueStart + end);
+}
+
 class ViewerServer {
     /**
      * @param {object} options
@@ -260,7 +303,7 @@ class ViewerServer {
      * `follow` marks a tab served from `/`: it reloads when a newer canvas opens.
      */
     render(entry, follow) {
-        let out = String(entry.rawHtml);
+        let out = withSavedCanvasData(String(entry.rawHtml), entry.jsonPath);
         const cspMeta = `<meta http-equiv="Content-Security-Policy" content="${SERVER_CSP}">`;
         if (/<meta http-equiv="Content-Security-Policy"[^>]*>/.test(out)) {
             out = out.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, cspMeta);
@@ -758,4 +801,4 @@ class ViewerServer {
     }
 }
 
-module.exports = { ViewerServer, SERVER_CSP };
+module.exports = { ViewerServer, SERVER_CSP, withSavedCanvasData };

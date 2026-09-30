@@ -196,5 +196,31 @@
       "connections": []
     },
     "expected": null
+  },
+  {
+    "label": "orphan field declaration window is never picked as root",
+    "input": {
+      "windows": [
+        {
+          "id": "w2"
+        },
+        {
+          "id": "f1",
+          "windowType": "field"
+        },
+        {
+          "id": "w1"
+        }
+      ],
+      "connections": [
+        {
+          "from": "w1",
+          "to": "w2"
+        }
+      ]
+    },
+    "expected": {
+      "id": "w1"
+    }
   }
 ]
