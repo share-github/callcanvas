@@ -169,9 +169,10 @@ function memento() {
  * @param {string} host.projectRoot
  * @param {import('./config').ConfigStore} host.config
  * @param {import('./nvimClient').NvimClient} host.nvim
- * @param {object} host.ui        { input, pick, openPath, savePath, message }
+ * @param {object} host.ui        { input, pick, openPath, savePath, message, progress* }
  * @param {object} host.panelSink { onHtml, onPost, onTitle, onDispose, assetUrl }
  * @param {Record<string,string>} host.extensionPaths  extension id -> directory
+ * @param {(channel: string, line: string) => void} [host.onOutput]  output channel lines
  * @param {(msg: string) => void} host.log
  */
 function createVscodeShim(host) {
@@ -394,10 +395,19 @@ function createVscodeShim(host) {
                 if (outputChannels.has(name)) {
                     return outputChannels.get(name);
                 }
+                // The extensions report long-running background work (the automatic
+                // call index build) only through their output channel, so the host
+                // listens in to turn it into progress the user can see.
+                const emit = (value) => {
+                    log(`[${name}] ${value}`);
+                    if (host.onOutput) {
+                        host.onOutput(name, String(value));
+                    }
+                };
                 const channel = {
                     name,
-                    append: (value) => log(`[${name}] ${value}`),
-                    appendLine: (value) => log(`[${name}] ${value}`),
+                    append: emit,
+                    appendLine: emit,
                     replace: () => {},
                     clear: () => {},
                     show: () => {},
@@ -435,18 +445,17 @@ function createVscodeShim(host) {
 
             async withProgress(options, task) {
                 const title = options && options.title ? options.title : '';
-                if (title) {
-                    host.ui.progress(title, true);
-                }
+                // Begin/end rather than progress(text, active): the host keeps one line
+                // on screen for as long as anything is running, so the pair has to be
+                // balanced even when this work has no title of its own.
+                host.ui.progressBegin(title);
                 try {
                     return await task(
-                        { report: (value) => value && value.message && host.ui.progress(value.message, true) },
+                        { report: (value) => value && value.message && host.ui.progressUpdate(value.message) },
                         { isCancellationRequested: false, onCancellationRequested: () => ({ dispose() {} }) }
                     );
                 } finally {
-                    if (title) {
-                        host.ui.progress(title, false);
-                    }
+                    host.ui.progressEnd(title);
                 }
             },
 

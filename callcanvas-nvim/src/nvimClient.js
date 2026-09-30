@@ -108,6 +108,23 @@ class NvimClient {
     }
 
     /**
+     * Show (or clear) a progress line in the launching Neovim. Fire and forget: the
+     * caller must not wait for a display update.
+     * @param {string} text
+     * @param {boolean} active false clears it
+     */
+    async progress(text, active) {
+        if (!this.address) {
+            return;
+        }
+        const expr = `CallCanvasNvimProgress(${vimStr(text)}, ${active ? 1 : 0})`;
+        const result = await this.run(['--remote-expr', expr]);
+        if (!result.ok) {
+            this.log(`nvim progress failed: ${result.error}`);
+        }
+    }
+
+    /**
      * Ask the launching Neovim to choose from a list (a QuickPick in VS Code terms).
      * @returns {Promise<number>} 0-based choice, -1 when nobody could be asked
      *   (no address, no UI, plugin missing), -2 when the user cancelled.

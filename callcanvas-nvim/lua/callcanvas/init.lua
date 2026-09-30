@@ -33,6 +33,10 @@ M.config = {
   -- (created on the first jump and reused afterwards), 'here' replaces the current
   -- window, 'tab' uses a dedicated tab.
   jump_mode = 'split',
+  -- Keep a line on screen while the host is busy (analysis, and the call index build
+  -- that an analysis kicks off in the background — it outlives the analysis itself and
+  -- would otherwise be a notification that scrolls away). false disables it.
+  progress = true,
   -- Whether a jump moves the cursor focus to the opened file:
   --   'auto'  (default) only when Neovim actually has terminal focus
   --   true    always (the old behaviour)
@@ -48,7 +52,9 @@ local state = { url = nil, short_url = nil, short_bookmark_url = nil, bookmark_u
   -- come from the browser, so "not focused" is the safe assumption.
   focused = false,
   -- The one window jumps reuse, so repeated jumps do not keep splitting.
-  jump_win = nil }
+  jump_win = nil,
+  -- The progress line: one reused floating window, ticking its own elapsed time.
+  progress = { win = nil, buf = nil, timer = nil, text = nil, started = 0, frame = 1, closing = nil } }
 
 local function plugin_root()
   local source = debug.getinfo(1, 'S').source:sub(2)
@@ -305,6 +311,9 @@ function M.stop()
     table.insert(args, '--file')
     table.insert(args, file)
   end
+  -- The host is going away, so nothing is running any more. (Through M, because the
+  -- progress helpers are defined further down.)
+  M.progress_remote('', 0)
   vim.system(args, { text = true }, function(result)
     vim.schedule(function()
       state.url = nil
@@ -515,6 +524,135 @@ end
 
 --- Called by the host when it needs a value typed by the user.
 --- Runs inside a synchronous --remote-expr call, so input() blocks until answered.
+-- --- progress line ---------------------------------------------------------------
+-- The host pushes text; the elapsed time and the spinner tick here, so a minutes-long
+-- index build costs one RPC per status change instead of one per frame.
+
+local SPINNER = { '⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏' }
+
+local function progress_close()
+  local p = state.progress
+  if p.timer then
+    p.timer:stop()
+    p.timer:close()
+    p.timer = nil
+  end
+  if p.closing then
+    p.closing:stop()
+    p.closing:close()
+    p.closing = nil
+  end
+  if p.win and vim.api.nvim_win_is_valid(p.win) then
+    pcall(vim.api.nvim_win_close, p.win, true)
+  end
+  if p.buf and vim.api.nvim_buf_is_valid(p.buf) then
+    pcall(vim.api.nvim_buf_delete, p.buf, { force = true })
+  end
+  p.win, p.buf, p.text = nil, nil, nil
+end
+
+--- Draw the line, creating the window on first use.
+--- Bottom right, not focusable, no autocmds: it must never take the cursor or fire
+--- events in the middle of whatever the user is doing.
+local function progress_draw(line)
+  local p = state.progress
+  if not p.buf or not vim.api.nvim_buf_is_valid(p.buf) then
+    p.buf = vim.api.nvim_create_buf(false, true)
+    vim.bo[p.buf].bufhidden = 'wipe'
+  end
+  pcall(vim.api.nvim_buf_set_lines, p.buf, 0, -1, false, { line })
+  local width = math.min(vim.o.columns - 2, math.max(20, vim.fn.strdisplaywidth(line) + 2))
+  local config = {
+    relative = 'editor',
+    anchor = 'SE',
+    row = vim.o.lines - 1,
+    col = vim.o.columns,
+    width = width,
+    height = 1,
+    style = 'minimal',
+    border = 'rounded',
+    focusable = false,
+    noautocmd = true,
+    zindex = 200,
+  }
+  if p.win and vim.api.nvim_win_is_valid(p.win) then
+    pcall(vim.api.nvim_win_set_config, p.win, config)
+  else
+    local ok, win = pcall(vim.api.nvim_open_win, p.buf, false, config)
+    if not ok then
+      return
+    end
+    p.win = win
+    pcall(function()
+      vim.wo[win].winhighlight = 'NormalFloat:NormalFloat,FloatBorder:FloatBorder'
+    end)
+  end
+end
+
+local function progress_tick()
+  local p = state.progress
+  if not p.text then
+    return
+  end
+  p.frame = (p.frame % #SPINNER) + 1
+  local seconds = math.floor((vim.uv or vim.loop).now() / 1000) - p.started
+  progress_draw((' %s %s (%ds)'):format(SPINNER[p.frame], p.text, math.max(0, seconds)))
+end
+
+--- Show (or clear) the host's progress line. Called by the host over RPC.
+--- @param text string
+--- @param active number|boolean 0/false clears it
+function M.progress_remote(text, active)
+  local on = active == true or active == 1
+  -- Nothing to draw on (headless, or the user turned it off).
+  if M.config.progress == false or #vim.api.nvim_list_uis() == 0 then
+    return 1
+  end
+  local p = state.progress
+  if not on then
+    -- No text: the work simply ended, so the line goes away at once. With text it is
+    -- an outcome worth reading ('call index built'), so leave it up for a moment.
+    if text == nil or text == '' then
+      progress_close()
+      return 1
+    end
+    if p.text == nil and p.win == nil then
+      return 1
+    end
+    progress_draw((' %s'):format(text))
+    if p.timer then
+      p.timer:stop()
+      p.timer:close()
+      p.timer = nil
+    end
+    p.text = nil
+    if p.closing then
+      p.closing:stop()
+      p.closing:close()
+    end
+    p.closing = (vim.uv or vim.loop).new_timer()
+    p.closing:start(2000, 0, vim.schedule_wrap(progress_close))
+    return 1
+  end
+
+  if p.closing then
+    p.closing:stop()
+    p.closing:close()
+    p.closing = nil
+  end
+  if p.text == nil then
+    p.started = math.floor((vim.uv or vim.loop).now() / 1000)
+    p.frame = 1
+  end
+  p.text = text
+  progress_tick()
+  if not p.timer then
+    p.timer = (vim.uv or vim.loop).new_timer()
+    p.timer:start(400, 400, vim.schedule_wrap(progress_tick))
+  end
+  return 1
+end
+
 --- Answer a host-side QuickPick ("which project?" when the call index is built
 --- without a Java buffer open) inside Neovim.
 --- @return number 0-based choice, -1 when nobody can be asked (headless), -2 = cancelled
@@ -571,6 +709,9 @@ function M.setup(opts)
     endfunction
     function! CallCanvasNvimSelect(prompt, items) abort
       return luaeval("require('callcanvas').select_remote(_A[1], _A[2])", [a:prompt, a:items])
+    endfunction
+    function! CallCanvasNvimProgress(text, active) abort
+      return luaeval("require('callcanvas').progress_remote(_A[1], _A[2])", [a:text, a:active])
     endfunction
   ]])
 

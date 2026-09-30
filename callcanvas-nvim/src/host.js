@@ -26,6 +26,9 @@ const OPEN_COMMANDS = {
     jsp: 'jsCallHierarchy.exportIncludeMap'
 };
 
+/** The Java extension prefixes every automatic (background) index build line with this. */
+const AUTO_INDEX_PREFIX = '[Auto-Index]';
+
 const BUILD_FILES = ['build.gradle', 'build.gradle.kts', 'pom.xml', 'settings.gradle', 'settings.gradle.kts', 'package.json'];
 /** A Java module is a directory with a Java build file — package.json does not count. */
 const JAVA_BUILD_FILES = ['pom.xml', 'build.gradle', 'build.gradle.kts'];
@@ -260,6 +263,16 @@ class CallCanvasHost {
          * real project, so the idle shutdown must not fire in the middle of one.
          */
         this.runningCommands = 0;
+        /** Last progress line pushed to Neovim, so the same text is not re-sent. */
+        this.lastProgressText = null;
+        this.lastProgressAt = 0;
+        /**
+         * Work in flight. The line is on screen while this is > 0 — "shown while
+         * something is actually running" — and several activities overlap (an analysis
+         * whose withProgress nests inside it, and the index build it starts, which
+         * outlives it), so the line must only be cleared by the last one.
+         */
+        this.workDepth = 0;
         /** canvas id -> panel (several canvases can be open at once) */
         this.panels = new Map();
         /** panel -> canvas id */
@@ -322,6 +335,7 @@ class CallCanvasHost {
             log: this.log,
             extensionPaths: this.extensionDirs,
             ui: this.buildUi(),
+            onOutput: (channel, line) => this.onOutput(channel, line),
             panelSink: this.buildPanelSink(),
             nvimJumpEnabled: () => this.nvimJumpEnabled(),
             showFileInBrowser: (fsPath, line) => this.showFileInBrowser(fsPath, line)
@@ -467,7 +481,15 @@ class CallCanvasHost {
                         : `unsupported file type: ${path.basename(file)}`
                 };
             }
-            await this.shim.vscode.commands.executeCommand(command);
+            // Bracket the analysis itself, not just the extension's own withProgress:
+            // only the Java extension reports progress, so a JS/TS analysis would
+            // otherwise run with nothing on screen.
+            this.beginWork(`analyzing ${path.basename(file)}:${line}`);
+            try {
+                await this.shim.vscode.commands.executeCommand(command);
+            } finally {
+                this.endWork();
+            }
             return this.openResult(generationBefore);
         } catch (error) {
             const message = error && error.message ? error.message : String(error);
@@ -526,9 +548,11 @@ class CallCanvasHost {
             clearTimeout(this.idleTimer);
             this.idleTimer = null;
         }
+        this.beginWork(`running ${commandId}`);
         try {
             return await this.shim.vscode.commands.executeCommand(commandId, ...(args || []));
         } finally {
+            this.endWork();
             this.runningCommands--;
             if (this.server.clients.size === 0) {
                 this.scheduleIdleShutdown();
@@ -617,6 +641,92 @@ class CallCanvasHost {
         return this.config.lookup('callcanvas.nvimJump', false) === true;
     }
 
+    /**
+     * Tell Neovim about long-running work, so it can keep a line on screen instead of
+     * a notification that scrolls away. Throttled: this crosses an `nvim --remote-expr`
+     * process per call, and the elapsed-time ticking is Neovim's own job.
+     */
+    nvimProgress(text, active) {
+        if (!this.nvim.available) {
+            return;
+        }
+        const now = Date.now();
+        if (active && text === this.lastProgressText && now - this.lastProgressAt < 1000) {
+            return;
+        }
+        this.lastProgressText = active ? text : null;
+        this.lastProgressAt = now;
+        this.nvim.progress(text, active);
+    }
+
+    /** Something started running: put the line up and keep it up. */
+    beginWork(label) {
+        this.workDepth++;
+        this.nvimProgress(label, true);
+    }
+
+    /** Same work, new status text. */
+    updateWork(text) {
+        if (this.workDepth === 0) {
+            this.workDepth++;
+        }
+        this.nvimProgress(text, true);
+    }
+
+    /**
+     * Work finished. The line goes away when nothing is running any more; an outcome
+     * worth reading (`call index built`) is passed as `finalText` and lingers briefly,
+     * while plain "the analysis returned" just clears.
+     */
+    endWork(finalText) {
+        this.workDepth = Math.max(0, this.workDepth - 1);
+        if (this.workDepth === 0) {
+            this.lastProgressText = null;
+            this.nvimProgress(finalText || '', false);
+        } else if (finalText) {
+            this.nvimProgress(finalText, true);
+        }
+    }
+
+    /**
+     * Output channel lines from the extensions. The automatic call index build (started
+     * by an analysis that finds no index) runs for minutes and reports only here, so
+     * without this the user is told "building in background" once and then nothing.
+     */
+    onOutput(channel, line) {
+        if (!line.startsWith(AUTO_INDEX_PREFIX)) {
+            return;
+        }
+        const body = line.slice(AUTO_INDEX_PREFIX.length).trim();
+        if (/^Building index for:/.test(body)) {
+            this.indexBuilding = true;
+            this.beginWork('building the call index');
+            return;
+        }
+        if (/^Index built successfully/.test(body)) {
+            this.endIndexBuild('call index built');
+            return;
+        }
+        if (/^(Failed|Error|Process exited|JAR not found|No source directories)/.test(body)) {
+            this.endIndexBuild(`call index build failed: ${body}`);
+            return;
+        }
+        // The analyzer's own progress ("Found 22 Java files", "117 methods indexed").
+        const info = body.match(/^\[INFO\]\s*(.+)$/);
+        if (info && this.indexBuilding) {
+            this.updateWork(`call index — ${info[1]}`);
+        }
+    }
+
+    /** The background build reports both an error line and a "Failed after" line. */
+    endIndexBuild(finalText) {
+        if (!this.indexBuilding) {
+            return;
+        }
+        this.indexBuilding = false;
+        this.endWork(finalText);
+    }
+
     /** Show a file in the browser's own panel instead of opening an editor. */
     showFileInBrowser(fsPath, line) {
         this.sendToUi({ kind: 'show-file', path: fsPath, line: Math.max(1, Number(line) || 1) });
@@ -643,8 +753,24 @@ class CallCanvasHost {
     buildUi() {
         const host = this;
         return {
-            progress(text, active) {
-                host.sendToUi({ kind: 'progress', text, active });
+            // The browser only hears about work that has a title, exactly as before.
+            // Neovim hears about all of it: the user is looking at the editor they
+            // pressed the key in, not necessarily at a browser tab.
+            progressBegin(title) {
+                if (title) {
+                    host.sendToUi({ kind: 'progress', text: title, active: true });
+                }
+                host.beginWork(title || 'working ...');
+            },
+            progressUpdate(text) {
+                host.sendToUi({ kind: 'progress', text, active: true });
+                host.updateWork(text);
+            },
+            progressEnd(title) {
+                if (title) {
+                    host.sendToUi({ kind: 'progress', text: title, active: false });
+                }
+                host.endWork();
             },
 
             async message(level, message, items) {
@@ -824,6 +950,12 @@ class CallCanvasHost {
 
     /** @param {number} code exit status — non-zero when a one-shot command failed */
     async shutdown(code = 0) {
+        // Nothing is running once this process is gone, so take the line down first —
+        // otherwise a spinner keeps ticking in Neovim for work that ended.
+        if (this.nvim.available) {
+            this.workDepth = 0;
+            await this.nvim.progress('', false);
+        }
         this.clearSession();
         await this.server.close();
         process.exit(code);

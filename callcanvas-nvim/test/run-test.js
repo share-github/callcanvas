@@ -716,6 +716,85 @@ async function main() {
     host.nvim = { available: true, select: async () => -1 };
     check('with nobody to ask (headless) the fallback decides',
         (await host.requestUi('pick', { items: ['a'], placeHolder: 'p' }, () => 0)) === 0);
+
+    // The background index build (started by an analysis that finds no index) outlives
+    // the analysis and reports only to an output channel, so Neovim has to be told
+    // about it or the user sees one notification and then silence.
+    section('long-running work is pushed to Neovim as progress');
+    const pushed = [];
+    host.nvim = { available: true, progress: async (text, active) => { pushed.push({ text, active }); } };
+    host.lastProgressText = null;
+    host.lastProgressAt = 0;
+
+    await host.shim.vscode.window.withProgress({ title: 'Analyzing...' }, async (progress) => {
+        progress.report({ message: 'Resolving method...' });
+    });
+    check('withProgress reaches Neovim, not only the browser',
+        pushed.some(p => p.text === 'Analyzing...' && p.active === true)
+            && pushed.some(p => p.text === 'Resolving method...'),
+        JSON.stringify(pushed));
+    check('the line goes away when the work ends',
+        pushed[pushed.length - 1].active === false && pushed[pushed.length - 1].text === '',
+        JSON.stringify(pushed[pushed.length - 1]));
+    check('nothing is left running', host.workDepth === 0, String(host.workDepth));
+
+    // The line is shown while something actually runs, and several things overlap: the
+    // index build is started by an analysis and outlives it, so only the last one may
+    // take the line down.
+    pushed.length = 0;
+    host.lastProgressText = null;
+    host.beginWork('analyzing Foo.java:31');
+    host.onOutput('Java Call Hierarchy', '[Auto-Index] Building index for: /tmp/x');
+    await host.shim.vscode.window.withProgress({ title: 'Analyzing Foo#bar...' }, async () => {});
+    check('a nested activity ending does not take the line down',
+        !pushed.some(p => p.active === false), JSON.stringify(pushed));
+    host.endWork();                                    // the analysis returns
+    check('the line stays up for the index build that outlived it',
+        !pushed.some(p => p.active === false) && host.workDepth === 1, String(host.workDepth));
+    host.onOutput('Java Call Hierarchy', '[Auto-Index] Index built successfully in 900ms');
+    check('the last activity clears it, with its outcome',
+        pushed[pushed.length - 1].active === false
+            && pushed[pushed.length - 1].text === 'call index built',
+        JSON.stringify(pushed[pushed.length - 1]));
+    check('no work left', host.workDepth === 0, String(host.workDepth));
+
+    pushed.length = 0;
+    host.lastProgressText = null;
+    host.onOutput('Java Call Hierarchy', '[Auto-Index] Building index for: /tmp/x');
+    host.onOutput('Java Call Hierarchy', '[Auto-Index] Command: java -jar ...');
+    host.onOutput('Java Call Hierarchy', '[Auto-Index] [INFO] Found 22 Java files');
+    host.onOutput('Java Call Hierarchy', 'Analyzing com.example.Foo#bar');
+    check('the index build start is shown',
+        pushed[0] && pushed[0].text === 'building the call index' && pushed[0].active === true,
+        JSON.stringify(pushed[0]));
+    check('the analyzer\'s own progress is shown',
+        pushed.some(p => /Found 22 Java files/.test(p.text) && p.active === true),
+        JSON.stringify(pushed));
+    check('noisy and unrelated output lines are not',
+        !pushed.some(p => /Command:|Analyzing com\.example/.test(p.text)), JSON.stringify(pushed));
+
+    pushed.length = 0;
+    host.onOutput('Java Call Hierarchy', '[Auto-Index] Error: spawn java ENOENT');
+    host.onOutput('Java Call Hierarchy', '[Auto-Index] Failed after 12ms');
+    check('a failed build says so and clears the line once',
+        pushed.length === 1 && pushed[0].active === false && /failed/.test(pushed[0].text),
+        JSON.stringify(pushed));
+    check('no work left after a failure', host.workDepth === 0, String(host.workDepth));
+
+    // Output lines that arrive with no build running (a stale log line) must not put a
+    // line on screen that nothing will ever take down.
+    pushed.length = 0;
+    host.onOutput('Java Call Hierarchy', '[Auto-Index] [INFO] Found 22 Java files');
+    check('progress without a running build is ignored', pushed.length === 0,
+        JSON.stringify(pushed));
+
+    // One `nvim --remote-expr` process per call, so repeats of the same line are dropped.
+    pushed.length = 0;
+    host.lastProgressText = null;
+    host.nvimProgress('same text', true);
+    host.nvimProgress('same text', true);
+    check('the same line is not re-sent', pushed.length === 1, String(pushed.length));
+
     host.nvim = realNvim;
 
     let stream;

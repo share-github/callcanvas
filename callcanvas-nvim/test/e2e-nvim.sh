@@ -188,6 +188,53 @@ else
     bad "select returned '$SELECTED', expected '1,-2'"
 fi
 
+# Long work (analysis, and the index build that outlives it) is shown as a line that
+# stays on screen. Without a UI there is nothing to draw on, which must be a no-op
+# rather than an error; the stubs are restored inside the same expression.
+step "the host can keep a progress line on screen in Neovim"
+PROGRESS_HEADLESS="$(nvim --server "$SOCK" --remote-expr \
+    "CallCanvasNvimProgress('building the call index', 1)" 2>/dev/null)"
+cat >"$WORK/progress.lua" <<'LUA'
+local cc = require('callcanvas')
+local uis = vim.api.nvim_list_uis
+local function floats()
+  local n = 0
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_config(win).relative ~= '' then n = n + 1 end
+  end
+  return n
+end
+vim.api.nvim_list_uis = function() return { {} } end
+cc.progress_remote('call index — Found 22 Java files', 1)
+local shown, text = floats(), ''
+for _, win in ipairs(vim.api.nvim_list_wins()) do
+  if vim.api.nvim_win_get_config(win).relative ~= '' then
+    text = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(win), 0, 1, false)[1] or ''
+  end
+end
+local window = vim.api.nvim_get_current_win()
+-- An outcome worth reading stays up for a moment, then goes.
+cc.progress_remote('call index built', 0)
+local lingered = floats()
+vim.wait(2600, function() return floats() == 0 end, 100)
+local closed = floats()
+-- Work that just ended (no outcome to read) takes the line down at once.
+cc.progress_remote('analyzing Foo.java:31', 1)
+cc.progress_remote('', 0)
+local immediate = floats()
+vim.api.nvim_list_uis = uis
+return ('%d,%d,%d,%d,%s,%s'):format(shown, lingered, closed, immediate,
+  tostring(window == vim.api.nvim_get_current_win()),
+  text:find('Found 22 Java files', 1, true) and 'text' or 'no-text')
+LUA
+PROGRESS="$(nvim --server "$SOCK" --remote-expr \
+    "luaeval('loadfile(_A)()', '$WORK/progress.lua')" 2>/dev/null)"
+if [[ "$PROGRESS_HEADLESS" == "1" && "$PROGRESS" == "1,1,0,0,true,text" ]]; then
+    ok "the line is drawn with its status, outlives the outcome briefly, then goes"
+else
+    bad "progress returned headless='$PROGRESS_HEADLESS' ui='$PROGRESS' (want 1 and 1,1,0,0,true,text)"
+fi
+
 # The index is what makes incoming-call analysis fast. `:CallCanvasBuildIndex`
 # goes through the CLI to the *running* host, so this also covers the long-running
 # command route (the default 120 s HTTP timeout is not enough for a real project).

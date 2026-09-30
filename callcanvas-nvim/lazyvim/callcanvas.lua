@@ -45,6 +45,11 @@ return {
       -- Seconds to keep the host alive after the last browser tab closes (0 = forever).
       idle_timeout = 300,
 
+      -- Keep a line in the bottom right while the host is busy — including the call
+      -- index build an analysis starts in the background, which outlives the analysis.
+      -- Set to false to keep the screen quiet.
+      progress = true,
+
       -- The browser is self-contained: a double-click on a window title shows the
       -- file in a side panel there, and Neovim is left alone. Set
       -- ['callcanvas.nvimJump'] = true in `settings` below if you want the browser to
