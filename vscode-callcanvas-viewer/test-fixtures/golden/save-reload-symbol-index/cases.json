@@ -30,7 +30,7 @@
     "expected": {
       "savedHasSymbolIndex": true,
       "savedHasDerivedKeys": false,
-      "savedFieldKeys": [],
+      "savedSymbolKeys": [],
       "symbolIndexAfterReload": {
         "MAX_ITEMS": {
           "value": "50",
@@ -65,7 +65,7 @@
     "expected": {
       "savedHasSymbolIndex": false,
       "savedHasDerivedKeys": false,
-      "savedFieldKeys": [],
+      "savedSymbolKeys": [],
       "symbolIndexAfterReload": null,
       "renderedLine": "int x = MAX_ITEMS + LIMIT;"
     }
@@ -91,13 +91,13 @@
     "expected": {
       "savedHasSymbolIndex": false,
       "savedHasDerivedKeys": false,
-      "savedFieldKeys": [],
+      "savedSymbolKeys": [],
       "symbolIndexAfterReload": null,
       "renderedLine": "int x = MAX_ITEMS + LIMIT;"
     }
   },
   {
-    "label": "with fields/fieldRefs (S4 fixture): both symbolIndex and fields are saved",
+    "label": "with symbols/refs: both symbolIndex and symbols are saved, refs stay on the window",
     "input": {
       "canvas": {
         "symbolIndex": {
@@ -107,47 +107,6 @@
             "type": "int"
           }
         },
-        "fields": {
-          "com.example.app.controller.OrderController#MAX_ITEMS": {
-            "displayName": "OrderController # MAX_ITEMS",
-            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
-            "startLine": 16,
-            "endLine": 16,
-            "code": "    private static final int MAX_ITEMS = 50;",
-            "type": "int",
-            "declaringClass": "com.example.app.controller.OrderController",
-            "static": true,
-            "final": true,
-            "enumConstant": false,
-            "value": "50"
-          },
-          "com.example.app.controller.OrderController#orderService": {
-            "displayName": "OrderController # orderService",
-            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
-            "startLine": 17,
-            "endLine": 18,
-            "code": "    /** 注文サービス */\n    private final OrderService orderService;",
-            "type": "OrderService",
-            "declaringClass": "com.example.app.controller.OrderController",
-            "static": false,
-            "final": true,
-            "enumConstant": false,
-            "value": null
-          },
-          "com.example.app.domain.PaymentType#CARD": {
-            "displayName": "PaymentType # CARD",
-            "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
-            "startLine": 5,
-            "endLine": 5,
-            "code": "    CARD(\"card\"),",
-            "type": "PaymentType",
-            "declaringClass": "com.example.app.domain.PaymentType",
-            "static": true,
-            "final": true,
-            "enumConstant": true,
-            "value": null
-          }
-        },
         "windows": [
           {
             "id": "window-1",
@@ -155,36 +114,36 @@
             "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
             "startLine": 31,
             "code": "    public Order place(OrderRequest req) {\n\tif (req.items().size() > MAX_ITEMS) { // MAX_ITEMS guard\n\t\tthrow new IllegalArgumentException(\"max \" + MAX_ITEMS);\n    }\n    // orderService is injected\n    return orderService.place(req, this.orderService.defaultType(), PaymentType.CARD);\n}",
-            "fieldRefs": [
+            "refs": [
               {
                 "line": 32,
                 "col": 26,
                 "len": 9,
-                "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+                "symbol": "com.example.app.controller.OrderController#MAX_ITEMS"
               },
               {
                 "line": 33,
                 "col": 46,
                 "len": 9,
-                "field": "com.example.app.controller.OrderController#MAX_ITEMS"
+                "symbol": "com.example.app.controller.OrderController#MAX_ITEMS"
               },
               {
                 "line": 36,
                 "col": 11,
                 "len": 12,
-                "field": "com.example.app.controller.OrderController#orderService"
+                "symbol": "com.example.app.controller.OrderController#orderService"
               },
               {
                 "line": 36,
                 "col": 40,
                 "len": 12,
-                "field": "com.example.app.controller.OrderController#orderService"
+                "symbol": "com.example.app.controller.OrderController#orderService"
               },
               {
                 "line": 36,
                 "col": 80,
                 "len": 4,
-                "field": "com.example.app.domain.PaymentType#CARD"
+                "symbol": "com.example.app.domain.PaymentType#CARD"
               }
             ]
           },
@@ -203,14 +162,52 @@
             "callLine": 36,
             "callEndLine": 36
           }
-        ]
+        ],
+        "symbols": {
+          "com.example.app.controller.OrderController#MAX_ITEMS": {
+            "kind": "field",
+            "displayName": "OrderController # MAX_ITEMS",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "line": 16,
+            "type": "int",
+            "declaringClass": "com.example.app.controller.OrderController",
+            "static": true,
+            "final": true,
+            "enumConstant": false,
+            "value": "50"
+          },
+          "com.example.app.controller.OrderController#orderService": {
+            "kind": "field",
+            "displayName": "OrderController # orderService",
+            "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+            "line": 18,
+            "type": "OrderService",
+            "declaringClass": "com.example.app.controller.OrderController",
+            "static": false,
+            "final": true,
+            "enumConstant": false,
+            "value": null
+          },
+          "com.example.app.domain.PaymentType#CARD": {
+            "kind": "field",
+            "displayName": "PaymentType # CARD",
+            "filePath": "module-app/src/main/java/com/example/app/domain/PaymentType.java",
+            "line": 5,
+            "type": "PaymentType",
+            "declaringClass": "com.example.app.domain.PaymentType",
+            "static": true,
+            "final": true,
+            "enumConstant": true,
+            "value": null
+          }
+        }
       },
       "line": 32
     },
     "expected": {
       "savedHasSymbolIndex": true,
       "savedHasDerivedKeys": false,
-      "savedFieldKeys": [
+      "savedSymbolKeys": [
         "com.example.app.controller.OrderController#MAX_ITEMS",
         "com.example.app.controller.OrderController#orderService",
         "com.example.app.domain.PaymentType#CARD"

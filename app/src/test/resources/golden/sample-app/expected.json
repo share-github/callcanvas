@@ -8,189 +8,221 @@
       "id": "window-20"
     },
     {
-      "fieldRefs": [
+      "code": "    public PageResult(List<T> items, long totalCount, int pageNumber, int pageSize) {\n        this.items = Collections.unmodifiableList(Objects.requireNonNull(items));\n        this.totalCount = Math.max(0, totalCount);\n        this.pageNumber = Math.max(0, pageNumber);\n        this.pageSize = Math.max(1, pageSize);\n    }",
+      "refs": [
         {
           "col": 13,
+          "symbol": "com.example.demo.common.PageResult#items",
           "len": 5,
-          "field": "com.example.demo.common.PageResult#items",
           "line": 22
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.common.PageResult#totalCount",
           "len": 10,
-          "field": "com.example.demo.common.PageResult#totalCount",
           "line": 23
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.common.PageResult#pageNumber",
           "len": 10,
-          "field": "com.example.demo.common.PageResult#pageNumber",
           "line": 24
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.common.PageResult#pageSize",
           "len": 8,
-          "field": "com.example.demo.common.PageResult#pageSize",
           "line": 25
         }
       ],
-      "code": "    public PageResult(List<T> items, long totalCount, int pageNumber, int pageSize) {\n        this.items = Collections.unmodifiableList(Objects.requireNonNull(items));\n        this.totalCount = Math.max(0, totalCount);\n        this.pageNumber = Math.max(0, pageNumber);\n        this.pageSize = Math.max(1, pageSize);\n    }",
       "displayName": "PageResult # PageResult",
       "startLine": 21,
       "filePath": "src/main/java/com/example/demo/common/PageResult.java",
       "id": "window-2"
     },
     {
-      "fieldRefs": [{
+      "code": "    public List<T> getItems() {\n        return items;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.common.PageResult#items",
         "len": 5,
-        "field": "com.example.demo.common.PageResult#items",
         "line": 29
       }],
-      "code": "    public List<T> getItems() {\n        return items;\n    }",
       "displayName": "PageResult # getItems",
       "startLine": 28,
       "filePath": "src/main/java/com/example/demo/common/PageResult.java",
       "id": "window-10"
     },
     {
-      "fieldRefs": [{
+      "code": "    public Boolean getCompleted() {\n        return completed;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#completed",
         "len": 9,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#completed",
         "line": 76
       }],
-      "code": "    public Boolean getCompleted() {\n        return completed;\n    }",
       "displayName": "Todo # getCompleted",
       "startLine": 75,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-43"
     },
     {
-      "fieldRefs": [{
+      "code": "    public LocalDateTime getCreateDate() {\n        return createDate;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#createDate",
         "len": 10,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#createDate",
         "line": 92
       }],
-      "code": "    public LocalDateTime getCreateDate() {\n        return createDate;\n    }",
       "displayName": "Todo # getCreateDate",
       "startLine": 91,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-47"
     },
     {
-      "fieldRefs": [{
+      "code": "    public Boolean getDeleted() {\n        return deleted;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#deleted",
         "len": 7,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#deleted",
         "line": 84
       }],
-      "code": "    public Boolean getDeleted() {\n        return deleted;\n    }",
       "displayName": "Todo # getDeleted",
       "startLine": 83,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-45"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getDescription() {\n        return description;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#description",
         "len": 11,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#description",
         "line": 52
       }],
-      "code": "    public String getDescription() {\n        return description;\n    }",
       "displayName": "Todo # getDescription",
       "startLine": 51,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-37"
     },
     {
-      "fieldRefs": [{
+      "code": "    public LocalDate getDueDate() {\n        return dueDate;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#dueDate",
         "len": 7,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#dueDate",
         "line": 60
       }],
-      "code": "    public LocalDate getDueDate() {\n        return dueDate;\n    }",
       "displayName": "Todo # getDueDate",
       "startLine": 59,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-39"
     },
     {
-      "fieldRefs": [{
+      "code": "    public Long getId() {\n        return id;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#id",
         "len": 2,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#id",
         "line": 28
       }],
-      "code": "    public Long getId() {\n        return id;\n    }",
       "displayName": "Todo # getId",
       "startLine": 27,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-31"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getOwnerName() {\n        return ownerName;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#ownerName",
         "len": 9,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#ownerName",
         "line": 36
       }],
-      "code": "    public String getOwnerName() {\n        return ownerName;\n    }",
       "displayName": "Todo # getOwnerName",
       "startLine": 35,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-33"
     },
     {
-      "fieldRefs": [{
+      "code": "    public Integer getPriority() {\n        return priority;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#priority",
         "len": 8,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#priority",
         "line": 68
       }],
-      "code": "    public Integer getPriority() {\n        return priority;\n    }",
       "displayName": "Todo # getPriority",
       "startLine": 67,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-41"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getTitle() {\n        return title;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#title",
         "len": 5,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#title",
         "line": 44
       }],
-      "code": "    public String getTitle() {\n        return title;\n    }",
       "displayName": "Todo # getTitle",
       "startLine": 43,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-35"
     },
     {
-      "fieldRefs": [{
+      "code": "    public LocalDateTime getUpdateDate() {\n        return updateDate;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo#updateDate",
         "len": 10,
-        "field": "com.example.demo.repository.mybatis.generated.model.Todo#updateDate",
         "line": 100
       }],
-      "code": "    public LocalDateTime getUpdateDate() {\n        return updateDate;\n    }",
       "displayName": "Todo # getUpdateDate",
       "startLine": 99,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
       "id": "window-49"
     },
     {
-      "fieldRefs": [{
-        "col": 38,
-        "len": 11,
-        "field": "com.example.demo.controller.todo.TodoController#todoService",
-        "line": 41
-      }],
       "code": "    @GetMapping\n    @Audited(page = \"todo\", action = \"search\")\n    public String index(\n            @Valid @ModelAttribute TodoSearchForm form,\n            BindingResult bindingResult,\n            Model model) {\n\n        // バリデーションエラーがある場合は空のリストを表示\n        if (bindingResult.hasErrors()) {\n            model.addAttribute(\"todos\", java.util.List.of());\n            model.addAttribute(\"page\", new PageResult<>(java.util.List.of(), 0, 0, form.getSize()));\n            model.addAttribute(\"validationErrors\", bindingResult.getAllErrors());\n            return \"todo/index\";\n        }\n\n        PageResult<TodoItem> result = todoService.search(\n                form.getQ(),\n                form.toCompletedBoolean(),\n                form.toDueFromDate(),\n                form.toDueToDate(),\n                form.getPage(),\n                form.getSize());\n\n        model.addAttribute(\"todos\", result.getItems());\n        model.addAttribute(\"page\", result);\n        model.addAttribute(\"q\", form.getQ());\n        model.addAttribute(\"completed\", form.getCompleted());\n        model.addAttribute(\"dueFrom\", form.getDueFrom());\n        model.addAttribute(\"dueTo\", form.getDueTo());\n        model.addAttribute(\"size\", form.getSize());\n\n        return \"todo/index\";\n    }",
+      "refs": [
+        {
+          "col": 5,
+          "symbol": "com.example.demo.annotation.Audited",
+          "len": 7,
+          "line": 27
+        },
+        {
+          "col": 35,
+          "symbol": "com.example.demo.controller.todo.TodoSearchForm",
+          "len": 14,
+          "line": 29
+        },
+        {
+          "col": 43,
+          "symbol": "com.example.demo.common.PageResult",
+          "len": 10,
+          "line": 36
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.demo.common.PageResult",
+          "len": 10,
+          "line": 41
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.demo.domain.todo.TodoItem",
+          "len": 8,
+          "line": 41
+        },
+        {
+          "col": 38,
+          "symbol": "com.example.demo.controller.todo.TodoController#todoService",
+          "len": 11,
+          "line": 41
+        }
+      ],
       "displayName": "TodoController # index",
       "startLine": 26,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoController.java",
@@ -205,6 +237,12 @@
     },
     {
       "code": "    List<Todo> selectByCondition(\n            @Param(\"ownerName\") String ownerName,\n            @Param(\"keyword\") String keyword,\n            @Param(\"completed\") Boolean completed,\n            @Param(\"dueDateFrom\") LocalDate dueDateFrom,\n            @Param(\"dueDateTo\") LocalDate dueDateTo,\n            @Param(\"offset\") int offset,\n            @Param(\"limit\") int limit);",
+      "refs": [{
+        "col": 9,
+        "symbol": "com.example.demo.repository.mybatis.generated.model.Todo",
+        "len": 4,
+        "line": 10
+      }],
       "displayName": "TodoCustomMapper # selectByCondition",
       "startLine": 10,
       "filePath": "src/main/java/com/example/demo/repository/mybatis/mapper/TodoCustomMapper.java",
@@ -219,472 +257,520 @@
     },
     {
       "code": "    public static TodoItem fromEntity(\n            com.example.demo.repository.mybatis.generated.model.Todo entity) {\n        Objects.requireNonNull(entity);\n        TodoItem item = new TodoItem();\n        item.setId(entity.getId());\n        item.setOwnerName(entity.getOwnerName());\n        item.setTitle(entity.getTitle());\n        item.setDescription(entity.getDescription());\n        item.setDueDate(entity.getDueDate());\n        item.setPriority(entity.getPriority());\n        item.setCompleted(Boolean.TRUE.equals(entity.getCompleted()));\n        item.setDeleted(Boolean.TRUE.equals(entity.getDeleted()));\n        item.setCreateDate(entity.getCreateDate());\n        item.setUpdateDate(entity.getUpdateDate());\n        return item;\n    }",
+      "refs": [
+        {
+          "col": 18,
+          "symbol": "com.example.demo.domain.todo.TodoItem",
+          "len": 8,
+          "line": 129
+        },
+        {
+          "col": 64,
+          "symbol": "com.example.demo.repository.mybatis.generated.model.Todo",
+          "len": 4,
+          "line": 130
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.demo.domain.todo.TodoItem",
+          "len": 8,
+          "line": 132
+        },
+        {
+          "col": 28,
+          "symbol": "com.example.demo.domain.todo.TodoItem",
+          "len": 8,
+          "line": 132
+        }
+      ],
       "displayName": "TodoItem # fromEntity",
       "startLine": 129,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-17"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setCompleted(Boolean completed) {\n        this.completed = completed;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#completed",
         "len": 9,
-        "field": "com.example.demo.domain.todo.TodoItem#completed",
         "line": 102
       }],
-      "code": "    public void setCompleted(Boolean completed) {\n        this.completed = completed;\n    }",
       "displayName": "TodoItem # setCompleted",
       "startLine": 101,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-42"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setCreateDate(LocalDateTime createDate) {\n        this.createDate = createDate;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#createDate",
         "len": 10,
-        "field": "com.example.demo.domain.todo.TodoItem#createDate",
         "line": 118
       }],
-      "code": "    public void setCreateDate(LocalDateTime createDate) {\n        this.createDate = createDate;\n    }",
       "displayName": "TodoItem # setCreateDate",
       "startLine": 117,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-46"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setDeleted(Boolean deleted) {\n        this.deleted = deleted;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#deleted",
         "len": 7,
-        "field": "com.example.demo.domain.todo.TodoItem#deleted",
         "line": 110
       }],
-      "code": "    public void setDeleted(Boolean deleted) {\n        this.deleted = deleted;\n    }",
       "displayName": "TodoItem # setDeleted",
       "startLine": 109,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-44"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setDescription(String description) {\n        this.description = description;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#description",
         "len": 11,
-        "field": "com.example.demo.domain.todo.TodoItem#description",
         "line": 78
       }],
-      "code": "    public void setDescription(String description) {\n        this.description = description;\n    }",
       "displayName": "TodoItem # setDescription",
       "startLine": 77,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-36"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setDueDate(LocalDate dueDate) {\n        this.dueDate = dueDate;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#dueDate",
         "len": 7,
-        "field": "com.example.demo.domain.todo.TodoItem#dueDate",
         "line": 86
       }],
-      "code": "    public void setDueDate(LocalDate dueDate) {\n        this.dueDate = dueDate;\n    }",
       "displayName": "TodoItem # setDueDate",
       "startLine": 85,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-38"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setId(Long id) {\n        this.id = id;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#id",
         "len": 2,
-        "field": "com.example.demo.domain.todo.TodoItem#id",
         "line": 54
       }],
-      "code": "    public void setId(Long id) {\n        this.id = id;\n    }",
       "displayName": "TodoItem # setId",
       "startLine": 53,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-30"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setOwnerName(String ownerName) {\n        this.ownerName = ownerName;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#ownerName",
         "len": 9,
-        "field": "com.example.demo.domain.todo.TodoItem#ownerName",
         "line": 62
       }],
-      "code": "    public void setOwnerName(String ownerName) {\n        this.ownerName = ownerName;\n    }",
       "displayName": "TodoItem # setOwnerName",
       "startLine": 61,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-32"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setPriority(Integer priority) {\n        this.priority = priority;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#priority",
         "len": 8,
-        "field": "com.example.demo.domain.todo.TodoItem#priority",
         "line": 94
       }],
-      "code": "    public void setPriority(Integer priority) {\n        this.priority = priority;\n    }",
       "displayName": "TodoItem # setPriority",
       "startLine": 93,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-40"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setTitle(String title) {\n        this.title = title;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#title",
         "len": 5,
-        "field": "com.example.demo.domain.todo.TodoItem#title",
         "line": 70
       }],
-      "code": "    public void setTitle(String title) {\n        this.title = title;\n    }",
       "displayName": "TodoItem # setTitle",
       "startLine": 69,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-34"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setUpdateDate(LocalDateTime updateDate) {\n        this.updateDate = updateDate;\n    }",
+      "refs": [{
         "col": 13,
+        "symbol": "com.example.demo.domain.todo.TodoItem#updateDate",
         "len": 10,
-        "field": "com.example.demo.domain.todo.TodoItem#updateDate",
         "line": 126
       }],
-      "code": "    public void setUpdateDate(LocalDateTime updateDate) {\n        this.updateDate = updateDate;\n    }",
       "displayName": "TodoItem # setUpdateDate",
       "startLine": 125,
       "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
       "id": "window-48"
     },
     {
-      "fieldRefs": [{
-        "col": 15,
-        "len": 16,
-        "field": "com.example.demo.repository.todo.TodoRepository#todoCustomMapper",
-        "line": 33
-      }],
       "code": "    public long count(TodoSearchCondition condition) {\n        return todoCustomMapper.countByCondition(\n                condition.getOwnerName(),\n                condition.getKeyword(),\n                condition.getCompleted(),\n                condition.getDueDateFrom(),\n                condition.getDueDateTo());\n    }",
+      "refs": [
+        {
+          "col": 22,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition",
+          "len": 19,
+          "line": 32
+        },
+        {
+          "col": 15,
+          "symbol": "com.example.demo.repository.todo.TodoRepository#todoCustomMapper",
+          "len": 16,
+          "line": 33
+        }
+      ],
       "displayName": "TodoRepository # count",
       "startLine": 32,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoRepository.java",
       "id": "window-18"
     },
     {
-      "fieldRefs": [{
-        "col": 15,
-        "len": 16,
-        "field": "com.example.demo.repository.todo.TodoRepository#todoCustomMapper",
-        "line": 22
-      }],
       "code": "    public List<Todo> search(TodoSearchCondition condition) {\n        return todoCustomMapper.selectByCondition(\n                condition.getOwnerName(),\n                condition.getKeyword(),\n                condition.getCompleted(),\n                condition.getDueDateFrom(),\n                condition.getDueDateTo(),\n                condition.calculateOffset(),\n                condition.getPageSize());\n    }",
+      "refs": [
+        {
+          "col": 16,
+          "symbol": "com.example.demo.repository.mybatis.generated.model.Todo",
+          "len": 4,
+          "line": 21
+        },
+        {
+          "col": 29,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition",
+          "len": 19,
+          "line": 21
+        },
+        {
+          "col": 15,
+          "symbol": "com.example.demo.repository.todo.TodoRepository#todoCustomMapper",
+          "len": 16,
+          "line": 22
+        }
+      ],
       "displayName": "TodoRepository # search",
       "startLine": 21,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoRepository.java",
       "id": "window-16"
     },
     {
-      "fieldRefs": [
+      "code": "    public TodoSearchCondition(\n            String ownerName,\n            String keyword,\n            Boolean completed,\n            LocalDate dueDateFrom,\n            LocalDate dueDateTo,\n            int pageNumber,\n            int pageSize) {\n        this.ownerName = ownerName;\n        this.keyword = keyword;\n        this.completed = completed;\n        this.dueDateFrom = dueDateFrom;\n        this.dueDateTo = dueDateTo;\n        this.pageNumber = pageNumber;\n        this.pageSize = pageSize;\n    }",
+      "refs": [
         {
           "col": 13,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#ownerName",
           "len": 9,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#ownerName",
           "line": 24
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#keyword",
           "len": 7,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#keyword",
           "line": 25
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#completed",
           "len": 9,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#completed",
           "line": 26
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#dueDateFrom",
           "len": 11,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#dueDateFrom",
           "line": 27
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#dueDateTo",
           "len": 9,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#dueDateTo",
           "line": 28
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#pageNumber",
           "len": 10,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#pageNumber",
           "line": 29
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#pageSize",
           "len": 8,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#pageSize",
           "line": 30
         }
       ],
-      "code": "    public TodoSearchCondition(\n            String ownerName,\n            String keyword,\n            Boolean completed,\n            LocalDate dueDateFrom,\n            LocalDate dueDateTo,\n            int pageNumber,\n            int pageSize) {\n        this.ownerName = ownerName;\n        this.keyword = keyword;\n        this.completed = completed;\n        this.dueDateFrom = dueDateFrom;\n        this.dueDateTo = dueDateTo;\n        this.pageNumber = pageNumber;\n        this.pageSize = pageSize;\n    }",
       "displayName": "TodoSearchCondition # TodoSearchCondition",
       "startLine": 16,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
       "id": "window-15"
     },
     {
-      "fieldRefs": [
+      "code": "    public int calculateOffset() {\n        int safePageNumber = Math.max(0, pageNumber);\n        return safePageNumber * Math.max(1, pageSize);\n    }",
+      "refs": [
         {
           "col": 41,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#pageNumber",
           "len": 10,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#pageNumber",
           "line": 62
         },
         {
           "col": 44,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition#pageSize",
           "len": 8,
-          "field": "com.example.demo.repository.todo.TodoSearchCondition#pageSize",
           "line": 63
         }
       ],
-      "code": "    public int calculateOffset() {\n        int safePageNumber = Math.max(0, pageNumber);\n        return safePageNumber * Math.max(1, pageSize);\n    }",
       "displayName": "TodoSearchCondition # calculateOffset",
       "startLine": 61,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
       "id": "window-27"
     },
     {
-      "fieldRefs": [{
+      "code": "    public Boolean getCompleted() {\n        return completed;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.todo.TodoSearchCondition#completed",
         "len": 9,
-        "field": "com.example.demo.repository.todo.TodoSearchCondition#completed",
         "line": 42
       }],
-      "code": "    public Boolean getCompleted() {\n        return completed;\n    }",
       "displayName": "TodoSearchCondition # getCompleted",
       "startLine": 41,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
       "id": "window-24"
     },
     {
-      "fieldRefs": [{
+      "code": "    public LocalDate getDueDateFrom() {\n        return dueDateFrom;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.todo.TodoSearchCondition#dueDateFrom",
         "len": 11,
-        "field": "com.example.demo.repository.todo.TodoSearchCondition#dueDateFrom",
         "line": 46
       }],
-      "code": "    public LocalDate getDueDateFrom() {\n        return dueDateFrom;\n    }",
       "displayName": "TodoSearchCondition # getDueDateFrom",
       "startLine": 45,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
       "id": "window-25"
     },
     {
-      "fieldRefs": [{
+      "code": "    public LocalDate getDueDateTo() {\n        return dueDateTo;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.todo.TodoSearchCondition#dueDateTo",
         "len": 9,
-        "field": "com.example.demo.repository.todo.TodoSearchCondition#dueDateTo",
         "line": 50
       }],
-      "code": "    public LocalDate getDueDateTo() {\n        return dueDateTo;\n    }",
       "displayName": "TodoSearchCondition # getDueDateTo",
       "startLine": 49,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
       "id": "window-26"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getKeyword() {\n        return keyword;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.todo.TodoSearchCondition#keyword",
         "len": 7,
-        "field": "com.example.demo.repository.todo.TodoSearchCondition#keyword",
         "line": 38
       }],
-      "code": "    public String getKeyword() {\n        return keyword;\n    }",
       "displayName": "TodoSearchCondition # getKeyword",
       "startLine": 37,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
       "id": "window-23"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getOwnerName() {\n        return ownerName;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.todo.TodoSearchCondition#ownerName",
         "len": 9,
-        "field": "com.example.demo.repository.todo.TodoSearchCondition#ownerName",
         "line": 34
       }],
-      "code": "    public String getOwnerName() {\n        return ownerName;\n    }",
       "displayName": "TodoSearchCondition # getOwnerName",
       "startLine": 33,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
       "id": "window-22"
     },
     {
-      "fieldRefs": [{
+      "code": "    public int getPageSize() {\n        return pageSize;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.repository.todo.TodoSearchCondition#pageSize",
         "len": 8,
-        "field": "com.example.demo.repository.todo.TodoSearchCondition#pageSize",
         "line": 58
       }],
-      "code": "    public int getPageSize() {\n        return pageSize;\n    }",
       "displayName": "TodoSearchCondition # getPageSize",
       "startLine": 57,
       "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
       "id": "window-28"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getCompleted() {\n        return completed;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.controller.todo.TodoSearchForm#completed",
         "len": 9,
-        "field": "com.example.demo.controller.todo.TodoSearchForm#completed",
         "line": 51
       }],
-      "code": "    public String getCompleted() {\n        return completed;\n    }",
       "displayName": "TodoSearchForm # getCompleted",
       "startLine": 50,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-11"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getDueFrom() {\n        return dueFrom;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.controller.todo.TodoSearchForm#dueFrom",
         "len": 7,
-        "field": "com.example.demo.controller.todo.TodoSearchForm#dueFrom",
         "line": 59
       }],
-      "code": "    public String getDueFrom() {\n        return dueFrom;\n    }",
       "displayName": "TodoSearchForm # getDueFrom",
       "startLine": 58,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-12"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getDueTo() {\n        return dueTo;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.controller.todo.TodoSearchForm#dueTo",
         "len": 5,
-        "field": "com.example.demo.controller.todo.TodoSearchForm#dueTo",
         "line": 67
       }],
-      "code": "    public String getDueTo() {\n        return dueTo;\n    }",
       "displayName": "TodoSearchForm # getDueTo",
       "startLine": 66,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-13"
     },
     {
-      "fieldRefs": [
+      "code": "    public int getPage() {\n        return page != null ? page : 0;\n    }",
+      "refs": [
         {
           "col": 15,
+          "symbol": "com.example.demo.controller.todo.TodoSearchForm#page",
           "len": 4,
-          "field": "com.example.demo.controller.todo.TodoSearchForm#page",
           "line": 75
         },
         {
           "col": 30,
+          "symbol": "com.example.demo.controller.todo.TodoSearchForm#page",
           "len": 4,
-          "field": "com.example.demo.controller.todo.TodoSearchForm#page",
           "line": 75
         }
       ],
-      "code": "    public int getPage() {\n        return page != null ? page : 0;\n    }",
       "displayName": "TodoSearchForm # getPage",
       "startLine": 74,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-9"
     },
     {
-      "fieldRefs": [{
+      "code": "    // Getters and Setters\n\n    public String getQ() {\n        return q;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.demo.controller.todo.TodoSearchForm#q",
         "len": 1,
-        "field": "com.example.demo.controller.todo.TodoSearchForm#q",
         "line": 43
       }],
-      "code": "    // Getters and Setters\n\n    public String getQ() {\n        return q;\n    }",
       "displayName": "TodoSearchForm # getQ",
       "startLine": 40,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-5"
     },
     {
-      "fieldRefs": [
+      "code": "    public int getSize() {\n        return size != null ? size : 10;\n    }",
+      "refs": [
         {
           "col": 15,
+          "symbol": "com.example.demo.controller.todo.TodoSearchForm#size",
           "len": 4,
-          "field": "com.example.demo.controller.todo.TodoSearchForm#size",
           "line": 83
         },
         {
           "col": 30,
+          "symbol": "com.example.demo.controller.todo.TodoSearchForm#size",
           "len": 4,
-          "field": "com.example.demo.controller.todo.TodoSearchForm#size",
           "line": 83
         }
       ],
-      "code": "    public int getSize() {\n        return size != null ? size : 10;\n    }",
       "displayName": "TodoSearchForm # getSize",
       "startLine": 82,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-3"
     },
     {
-      "fieldRefs": [{
+      "code": "    private static LocalDate parseDate(String text) {\n        if (text == null || text.isBlank()) {\n            return null;\n        }\n        try {\n            return LocalDate.parse(text, DATE_FORMATTER);\n        } catch (DateTimeParseException ex) {\n            return null;\n        }\n    }",
+      "refs": [{
         "col": 41,
+        "symbol": "com.example.demo.controller.todo.TodoSearchForm#DATE_FORMATTER",
         "len": 14,
-        "field": "com.example.demo.controller.todo.TodoSearchForm#DATE_FORMATTER",
         "line": 127
       }],
-      "code": "    private static LocalDate parseDate(String text) {\n        if (text == null || text.isBlank()) {\n            return null;\n        }\n        try {\n            return LocalDate.parse(text, DATE_FORMATTER);\n        } catch (DateTimeParseException ex) {\n            return null;\n        }\n    }",
       "displayName": "TodoSearchForm # parseDate",
       "startLine": 122,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-19"
     },
     {
-      "fieldRefs": [
+      "code": "    /**\n     * completed文字列をBoolean型に変換\n     * \n     * @return Boolean値、または空文字/nullの場合はnull\n     */\n    public Boolean toCompletedBoolean() {\n        if (completed == null || completed.isBlank()) {\n            return null; // NOSONAR: nullを返すことが意図的な設計\n        }\n        return Boolean.parseBoolean(completed);\n    }",
+      "refs": [
         {
           "col": 12,
+          "symbol": "com.example.demo.controller.todo.TodoSearchForm#completed",
           "len": 9,
-          "field": "com.example.demo.controller.todo.TodoSearchForm#completed",
           "line": 98
         },
         {
           "col": 33,
+          "symbol": "com.example.demo.controller.todo.TodoSearchForm#completed",
           "len": 9,
-          "field": "com.example.demo.controller.todo.TodoSearchForm#completed",
           "line": 98
         },
         {
           "col": 36,
+          "symbol": "com.example.demo.controller.todo.TodoSearchForm#completed",
           "len": 9,
-          "field": "com.example.demo.controller.todo.TodoSearchForm#completed",
           "line": 101
         }
       ],
-      "code": "    /**\n     * completed文字列をBoolean型に変換\n     * \n     * @return Boolean値、または空文字/nullの場合はnull\n     */\n    public Boolean toCompletedBoolean() {\n        if (completed == null || completed.isBlank()) {\n            return null; // NOSONAR: nullを返すことが意図的な設計\n        }\n        return Boolean.parseBoolean(completed);\n    }",
       "displayName": "TodoSearchForm # toCompletedBoolean",
       "startLine": 92,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-6"
     },
     {
-      "fieldRefs": [{
+      "code": "    /**\n     * dueFrom文字列をLocalDate型に変換\n     * \n     * @return LocalDate、またはパース失敗時はnull\n     */\n    public LocalDate toDueFromDate() {\n        return parseDate(dueFrom);\n    }",
+      "refs": [{
         "col": 25,
+        "symbol": "com.example.demo.controller.todo.TodoSearchForm#dueFrom",
         "len": 7,
-        "field": "com.example.demo.controller.todo.TodoSearchForm#dueFrom",
         "line": 110
       }],
-      "code": "    /**\n     * dueFrom文字列をLocalDate型に変換\n     * \n     * @return LocalDate、またはパース失敗時はnull\n     */\n    public LocalDate toDueFromDate() {\n        return parseDate(dueFrom);\n    }",
       "displayName": "TodoSearchForm # toDueFromDate",
       "startLine": 104,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
       "id": "window-7"
     },
     {
-      "fieldRefs": [{
+      "code": "    /**\n     * dueTo文字列をLocalDate型に変換\n     * \n     * @return LocalDate、またはパース失敗時はnull\n     */\n    public LocalDate toDueToDate() {\n        return parseDate(dueTo);\n    }",
+      "refs": [{
         "col": 25,
+        "symbol": "com.example.demo.controller.todo.TodoSearchForm#dueTo",
         "len": 5,
-        "field": "com.example.demo.controller.todo.TodoSearchForm#dueTo",
         "line": 119
       }],
-      "code": "    /**\n     * dueTo文字列をLocalDate型に変換\n     * \n     * @return LocalDate、またはパース失敗時はnull\n     */\n    public LocalDate toDueToDate() {\n        return parseDate(dueTo);\n    }",
       "displayName": "TodoSearchForm # toDueToDate",
       "startLine": 113,
       "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
@@ -698,581 +784,69 @@
       "id": "window-14"
     },
     {
-      "fieldRefs": [
+      "code": "    public PageResult<TodoItem> search(\n            String keyword,\n            Boolean completed,\n            java.time.LocalDate dueDateFrom,\n            java.time.LocalDate dueDateTo,\n            int pageNumber,\n            int pageSize) {\n\n        String ownerName = currentUserName();\n        var condition = new TodoSearchCondition(\n                ownerName, keyword, completed, dueDateFrom, dueDateTo, pageNumber, pageSize);\n        List<TodoItem> items = todoRepository.search(condition).stream()\n                .map(TodoItem::fromEntity)\n                .toList();\n        long total = todoRepository.count(condition);\n\n        log.info(\n                \"TODO検索: owner={}, keyword={}, completed={}, dueDateFrom={}, dueDateTo={}, page={}/{}, 結果={}件/全{}件\",\n                ownerName, keyword, completed, dueDateFrom, dueDateTo, pageNumber, pageSize, items.size(), total);\n\n        return new PageResult<>(items, total, pageNumber, pageSize);\n    }",
+      "refs": [
+        {
+          "col": 11,
+          "symbol": "com.example.demo.common.PageResult",
+          "len": 10,
+          "line": 34
+        },
+        {
+          "col": 22,
+          "symbol": "com.example.demo.domain.todo.TodoItem",
+          "len": 8,
+          "line": 34
+        },
+        {
+          "col": 28,
+          "symbol": "com.example.demo.repository.todo.TodoSearchCondition",
+          "len": 19,
+          "line": 43
+        },
+        {
+          "col": 13,
+          "symbol": "com.example.demo.domain.todo.TodoItem",
+          "len": 8,
+          "line": 45
+        },
         {
           "col": 31,
+          "symbol": "com.example.demo.service.TodoService#todoRepository",
           "len": 14,
-          "field": "com.example.demo.service.TodoService#todoRepository",
           "line": 45
         },
         {
           "col": 21,
+          "symbol": "com.example.demo.domain.todo.TodoItem",
+          "len": 8,
+          "line": 46
+        },
+        {
+          "col": 21,
+          "symbol": "com.example.demo.service.TodoService#todoRepository",
           "len": 14,
-          "field": "com.example.demo.service.TodoService#todoRepository",
           "line": 48
         },
         {
           "col": 8,
+          "symbol": "com.example.demo.service.TodoService#log",
           "len": 3,
-          "field": "com.example.demo.service.TodoService#log",
           "line": 50
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.demo.common.PageResult",
+          "len": 10,
+          "line": 54
         }
       ],
-      "code": "    public PageResult<TodoItem> search(\n            String keyword,\n            Boolean completed,\n            java.time.LocalDate dueDateFrom,\n            java.time.LocalDate dueDateTo,\n            int pageNumber,\n            int pageSize) {\n\n        String ownerName = currentUserName();\n        var condition = new TodoSearchCondition(\n                ownerName, keyword, completed, dueDateFrom, dueDateTo, pageNumber, pageSize);\n        List<TodoItem> items = todoRepository.search(condition).stream()\n                .map(TodoItem::fromEntity)\n                .toList();\n        long total = todoRepository.count(condition);\n\n        log.info(\n                \"TODO検索: owner={}, keyword={}, completed={}, dueDateFrom={}, dueDateTo={}, page={}/{}, 結果={}件/全{}件\",\n                ownerName, keyword, completed, dueDateFrom, dueDateTo, pageNumber, pageSize, items.size(), total);\n\n        return new PageResult<>(items, total, pageNumber, pageSize);\n    }",
       "displayName": "TodoService # search",
       "startLine": 34,
       "filePath": "src/main/java/com/example/demo/service/TodoService.java",
       "id": "window-4"
     }
   ],
-  "fields": {
-    "com.example.demo.domain.todo.TodoItem#id": {
-      "endLine": 16,
-      "code": "    private Long id;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # id",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 16,
-      "final": false,
-      "type": "Long",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#description": {
-      "endLine": 13,
-      "code": "    private String description;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # description",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 13,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.common.PageResult#items": {
-      "endLine": 16,
-      "code": "    private final List<T> items;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "PageResult # items",
-      "filePath": "src/main/java/com/example/demo/common/PageResult.java",
-      "startLine": 16,
-      "final": true,
-      "type": "List<T>",
-      "value": null,
-      "declaringClass": "com.example.demo.common.PageResult"
-    },
-    "com.example.demo.domain.todo.TodoItem#createDate": {
-      "endLine": 40,
-      "code": "    private LocalDateTime createDate;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # createDate",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 40,
-      "final": false,
-      "type": "LocalDateTime",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.common.PageResult#totalCount": {
-      "endLine": 17,
-      "code": "    private final long totalCount;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "PageResult # totalCount",
-      "filePath": "src/main/java/com/example/demo/common/PageResult.java",
-      "startLine": 17,
-      "final": true,
-      "type": "long",
-      "value": null,
-      "declaringClass": "com.example.demo.common.PageResult"
-    },
-    "com.example.demo.controller.todo.TodoSearchForm#dueTo": {
-      "endLine": 31,
-      "code": "    @Pattern(regexp = \"^\\\\d{4}-\\\\d{2}-\\\\d{2}$|^$\", message = \"期限(終了)はyyyy-MM-dd形式で指定してください\")\n    private String dueTo;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchForm # dueTo",
-      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
-      "startLine": 30,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
-    },
-    "com.example.demo.repository.todo.TodoSearchCondition#keyword": {
-      "endLine": 9,
-      "code": "    private final String keyword;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchCondition # keyword",
-      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
-      "startLine": 9,
-      "final": true,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
-    },
-    "com.example.demo.service.TodoService#log": {
-      "endLine": 24,
-      "code": "    private static final Logger log = LoggerFactory.getLogger(TodoService.class);",
-      "static": true,
-      "enumConstant": false,
-      "displayName": "TodoService # log",
-      "filePath": "src/main/java/com/example/demo/service/TodoService.java",
-      "startLine": 24,
-      "final": true,
-      "type": "Logger",
-      "value": null,
-      "declaringClass": "com.example.demo.service.TodoService"
-    },
-    "com.example.demo.repository.todo.TodoSearchCondition#completed": {
-      "endLine": 10,
-      "code": "    private final Boolean completed;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchCondition # completed",
-      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
-      "startLine": 10,
-      "final": true,
-      "type": "Boolean",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
-    },
-    "com.example.demo.domain.todo.TodoItem#deleted": {
-      "endLine": 38,
-      "code": "    @NotNull\n    private Boolean deleted;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # deleted",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 37,
-      "final": false,
-      "type": "Boolean",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#id": {
-      "endLine": 7,
-      "code": "    private Long id;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # id",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 7,
-      "final": false,
-      "type": "Long",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.controller.todo.TodoController#todoService": {
-      "endLine": 20,
-      "code": "    private final TodoService todoService;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoController # todoService",
-      "filePath": "src/main/java/com/example/demo/controller/todo/TodoController.java",
-      "startLine": 20,
-      "final": true,
-      "type": "TodoService",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.todo.TodoController"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#priority": {
-      "endLine": 17,
-      "code": "    private Integer priority;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # priority",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 17,
-      "final": false,
-      "type": "Integer",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.common.PageResult#pageSize": {
-      "endLine": 19,
-      "code": "    private final int pageSize;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "PageResult # pageSize",
-      "filePath": "src/main/java/com/example/demo/common/PageResult.java",
-      "startLine": 19,
-      "final": true,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.demo.common.PageResult"
-    },
-    "com.example.demo.repository.todo.TodoSearchCondition#ownerName": {
-      "endLine": 8,
-      "code": "    private final String ownerName;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchCondition # ownerName",
-      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
-      "startLine": 8,
-      "final": true,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#deleted": {
-      "endLine": 21,
-      "code": "    private Boolean deleted;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # deleted",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 21,
-      "final": false,
-      "type": "Boolean",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#createDate": {
-      "endLine": 23,
-      "code": "    private LocalDateTime createDate;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # createDate",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 23,
-      "final": false,
-      "type": "LocalDateTime",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.common.PageResult#pageNumber": {
-      "endLine": 18,
-      "code": "    private final int pageNumber;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "PageResult # pageNumber",
-      "filePath": "src/main/java/com/example/demo/common/PageResult.java",
-      "startLine": 18,
-      "final": true,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.demo.common.PageResult"
-    },
-    "com.example.demo.domain.todo.TodoItem#dueDate": {
-      "endLine": 30,
-      "code": "    @FutureOrPresent\n    private LocalDate dueDate;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # dueDate",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 29,
-      "final": false,
-      "type": "LocalDate",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.repository.todo.TodoSearchCondition#pageSize": {
-      "endLine": 14,
-      "code": "    private final int pageSize;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchCondition # pageSize",
-      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
-      "startLine": 14,
-      "final": true,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#dueDate": {
-      "endLine": 15,
-      "code": "    private LocalDate dueDate;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # dueDate",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 15,
-      "final": false,
-      "type": "LocalDate",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#updateDate": {
-      "endLine": 25,
-      "code": "    private LocalDateTime updateDate;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # updateDate",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 25,
-      "final": false,
-      "type": "LocalDateTime",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.controller.todo.TodoSearchForm#completed": {
-      "endLine": 25,
-      "code": "    @Pattern(regexp = \"^(true|false)?$\", message = \"完了状態はtrueまたはfalseを指定してください\")\n    private String completed;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchForm # completed",
-      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
-      "startLine": 24,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
-    },
-    "com.example.demo.repository.todo.TodoSearchCondition#pageNumber": {
-      "endLine": 13,
-      "code": "    private final int pageNumber;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchCondition # pageNumber",
-      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
-      "startLine": 13,
-      "final": true,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
-    },
-    "com.example.demo.repository.todo.TodoSearchCondition#dueDateTo": {
-      "endLine": 12,
-      "code": "    private final LocalDate dueDateTo;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchCondition # dueDateTo",
-      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
-      "startLine": 12,
-      "final": true,
-      "type": "LocalDate",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
-    },
-    "com.example.demo.controller.todo.TodoSearchForm#q": {
-      "endLine": 22,
-      "code": "    private String q;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchForm # q",
-      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
-      "startLine": 22,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
-    },
-    "com.example.demo.controller.todo.TodoSearchForm#DATE_FORMATTER": {
-      "endLine": 20,
-      "code": "    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(\"yyyy-MM-dd\");",
-      "static": true,
-      "enumConstant": false,
-      "displayName": "TodoSearchForm # DATE_FORMATTER",
-      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
-      "startLine": 20,
-      "final": true,
-      "type": "DateTimeFormatter",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
-    },
-    "com.example.demo.repository.todo.TodoRepository#todoCustomMapper": {
-      "endLine": 14,
-      "code": "    private final TodoCustomMapper todoCustomMapper;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoRepository # todoCustomMapper",
-      "filePath": "src/main/java/com/example/demo/repository/todo/TodoRepository.java",
-      "startLine": 14,
-      "final": true,
-      "type": "TodoCustomMapper",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.todo.TodoRepository"
-    },
-    "com.example.demo.repository.todo.TodoSearchCondition#dueDateFrom": {
-      "endLine": 11,
-      "code": "    private final LocalDate dueDateFrom;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchCondition # dueDateFrom",
-      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
-      "startLine": 11,
-      "final": true,
-      "type": "LocalDate",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
-    },
-    "com.example.demo.domain.todo.TodoItem#completed": {
-      "endLine": 35,
-      "code": "    @NotNull\n    private Boolean completed;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # completed",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 34,
-      "final": false,
-      "type": "Boolean",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.controller.todo.TodoSearchForm#size": {
-      "endLine": 38,
-      "code": "    @Min(value = 1, message = \"ページサイズは1以上を指定してください\")\n    @Max(value = 100, message = \"ページサイズは100以下を指定してください\")\n    private Integer size;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchForm # size",
-      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
-      "startLine": 36,
-      "final": false,
-      "type": "Integer",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
-    },
-    "com.example.demo.service.TodoService#todoRepository": {
-      "endLine": 26,
-      "code": "    private final TodoRepository todoRepository;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoService # todoRepository",
-      "filePath": "src/main/java/com/example/demo/service/TodoService.java",
-      "startLine": 26,
-      "final": true,
-      "type": "TodoRepository",
-      "value": null,
-      "declaringClass": "com.example.demo.service.TodoService"
-    },
-    "com.example.demo.domain.todo.TodoItem#ownerName": {
-      "endLine": 20,
-      "code": "    @NotNull\n    @Size(min = 1, max = 255)\n    private String ownerName;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # ownerName",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 18,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#title": {
-      "endLine": 11,
-      "code": "    private String title;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # title",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 11,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.domain.todo.TodoItem#updateDate": {
-      "endLine": 42,
-      "code": "    private LocalDateTime updateDate;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # updateDate",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 42,
-      "final": false,
-      "type": "LocalDateTime",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.controller.todo.TodoSearchForm#dueFrom": {
-      "endLine": 28,
-      "code": "    @Pattern(regexp = \"^\\\\d{4}-\\\\d{2}-\\\\d{2}$|^$\", message = \"期限(開始)はyyyy-MM-dd形式で指定してください\")\n    private String dueFrom;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchForm # dueFrom",
-      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
-      "startLine": 27,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#completed": {
-      "endLine": 19,
-      "code": "    private Boolean completed;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # completed",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 19,
-      "final": false,
-      "type": "Boolean",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.controller.todo.TodoSearchForm#page": {
-      "endLine": 34,
-      "code": "    @Min(value = 0, message = \"ページ番号は0以上を指定してください\")\n    private Integer page;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoSearchForm # page",
-      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
-      "startLine": 33,
-      "final": false,
-      "type": "Integer",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
-    },
-    "com.example.demo.domain.todo.TodoItem#description": {
-      "endLine": 27,
-      "code": "    @Size(max = 3000)\n    private String description;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # description",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 26,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.domain.todo.TodoItem#title": {
-      "endLine": 24,
-      "code": "    @NotBlank\n    @Size(max = 255)\n    private String title;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # title",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 22,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    },
-    "com.example.demo.repository.mybatis.generated.model.Todo#ownerName": {
-      "endLine": 9,
-      "code": "    private String ownerName;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Todo # ownerName",
-      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
-      "startLine": 9,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
-    },
-    "com.example.demo.domain.todo.TodoItem#priority": {
-      "endLine": 32,
-      "code": "    private Integer priority;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "TodoItem # priority",
-      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
-      "startLine": 32,
-      "final": false,
-      "type": "Integer",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.todo.TodoItem"
-    }
-  },
   "connections": [
     {
       "callLine": 49,
@@ -1635,5 +1209,553 @@
       "to": "window-19"
     }
   ],
+  "symbols": {
+    "com.example.demo.domain.todo.TodoItem#id": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # id",
+      "line": 16,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "Long",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#description": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # description",
+      "line": 13,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.common.PageResult#items": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "PageResult # items",
+      "line": 16,
+      "filePath": "src/main/java/com/example/demo/common/PageResult.java",
+      "final": true,
+      "type": "List<T>",
+      "value": null,
+      "declaringClass": "com.example.demo.common.PageResult"
+    },
+    "com.example.demo.domain.todo.TodoItem#createDate": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # createDate",
+      "line": 40,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "LocalDateTime",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.common.PageResult#totalCount": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "PageResult # totalCount",
+      "line": 17,
+      "filePath": "src/main/java/com/example/demo/common/PageResult.java",
+      "final": true,
+      "type": "long",
+      "value": null,
+      "declaringClass": "com.example.demo.common.PageResult"
+    },
+    "com.example.demo.controller.todo.TodoSearchForm#dueTo": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchForm # dueTo",
+      "line": 31,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
+    },
+    "com.example.demo.repository.todo.TodoSearchCondition#keyword": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchCondition # keyword",
+      "line": 9,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
+      "final": true,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
+    },
+    "com.example.demo.service.TodoService#log": {
+      "static": true,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoService # log",
+      "line": 24,
+      "filePath": "src/main/java/com/example/demo/service/TodoService.java",
+      "final": true,
+      "type": "Logger",
+      "value": null,
+      "declaringClass": "com.example.demo.service.TodoService"
+    },
+    "com.example.demo.controller.todo.TodoSearchForm": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "TodoSearchForm",
+      "line": 18,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java"
+    },
+    "com.example.demo.repository.todo.TodoSearchCondition#completed": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchCondition # completed",
+      "line": 10,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
+      "final": true,
+      "type": "Boolean",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
+    },
+    "com.example.demo.domain.todo.TodoItem#deleted": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # deleted",
+      "line": 38,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "Boolean",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#id": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # id",
+      "line": 7,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "Long",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.common.PageResult": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "PageResult",
+      "line": 14,
+      "filePath": "src/main/java/com/example/demo/common/PageResult.java"
+    },
+    "com.example.demo.controller.todo.TodoController#todoService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoController # todoService",
+      "line": 20,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoController.java",
+      "final": true,
+      "type": "TodoService",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.todo.TodoController"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#priority": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # priority",
+      "line": 17,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "Integer",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.common.PageResult#pageSize": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "PageResult # pageSize",
+      "line": 19,
+      "filePath": "src/main/java/com/example/demo/common/PageResult.java",
+      "final": true,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.demo.common.PageResult"
+    },
+    "com.example.demo.repository.todo.TodoSearchCondition#ownerName": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchCondition # ownerName",
+      "line": 8,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
+      "final": true,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#deleted": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # deleted",
+      "line": 21,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "Boolean",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.domain.todo.TodoItem": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "TodoItem",
+      "line": 14,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#createDate": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # createDate",
+      "line": 23,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "LocalDateTime",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.common.PageResult#pageNumber": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "PageResult # pageNumber",
+      "line": 18,
+      "filePath": "src/main/java/com/example/demo/common/PageResult.java",
+      "final": true,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.demo.common.PageResult"
+    },
+    "com.example.demo.repository.todo.TodoSearchCondition": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "TodoSearchCondition",
+      "line": 6,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java"
+    },
+    "com.example.demo.domain.todo.TodoItem#dueDate": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # dueDate",
+      "line": 30,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "LocalDate",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.repository.todo.TodoSearchCondition#pageSize": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchCondition # pageSize",
+      "line": 14,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
+      "final": true,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#dueDate": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # dueDate",
+      "line": 15,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "LocalDate",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Todo",
+      "line": 6,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#updateDate": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # updateDate",
+      "line": 25,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "LocalDateTime",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.controller.todo.TodoSearchForm#completed": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchForm # completed",
+      "line": 25,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
+    },
+    "com.example.demo.repository.todo.TodoSearchCondition#pageNumber": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchCondition # pageNumber",
+      "line": 13,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
+      "final": true,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
+    },
+    "com.example.demo.repository.todo.TodoSearchCondition#dueDateTo": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchCondition # dueDateTo",
+      "line": 12,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
+      "final": true,
+      "type": "LocalDate",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
+    },
+    "com.example.demo.controller.todo.TodoSearchForm#q": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchForm # q",
+      "line": 22,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
+    },
+    "com.example.demo.annotation.Audited": {
+      "typeKind": "annotation",
+      "kind": "type",
+      "displayName": "Audited",
+      "line": 10,
+      "filePath": "src/main/java/com/example/demo/annotation/Audited.java"
+    },
+    "com.example.demo.controller.todo.TodoSearchForm#DATE_FORMATTER": {
+      "static": true,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchForm # DATE_FORMATTER",
+      "line": 20,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
+      "final": true,
+      "type": "DateTimeFormatter",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
+    },
+    "com.example.demo.repository.todo.TodoRepository#todoCustomMapper": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoRepository # todoCustomMapper",
+      "line": 14,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoRepository.java",
+      "final": true,
+      "type": "TodoCustomMapper",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.todo.TodoRepository"
+    },
+    "com.example.demo.repository.todo.TodoSearchCondition#dueDateFrom": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchCondition # dueDateFrom",
+      "line": 11,
+      "filePath": "src/main/java/com/example/demo/repository/todo/TodoSearchCondition.java",
+      "final": true,
+      "type": "LocalDate",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.todo.TodoSearchCondition"
+    },
+    "com.example.demo.domain.todo.TodoItem#completed": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # completed",
+      "line": 35,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "Boolean",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.controller.todo.TodoSearchForm#size": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchForm # size",
+      "line": 38,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
+      "final": false,
+      "type": "Integer",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
+    },
+    "com.example.demo.service.TodoService#todoRepository": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoService # todoRepository",
+      "line": 26,
+      "filePath": "src/main/java/com/example/demo/service/TodoService.java",
+      "final": true,
+      "type": "TodoRepository",
+      "value": null,
+      "declaringClass": "com.example.demo.service.TodoService"
+    },
+    "com.example.demo.domain.todo.TodoItem#ownerName": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # ownerName",
+      "line": 20,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#title": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # title",
+      "line": 11,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.domain.todo.TodoItem#updateDate": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # updateDate",
+      "line": 42,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "LocalDateTime",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.controller.todo.TodoSearchForm#dueFrom": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchForm # dueFrom",
+      "line": 28,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#completed": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # completed",
+      "line": 19,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "Boolean",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.controller.todo.TodoSearchForm#page": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoSearchForm # page",
+      "line": 34,
+      "filePath": "src/main/java/com/example/demo/controller/todo/TodoSearchForm.java",
+      "final": false,
+      "type": "Integer",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.todo.TodoSearchForm"
+    },
+    "com.example.demo.domain.todo.TodoItem#description": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # description",
+      "line": 27,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.domain.todo.TodoItem#title": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # title",
+      "line": 24,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    },
+    "com.example.demo.repository.mybatis.generated.model.Todo#ownerName": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Todo # ownerName",
+      "line": 9,
+      "filePath": "src/main/java/com/example/demo/repository/mybatis/generated/model/Todo.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.mybatis.generated.model.Todo"
+    },
+    "com.example.demo.domain.todo.TodoItem#priority": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "TodoItem # priority",
+      "line": 32,
+      "filePath": "src/main/java/com/example/demo/domain/todo/TodoItem.java",
+      "final": false,
+      "type": "Integer",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.todo.TodoItem"
+    }
+  },
   "autoLayout": true
 }

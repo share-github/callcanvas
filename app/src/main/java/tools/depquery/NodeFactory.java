@@ -37,7 +37,7 @@ class NodeFactory {
             annotations,
             stereotype
         );
-        if (entry.fieldRefs != null) node.fieldRefs = entry.fieldRefs;
+        if (entry.refs != null) node.refs = entry.refs;
         g.addOrUpdateNode(node);
     }
 

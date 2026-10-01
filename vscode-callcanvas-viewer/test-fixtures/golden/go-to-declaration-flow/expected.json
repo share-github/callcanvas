@@ -1,0 +1,141 @@
+{
+  "clicks": [
+    {
+      "symbol": "com.example.domain.Order",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+          "line": 5
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.domain.Order",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+          "line": 5
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.app.controller.OrderController#orderService",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+          "line": 16
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.domain.Order",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+          "line": 5
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.domain.Order",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+          "line": 5
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.service.OrderService#orderProcessor",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-service/src/main/java/com/example/service/OrderService.java",
+          "line": 8
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.domain.PaymentResult",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-domain/src/main/java/com/example/domain/PaymentResult.java",
+          "line": 3
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.service.OrderService#paymentService",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-service/src/main/java/com/example/service/OrderService.java",
+          "line": 9
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.domain.OrderStatus",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-domain/src/main/java/com/example/domain/OrderStatus.java",
+          "line": 3
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.domain.OrderStatus#FAILED",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-domain/src/main/java/com/example/domain/OrderStatus.java",
+          "line": 8
+        }
+      ],
+      "toasts": []
+    },
+    {
+      "symbol": "com.example.service.OrderService#orderProcessor",
+      "posted": [
+        {
+          "command": "openFile",
+          "filePath": "module-service/src/main/java/com/example/service/OrderService.java",
+          "line": 8
+        }
+      ],
+      "toasts": []
+    }
+  ],
+  "unknown": {
+    "symbol": "com.example.Missing",
+    "posted": [],
+    "toasts": [
+      {
+        "msg": "宣言が見つかりません: com.example.Missing",
+        "type": "warning"
+      }
+    ]
+  },
+  "exported": {
+    "symbol": "com.example.domain.Order",
+    "posted": [],
+    "toasts": []
+  },
+  "canvasUnchanged": true
+}

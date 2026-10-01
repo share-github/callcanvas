@@ -406,7 +406,6 @@ function loadExtensionHostFunctions() {
         'resolveDeclarationLine',
         'buildReanalysisPlan',
         'preserveLineComments',
-        'preserveFieldWindows',
         'withAnalysisMetadata',
         'summarizeReanalysis',
     ];
@@ -560,16 +559,18 @@ function loadWebviewFunctions(settingsOverride) {
         'normalizeDisplayNameToClassMethod',
         'wrapConstantTokens',
         'extractMethodName',
-        // Field references (fieldRefs / declaration windows)
-        'isFieldRefConnection',
+        // Go to Declaration (symbols / refs)
         'escapeHtmlAttr',
-        'buildFieldTip',
-        'groupFieldRefsByLine',
-        'wrapFieldRefTokens',
+        'isConstantSymbol',
+        'buildSymbolTip',
+        'groupRefsByLine',
+        'wrapSymbolRefTokens',
         'decorateCodeLineTokens',
-        'planFieldDeclaration',
+        'buildOpenDeclarationMessage',
+        'resolveSymbolRefClick',
         'computeWindowDeletion',
-        'mergeFieldData',
+        'mergeSymbols',
+        'adoptWindowRefs',
         'mergeSymbolIndex',
     ];
 
@@ -628,6 +629,21 @@ function loadWebviewFunctions(settingsOverride) {
         throw new Error('Patch failed for findConnectionsAtLine: signature not found. Has the function signature changed in viewer.js?');
     }
     codeFragments.push(findConnectionsAtLinePatched);
+
+    // goToDeclaration(symbolKey) references currentData / IS_EXPORT_MODE / vscode / showToast
+    // → goToDeclaration(currentData, symbolKey, vscode, showToast, IS_EXPORT_MODE)
+    const goToDeclarationRaw = extractTopLevelFunctionSimple(src, 'goToDeclaration');
+    if (!goToDeclarationRaw) {
+        throw new Error('Could not extract webview function: goToDeclaration');
+    }
+    const goToDeclarationPatched = goToDeclarationRaw.replace(
+        'function goToDeclaration(symbolKey)',
+        'function goToDeclaration(currentData, symbolKey, vscode, showToast, IS_EXPORT_MODE)'
+    );
+    if (goToDeclarationPatched === goToDeclarationRaw) {
+        throw new Error('Patch failed for goToDeclaration: signature not found. Has the function signature changed in viewer.js?');
+    }
+    codeFragments.push(goToDeclarationPatched);
 
     // getWindowText(windowData) — pure function, no patching needed
     const getWindowTextRaw = extractTopLevelFunctionSimple(src, 'getWindowText');
@@ -696,6 +712,7 @@ function loadWebviewFunctions(settingsOverride) {
         'buildSaveData',
         'findPathWindows',
         'findConnectionsAtLine',
+        'goToDeclaration',
         'getWindowText',
         'splitHighlightedLines',
         'escapeRegExp',

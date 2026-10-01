@@ -2,7 +2,7 @@
   "name": "java-call-hierarchy",
   "displayName": "Java Call Hierarchy Analyzer",
   "description": "Analyze and visualize Java method call hierarchies",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "publisher": "share-github",
   "license": "MIT",
   "author": "share-github",

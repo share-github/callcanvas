@@ -69,8 +69,8 @@ final class OnDemandIndexer {
                     callers.put(c.entry.fqn, c);
                     index.addMethod(c.entry);
                 }
-                index.symbolIndex.putAll(r.symbols());
-                index.fields.putAll(r.fields());
+                index.symbolIndex.putAll(r.constants());
+                index.symbols.putAll(r.symbols());
             }
         } catch (IOException ex) {
             info("[WARN] Failed to analyze sources: " + ex.getMessage());
@@ -207,13 +207,14 @@ final class OnDemandIndexer {
     }
 
     /**
-     * フィールド参照の宣言が未解析のファイルにあれば解析する（出力の fields を埋めるため）。
-     * 宣言は参照元のクラスや定数クラス・enum にあることが多く、たいていは解析済みで追加の解析は起きない。
+     * シンボル参照（型・フィールド）の宣言が未解析のファイルにあれば解析する（出力の symbols を埋めるため）。
+     * 宣言は参照元のクラスや呼び出し先のクラス・定数クラス・enum にあることが多く、たいていは解析済み。
+     * 未解析のファイルは宣言を集めるためだけに解析する（そのファイルのメソッドの辺は出力に使わない）。
      */
-    void ensureFieldDeclarations(Collection<String> fieldKeys) {
+    void ensureSymbolDeclarations(Collection<String> symbolKeys) {
         Set<Path> need = new LinkedHashSet<>();
-        for (String key : fieldKeys) {
-            if (index.fields.containsKey(key)) continue;
+        for (String key : symbolKeys) {
+            if (index.symbols.containsKey(key)) continue;
             Path f = locator.resolveClassFile(classOf(key));
             if (f != null && !analyzed.contains(f)) need.add(f);
         }

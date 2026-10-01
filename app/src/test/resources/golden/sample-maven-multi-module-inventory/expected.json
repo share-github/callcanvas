@@ -2,6 +2,12 @@
   "windows": [
     {
       "code": "    /**\n     * Log product info\n     */\n    private void logProduct(ProductInfo product) {\n        System.out.println(\"  - \" + product);\n    }",
+      "refs": [{
+        "col": 28,
+        "symbol": "com.example.domain.ProductInfo",
+        "len": 11,
+        "line": 45
+      }],
       "displayName": "InventoryService # logProduct",
       "startLine": 42,
       "filePath": "src/main/java/com/example/service/InventoryService.java",
@@ -9,6 +15,26 @@
     },
     {
       "code": "    /**\n     * Process nested Map with complex generics\n     * This tests: Map<Integer, Map<String, ProductInfo>>\n     */\n    public int processInventoryMap(Map<Integer, Map<String, ProductInfo>> inventoryMap, String warehouseId) {\n        int totalItems = 0;\n        for (Map.Entry<Integer, Map<String, ProductInfo>> entry : inventoryMap.entrySet()) {\n            Integer shelfId = entry.getKey();\n            Map<String, ProductInfo> products = entry.getValue();\n            totalItems += processShelf(shelfId, products, warehouseId);\n        }\n        return totalItems;\n    }",
+      "refs": [
+        {
+          "col": 60,
+          "symbol": "com.example.domain.ProductInfo",
+          "len": 11,
+          "line": 19
+        },
+        {
+          "col": 44,
+          "symbol": "com.example.domain.ProductInfo",
+          "len": 11,
+          "line": 21
+        },
+        {
+          "col": 24,
+          "symbol": "com.example.domain.ProductInfo",
+          "len": 11,
+          "line": 23
+        }
+      ],
       "displayName": "InventoryService # processInventoryMap",
       "startLine": 15,
       "filePath": "src/main/java/com/example/service/InventoryService.java",
@@ -16,66 +42,60 @@
     },
     {
       "code": "    /**\n     * Process a single shelf\n     */\n    private int processShelf(Integer shelfId, Map<String, ProductInfo> products, String warehouseId) {\n        System.out.println(\"Processing shelf \" + shelfId + \" in warehouse \" + warehouseId);\n        int count = 0;\n        for (ProductInfo product : products.values()) {\n            count += product.getQuantity();\n            logProduct(product);\n        }\n        return count;\n    }",
+      "refs": [
+        {
+          "col": 58,
+          "symbol": "com.example.domain.ProductInfo",
+          "len": 11,
+          "line": 32
+        },
+        {
+          "col": 13,
+          "symbol": "com.example.domain.ProductInfo",
+          "len": 11,
+          "line": 35
+        }
+      ],
       "displayName": "InventoryService # processShelf",
       "startLine": 29,
       "filePath": "src/main/java/com/example/service/InventoryService.java",
       "id": "window-3"
     },
     {
-      "fieldRefs": [{
-        "col": 15,
-        "len": 16,
-        "field": "com.example.app.controller.OrderController#inventoryService",
-        "line": 46
-      }],
       "code": "    /**\n     * Process inventory with nested generics - test case for Map<Integer,\n     * Map<String, ProductInfo>>\n     */\n    public int processInventory(Map<Integer, Map<String, ProductInfo>> inventoryData, String warehouseId) {\n        return inventoryService.processInventoryMap(inventoryData, warehouseId);\n    }",
+      "refs": [
+        {
+          "col": 57,
+          "symbol": "com.example.domain.ProductInfo",
+          "len": 11,
+          "line": 45
+        },
+        {
+          "col": 15,
+          "symbol": "com.example.app.controller.OrderController#inventoryService",
+          "len": 16,
+          "line": 46
+        }
+      ],
       "displayName": "OrderController # processInventory",
       "startLine": 41,
       "filePath": "src/main/java/com/example/app/controller/OrderController.java",
       "id": "window-1"
     },
     {
-      "fieldRefs": [{
+      "code": "    public int getQuantity() {\n        return quantity;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.domain.ProductInfo#quantity",
         "len": 8,
-        "field": "com.example.domain.ProductInfo#quantity",
         "line": 22
       }],
-      "code": "    public int getQuantity() {\n        return quantity;\n    }",
       "displayName": "ProductInfo # getQuantity",
       "startLine": 21,
       "filePath": "src/main/java/com/example/domain/ProductInfo.java",
       "id": "window-4"
     }
   ],
-  "fields": {
-    "com.example.domain.ProductInfo#quantity": {
-      "endLine": 8,
-      "code": "    private int quantity;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "ProductInfo # quantity",
-      "filePath": "src/main/java/com/example/domain/ProductInfo.java",
-      "startLine": 8,
-      "final": false,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.domain.ProductInfo"
-    },
-    "com.example.app.controller.OrderController#inventoryService": {
-      "endLine": 17,
-      "code": "    private final InventoryService inventoryService;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "OrderController # inventoryService",
-      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
-      "startLine": 17,
-      "final": true,
-      "type": "InventoryService",
-      "value": null,
-      "declaringClass": "com.example.app.controller.OrderController"
-    }
-  },
   "connections": [
     {
       "callLine": 46,
@@ -102,5 +122,38 @@
       "to": "window-5"
     }
   ],
+  "symbols": {
+    "com.example.domain.ProductInfo#quantity": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "ProductInfo # quantity",
+      "line": 8,
+      "filePath": "src/main/java/com/example/domain/ProductInfo.java",
+      "final": false,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.domain.ProductInfo"
+    },
+    "com.example.domain.ProductInfo": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "ProductInfo",
+      "line": 6,
+      "filePath": "src/main/java/com/example/domain/ProductInfo.java"
+    },
+    "com.example.app.controller.OrderController#inventoryService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "OrderController # inventoryService",
+      "line": 17,
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "final": true,
+      "type": "InventoryService",
+      "value": null,
+      "declaringClass": "com.example.app.controller.OrderController"
+    }
+  },
   "autoLayout": true
 }

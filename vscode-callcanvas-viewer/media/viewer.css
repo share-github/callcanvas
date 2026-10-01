@@ -757,17 +757,6 @@ body {
     }
 }
 
-/* Field reference (kind: "fieldRef"): dashed, own color. Declared before .on-path/.selected so those still win */
-.arrow.field-ref .arrow-line {
-    stroke: #c586c0;
-    stroke-width: 2;
-    animation: none;
-}
-
-.arrow.field-ref .arrow-head {
-    fill: #c586c0;
-}
-
 .arrow.arrow-1 {
     animation-delay: 0.3s;
 }
@@ -1305,19 +1294,16 @@ body {
     cursor: help;
 }
 
-/* フィールド参照（fieldRefs）: ホバーで下線、Ctrl/⌘+クリックで宣言へ */
-.field-ref-token {
-    cursor: pointer;
+/* 定義へ移動（refs → .symbol-ref）: 通常時は見た目を変えない。定数だけは constant-token と同じ見た目（ツールチップあり） */
+.symbol-ref[data-tip] {
+    border-bottom: 1px dotted rgba(150, 150, 220, 0.6);
+    cursor: help;
 }
 
-.field-ref-token:hover {
+/* Ctrl/⌘ を押している間だけ、ホバー中のトークンに下線とリンクカーソル（IDE と同じ） */
+body.symbol-mod-held .symbol-ref:hover {
     text-decoration: underline;
-    text-decoration-color: #c586c0;
-}
-
-/* フィールド宣言ウィンドウ（windowType: "field"） */
-.code-window.field-window .title-bar {
-    box-shadow: inset 3px 0 0 #c586c0;
+    cursor: pointer;
 }
 
 /* ホバーツールチップ */

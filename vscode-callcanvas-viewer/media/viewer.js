@@ -99,7 +99,7 @@ window.addEventListener('DOMContentLoaded', function () {
     document.body.appendChild(tip);
 
     document.addEventListener('mouseover', e => {
-        const el = e.target.closest('.field-ref-token, .constant-token');
+        const el = e.target.closest('.symbol-ref[data-tip], .constant-token');
         if (!el) return;
         const encoded = el.dataset.tip || '';
         try {
@@ -117,10 +117,21 @@ window.addEventListener('DOMContentLoaded', function () {
         }
     });
     document.addEventListener('mouseout', e => {
-        if (e.target.closest('.field-ref-token, .constant-token')) {
+        if (e.target.closest('.symbol-ref[data-tip], .constant-token')) {
             tip.style.display = 'none';
         }
     });
+
+    // Ctrl/⌘ held → symbol-ref tokens show underline + link cursor on hover (IDE style)
+    const setModHeld = held => document.body.classList.toggle('symbol-mod-held', !!held);
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Control' || e.key === 'Meta') setModHeld(true);
+    });
+    document.addEventListener('keyup', e => {
+        if (e.key === 'Control' || e.key === 'Meta') setModHeld(false);
+    });
+    document.addEventListener('mousemove', e => setModHeld(e.ctrlKey || e.metaKey), { passive: true });
+    window.addEventListener('blur', () => setModHeld(false));
 });
 
 // Store current data globally for updates
@@ -430,10 +441,6 @@ function analyzeSelectedWindowNextLevel() {
         showToast('ウィンドウが見つかりません', 'error');
         return;
     }
-    if (windowData.windowType === 'field') {
-        showToast('フィールド宣言ウィンドウは解析対象外です', 'warning');
-        return;
-    }
 
     // Check if it's an analyzable file
     const lang = detectLanguage(windowData.filePath);
@@ -467,10 +474,6 @@ function analyzeSelectedWindowIncomingCalls() {
     
     if (!windowData) {
         showToast('ウィンドウが見つかりません', 'error');
-        return;
-    }
-    if (windowData.windowType === 'field') {
-        showToast('フィールド宣言ウィンドウは解析対象外です', 'warning');
         return;
     }
 
@@ -510,10 +513,6 @@ function analyzeSelectedWindowToRoot() {
 
     if (!windowData) {
         showToast('ウィンドウが見つかりません', 'error');
-        return;
-    }
-    if (windowData.windowType === 'field') {
-        showToast('フィールド宣言ウィンドウは解析対象外です', 'warning');
         return;
     }
 
@@ -600,6 +599,8 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
     // Adopt the result's constants before any window is (re)rendered below, so windows added by this
     // merge get constant-tokens too (resets _symbolKeys → wrapConstantTokens rebuilds its cache).
     const addedSymbols = mergeSymbolIndex(currentData, newData);
+    // Same for declarations (symbols): windows added below render their refs as tokens right away
+    const addedDeclarations = mergeSymbols(currentData, newData);
 
     const container = document.querySelector('.container');
     
@@ -740,32 +741,31 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
                     from: fromId, 
                     to: toId,
                     callLine: conn.callLine,
-                    callEndLine: conn.callEndLine,
-                    ...(conn.kind ? { kind: conn.kind } : {})
+                    callEndLine: conn.callEndLine
                 });
             }
         });
     }
 
-    // Merge field declarations; windows already on the canvas adopt the result's fieldRefs
-    const fieldIdMapping = {};
+    // Windows already on the canvas (source / duplicates) adopt the result's refs
+    const refsIdMapping = {};
     newData.windows.forEach((newWindow, index) => {
         if (index === 0) {
-            if (sourceWindow) fieldIdMapping[newWindow.id] = sourceWindow.id;
+            if (sourceWindow) refsIdMapping[newWindow.id] = sourceWindow.id;
             return;
         }
         const key = `${newWindow.filePath}:${newWindow.startLine}`;
         const existingWindow = currentData.windows.find(w =>
             `${w.filePath}:${w.code[0]?.line || w.startLine}` === key
         );
-        if (existingWindow) fieldIdMapping[newWindow.id] = existingWindow.id;
+        if (existingWindow) refsIdMapping[newWindow.id] = existingWindow.id;
     });
-    const fieldMerge = mergeFieldData(currentData, newData, fieldIdMapping);
+    const refsAdopted = adoptWindowRefs(currentData, newData, refsIdMapping);
     if (addedSymbols.length > 0 && addedCount === 0) {
         // No auto-layout re-render follows: refresh windows already on the canvas for the new constants
         rerenderCodeAreas(() => true);
-    } else if (fieldMerge.fieldsChanged || fieldMerge.updatedWindowIds.length > 0) {
-        rerenderFieldRefWindows();
+    } else if (addedDeclarations.length > 0 || refsAdopted.length > 0) {
+        rerenderCodeAreas(w => Array.isArray(w.refs) && w.refs.length > 0);
     }
 
     // Update arrows and container
@@ -846,11 +846,6 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
     }
 }
 
-/** Re-render rendered code areas that carry fieldRefs (after `fields` / fieldRefs changed). */
-function rerenderFieldRefWindows() {
-    rerenderCodeAreas(w => Array.isArray(w.fieldRefs) && w.fieldRefs.length > 0);
-}
-
 /** Re-render the already-rendered code areas of windows matching `predicate`. */
 function rerenderCodeAreas(predicate) {
     if (!currentData) return;
@@ -865,31 +860,18 @@ function rerenderCodeAreas(predicate) {
 }
 
 /**
- * Ctrl/⌘+click or context menu on a field-ref token: select the field's declaration window if the
- * canvas already has one, otherwise create it next to the source window with a fieldRef connection.
+ * Ctrl/⌘+click or "Go to Declaration" on a symbol-ref token: open the declaration with the same
+ * openFile message as the title-bar double-click (VS Code: editor, nvim bridge: side panel).
+ * The canvas is not changed (nothing is added or saved). No-op in Export HTML (nowhere to open).
  */
-function goToFieldDeclaration(sourceWindowId, lineNumber, fieldKey) {
-    if (!currentData || !fieldKey) return;
-    const plan = planFieldDeclaration(currentData, sourceWindowId, lineNumber, fieldKey, 'window-field-' + Date.now());
-    if (plan.action === 'missing') {
-        showToast('フィールド宣言が見つかりません: ' + fieldKey, 'warning');
+function goToDeclaration(symbolKey) {
+    if (IS_EXPORT_MODE || !currentData || !symbolKey) return;
+    const message = buildOpenDeclarationMessage(currentData.symbols, symbolKey);
+    if (!message) {
+        showToast('宣言が見つかりません: ' + symbolKey, 'warning');
         return;
     }
-    if (plan.action === 'create') {
-        const normalized = normalizeWindowData(plan.window);
-        currentData.windows.push(normalized);
-        if (!currentData.connections) currentData.connections = [];
-        currentData.connections.push(plan.connection);
-        const container = document.querySelector('.container');
-        container.appendChild(createWindow(normalized));
-        adjustColumnOverlaps(normalized.id);
-        updateArrows();
-        updateContainerSize();
-        saveData();
-        jumpToWindowWithOrigin(normalized.id, sourceWindowId, lineNumber);
-        return;
-    }
-    jumpToWindowWithOrigin(plan.windowId, sourceWindowId, lineNumber);
+    vscode.postMessage(message);
 }
 
 function buildSaveData() {
@@ -931,9 +913,7 @@ function buildSaveData() {
                 collapsed: w.collapsed === true,
                 visible: w.visible !== false,
                 fullHeight: w.fullHeight === true,
-                ...(w.windowType ? { windowType: w.windowType } : {}),
-                ...(w.field ? { field: w.field } : {}),
-                ...(Array.isArray(w.fieldRefs) && w.fieldRefs.length ? { fieldRefs: w.fieldRefs } : {}),
+                ...(Array.isArray(w.refs) && w.refs.length ? { refs: w.refs } : {}),
                 ...(Object.keys(lineComments).length ? { lineComments } : {}),
                 ...(diffState ? { diffState } : {}),
                 ...(savedDiffComments ? { savedDiffComments } : {})
@@ -946,8 +926,9 @@ function buildSaveData() {
     if (currentData.symbolIndex && typeof currentData.symbolIndex === 'object' && Object.keys(currentData.symbolIndex).length > 0) {
         payload.symbolIndex = currentData.symbolIndex;
     }
-    if (currentData.fields && typeof currentData.fields === 'object' && Object.keys(currentData.fields).length > 0) {
-        payload.fields = currentData.fields;
+    // symbols: declarations the windows' refs point at (Ctrl/⌘+click → openFile, constant tooltips)
+    if (currentData.symbols && typeof currentData.symbols === 'object' && Object.keys(currentData.symbols).length > 0) {
+        payload.symbols = currentData.symbols;
     }
     const meta = currentData.metadata;
     if (meta && typeof meta === 'object' && !Array.isArray(meta) && Object.keys(meta).length > 0) {
@@ -1587,7 +1568,7 @@ function updateArrows() {
 function deleteWindow(windowId) {
     if (!currentData) return;
 
-    // Cascade delete: children whose parents are all deleted go too (call and fieldRef connections)
+    // Cascade delete: children whose parents are all deleted go too
     const deletion = computeWindowDeletion(currentData.connections, [windowId]);
     const windowsToDelete = new Set(deletion.deleteIds);
 
@@ -2395,7 +2376,7 @@ function updatePathHighlight() {
 function deleteSelectedWindows() {
     if (!currentData || selectedWindows.size === 0) return;
 
-    // Cascade delete: children whose parents are all deleted go too (call and fieldRef connections)
+    // Cascade delete: children whose parents are all deleted go too
     const deletion = computeWindowDeletion(currentData.connections, [...selectedWindows]);
     const windowsToDelete = new Set(deletion.deleteIds);
 
@@ -2462,7 +2443,7 @@ function collectCallOriginLineKeys(data) {
     const sep = String.fromCharCode(31);
     if (!data || !data.connections) return set;
     for (const conn of data.connections) {
-        if (!conn.from || conn.callLine == null || isFieldRefConnection(conn)) continue;
+        if (!conn.from || conn.callLine == null) continue;
         const startLine = conn.callLine;
         const endLine = conn.callEndLine != null ? conn.callEndLine : conn.callLine;
         for (let L = startLine; L <= endLine; L++) {
@@ -2517,7 +2498,7 @@ function findConnectionsAtLine(windowId, lineNumber, omitEndLine) {
     const rangeEnd = omitEndLine != null && Number.isFinite(omitEndLine) ? omitEndLine : lineNumber;
 
     return currentData.connections.filter(conn => {
-        if (conn.from !== windowId || isFieldRefConnection(conn)) return false;
+        if (conn.from !== windowId) return false;
         const startLine = conn.callLine;
         const endLine = conn.callEndLine != null ? conn.callEndLine : conn.callLine;
         // Overlap [rangeStart, rangeEnd] with [startLine, endLine] (inclusive)
@@ -2550,7 +2531,7 @@ function handleF12Jump(focusedRow) {
         // No connection at this line - try to analyze if it's a Java file
         const targetWindow = currentData.windows.find(w => w.id === windowId);
         
-        if (targetWindow && targetWindow.windowType !== 'field' && targetWindow.filePath && detectLanguage(targetWindow.filePath)) {
+        if (targetWindow && targetWindow.filePath && detectLanguage(targetWindow.filePath)) {
             // Store pending F12 jump info
             pendingF12Jump = { windowId, lineNumber, omitEndLine };
             
@@ -2693,19 +2674,19 @@ function showLineContextMenu(e, lineRow, windowId, lineNumber) {
     menu.id = 'line-context-menu';
     menu.className = 'line-context-menu';
 
-    // Go to Field Declaration (only when right-clicking a field reference token)
-    const fieldToken = e.target && e.target.closest ? e.target.closest('.field-ref-token') : null;
-    if (fieldToken) {
-        const fieldKey = fieldToken.getAttribute('data-field');
-        const fieldItem = document.createElement('div');
-        fieldItem.className = 'line-context-menu-item';
-        fieldItem.textContent = 'Go to Field Declaration';
-        fieldItem.addEventListener('click', function(clickEvent) {
+    // Go to Declaration (only when right-clicking a symbol-ref token)
+    const symbolToken = e.target && e.target.closest ? e.target.closest('.symbol-ref') : null;
+    if (symbolToken) {
+        const symbolKey = symbolToken.getAttribute('data-symbol');
+        const declItem = document.createElement('div');
+        declItem.className = 'line-context-menu-item';
+        declItem.textContent = 'Go to Declaration';
+        declItem.addEventListener('click', function(clickEvent) {
             clickEvent.stopPropagation();
             menu.remove();
-            goToFieldDeclaration(windowId, lineNumber, fieldKey);
+            goToDeclaration(symbolKey);
         });
-        menu.appendChild(fieldItem);
+        menu.appendChild(declItem);
     }
     
     // Highlight item
@@ -3705,7 +3686,11 @@ function highlightSearchText(windowId, query, markClass) {
 
         // Replace matches in the HTML, but not inside tags
         const highlightedHtml = highlightTextInHTML(originalHtml, query, regex, markClass);
-        codeLine.innerHTML = highlightedHtml;
+        // Only touch lines that change: replacing a line's nodes under a pressed mouse button makes
+        // the click land on .code-line instead of the token (Ctrl/⌘+click on a symbol-ref then does nothing)
+        if (codeLine.innerHTML !== highlightedHtml) {
+            codeLine.innerHTML = highlightedHtml;
+        }
     });
 }
 
@@ -3810,7 +3795,9 @@ function clearTextHighlight(windowId) {
     const codeLines = windowEl.querySelectorAll('.code-line');
     codeLines.forEach(codeLine => {
         const originalHtml = codeLine.getAttribute('data-original-html');
-        if (originalHtml) {
+        // Unchanged lines are left alone (see highlightSearchText): this runs on every click that
+        // collapses the selection, i.e. between mousedown and mouseup of a Ctrl/⌘+click
+        if (originalHtml && codeLine.innerHTML !== originalHtml) {
             codeLine.innerHTML = originalHtml;
         }
     });
@@ -4036,7 +4023,7 @@ function _rerenderCodeAreaCore(codeArea, windowData, highlightedLines) {
         : {};
 
     const coverageLineMap = currentCoverage ? findCoverageForWindow(windowData) : null;
-    const fieldRefsByLine = currentData?.fields ? groupFieldRefsByLine(windowData.fieldRefs) : null;
+    const refsByLine = currentData?.symbols ? groupRefsByLine(windowData.refs) : null;
 
     codeArea.innerHTML = windowData.code.map((line, index) => {
         let classes = 'code-line';
@@ -4078,11 +4065,11 @@ function _rerenderCodeAreaCore(codeArea, windowData, highlightedLines) {
             content = applySyntaxHighlighting(content, line.isComment);
         }
 
-        // Field refs are skipped on comment lines and on diff-removed lines (old line numbers)
-        const lineFieldRefs = (fieldRefsByLine && !line.isComment && line.diffType !== 'removed')
-            ? fieldRefsByLine.get(line.line) : null;
-        if (!line.nestedOmitCard && (lineFieldRefs || currentData?._symbolKeys?.length > 0)) {
-            content = decorateCodeLineTokens(content, lineFieldRefs, currentData.fields,
+        // Refs are skipped on comment lines and on diff-removed lines (old line numbers)
+        const lineRefs = (refsByLine && !line.isComment && line.diffType !== 'removed')
+            ? refsByLine.get(line.line) : null;
+        if (!line.nestedOmitCard && (lineRefs || currentData?._symbolKeys?.length > 0)) {
+            content = decorateCodeLineTokens(content, lineRefs, currentData.symbols,
                 currentData.symbolIndex, currentData._symbolKeys || []);
         }
 
@@ -5511,7 +5498,7 @@ function updateBracketGuide(focusedRow) {
 
 function createWindow(windowData) {
     const windowDiv = document.createElement('div');
-    windowDiv.className = windowData.windowType === 'field' ? 'code-window field-window' : 'code-window';
+    windowDiv.className = 'code-window';
     windowDiv.id = windowData.id;
 
     // Apply position
@@ -5679,16 +5666,34 @@ function createWindow(windowData) {
         });
     }
 
-    // Ctrl/⌘+click on a field reference → its declaration window (also in export mode)
+    // Ctrl/⌘+click on a symbol reference → open its declaration (openFile). In export mode the click
+    // is swallowed and does nothing (nowhere to open).
+    // Decided on mouseup from the token remembered at mousedown, not on click: when the line's nodes
+    // are replaced before mouseup (the selection/search highlight is cleared as the click collapses the
+    // selection) or the window moves (hover transform), the click lands on .code-line or is not fired.
+    let pressedSymbolRef = null;
+    let swallowNextClick = false;
+    codeArea.addEventListener('mousedown', function(e) {
+        swallowNextClick = false;
+        const token = e.button === 0 && (e.ctrlKey || e.metaKey) ? e.target.closest('.symbol-ref') : null;
+        pressedSymbolRef = token ? { symbol: token.getAttribute('data-symbol'), x: e.clientX, y: e.clientY } : null;
+    }, true);
+    codeArea.addEventListener('mouseup', function(e) {
+        const pressed = pressedSymbolRef;
+        pressedSymbolRef = null;
+        if (e.button !== 0 || !(e.ctrlKey || e.metaKey)) return;
+        const token = e.target.closest('.symbol-ref');
+        const symbolKey = resolveSymbolRefClick(token ? token.getAttribute('data-symbol') : null,
+            pressed, { x: e.clientX, y: e.clientY });
+        if (!symbolKey) return;
+        swallowNextClick = true;   // the click that follows (if any) must not select the window
+        goToDeclaration(symbolKey);
+    });
     codeArea.addEventListener('click', function(e) {
-        if (!(e.ctrlKey || e.metaKey)) return;
-        const token = e.target.closest('.field-ref-token');
-        const lineRow = token && token.closest('.code-line-row');
-        if (!lineRow) return;
+        if (!swallowNextClick) return;
+        swallowNextClick = false;
         e.preventDefault();
         e.stopPropagation();
-        goToFieldDeclaration(lineRow.getAttribute('data-window-id'),
-            parseInt(lineRow.getAttribute('data-line-number'), 10), token.getAttribute('data-field'));
     });
 
     // Add right-click context menu via event delegation on codeArea (not in export mode)
@@ -5988,27 +5993,32 @@ function wrapConstantTokens(htmlContent, symbolIndex, sortedKeys) {
     });
 }
 
-// ---- Field references (fieldRefs → declaration windows) ----
-// JSON contract: top-level `fields` { "<FQN>#<name>": { displayName, filePath, startLine, endLine, code,
-// type, declaringClass, static, final, enumConstant, value } }, window.fieldRefs [{ line, col, len, field }]
-// (col = UTF-16 index in the raw source line, tab = 1), declaration windows { windowType: 'field', field },
-// and connections { ..., kind: 'fieldRef' }.
-
-function isFieldRefConnection(conn) {
-    return !!conn && conn.kind === 'fieldRef';
-}
+// ---- Go to Declaration (symbols / refs) ----
+// JSON contract: top-level `symbols` { "<FQN>" (type) | "<FQN>#<name>" (field): { kind: 'type'|'field',
+// displayName, filePath, line, typeKind | type, declaringClass, static, final, enumConstant, value } },
+// window.refs [{ line, col, len, symbol }] (line = absolute 1-based, col = 0-based UTF-16 index in the raw
+// source line, tab = 1). Refs become invisible tokens; Ctrl/⌘+click opens symbols[key].filePath:line.
 
 function escapeHtmlAttr(text) {
     // split/join instead of a regex literal with a double quote (the golden-test extractor scans quotes)
     return String(text).replace(/&/g, '&amp;').split('"').join('&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-/** Plain-text tooltip for a field reference: modifiers, type, name, constant value, declaring class. */
-function buildFieldTip(fieldKey, entry) {
-    const hashIdx = fieldKey.lastIndexOf('#');
-    const name = hashIdx >= 0 ? fieldKey.slice(hashIdx + 1) : fieldKey;
-    const declaringClass = (entry && entry.declaringClass) || (hashIdx >= 0 ? fieldKey.slice(0, hashIdx) : '');
-    if (!entry) return name;
+/** True for a field symbol that is a constant (compile-time value or enum constant). */
+function isConstantSymbol(entry) {
+    return !!entry && entry.kind === 'field'
+        && (entry.enumConstant === true || (entry.value != null && String(entry.value).length > 0));
+}
+
+/**
+ * Plain-text tooltip for a symbol ref: only constants get one ('' otherwise), e.g.
+ * "static final int MAX = 100  (com.example.Foo)" / "enum constant OrderStatus PAID  (com.example.OrderStatus)".
+ */
+function buildSymbolTip(symbolKey, entry) {
+    if (!isConstantSymbol(entry)) return '';
+    const hashIdx = symbolKey.lastIndexOf('#');
+    const name = hashIdx >= 0 ? symbolKey.slice(hashIdx + 1) : symbolKey;
+    const declaringClass = entry.declaringClass || (hashIdx >= 0 ? symbolKey.slice(0, hashIdx) : '');
     const mods = [];
     if (entry.enumConstant) {
         mods.push('enum constant');
@@ -6024,12 +6034,12 @@ function buildFieldTip(fieldKey, entry) {
     return tip;
 }
 
-/** Group a window's fieldRefs by absolute line number (sorted by col). */
-function groupFieldRefsByLine(fieldRefs) {
+/** Group a window's refs by absolute line number (sorted by col). */
+function groupRefsByLine(refs) {
     const byLine = new Map();
-    if (!Array.isArray(fieldRefs)) return byLine;
-    for (const ref of fieldRefs) {
-        if (!ref || typeof ref.line !== 'number' || typeof ref.col !== 'number' || !(ref.len > 0) || !ref.field) continue;
+    if (!Array.isArray(refs)) return byLine;
+    for (const ref of refs) {
+        if (!ref || typeof ref.line !== 'number' || typeof ref.col !== 'number' || !(ref.len > 0) || !ref.symbol) continue;
         if (!byLine.has(ref.line)) byLine.set(ref.line, []);
         byLine.get(ref.line).push(ref);
     }
@@ -6038,22 +6048,25 @@ function groupFieldRefsByLine(fieldRefs) {
 }
 
 /**
- * Wrap the [col, col+len) text ranges of one highlighted line in field-ref-token spans.
+ * Wrap the [col, col+len) text ranges of one highlighted line in symbol-ref spans.
  * Walks the HTML counting text characters (an entity counts as one character), so it works on
  * hljs output, the fallback highlighter and plain escaped text alike. The token span only ever
  * contains text: if a range crosses a tag it is closed before the tag and reopened after it.
- * Ranges inside a comment span (hljs-comment / comment) are left alone. Refs whose field is not
- * in `fields` are skipped (nothing to jump to).
+ * Ranges inside a comment span (hljs-comment / comment) are left alone. Refs whose symbol is not
+ * in `symbols` are skipped (nothing to open). Only constants carry data-tip (tooltip).
  */
-function wrapFieldRefTokens(htmlContent, lineRefs, fields) {
-    if (!htmlContent || !Array.isArray(lineRefs) || lineRefs.length === 0 || !fields) return htmlContent;
+function wrapSymbolRefTokens(htmlContent, lineRefs, symbols) {
+    if (!htmlContent || !Array.isArray(lineRefs) || lineRefs.length === 0 || !symbols) return htmlContent;
     const refs = lineRefs
-        .filter(r => r && r.len > 0 && typeof r.col === 'number' && r.field && fields[r.field])
+        .filter(r => r && r.len > 0 && typeof r.col === 'number' && r.symbol && symbols[r.symbol])
         .sort((a, b) => a.col - b.col);
     if (refs.length === 0) return htmlContent;
 
-    const openTagFor = ref => '<span class="field-ref-token" data-field="' + escapeHtmlAttr(ref.field)
-        + '" data-tip="' + encodeURIComponent(buildFieldTip(ref.field, fields[ref.field])) + '">';
+    const openTagFor = ref => {
+        const tip = buildSymbolTip(ref.symbol, symbols[ref.symbol]);
+        return '<span class="symbol-ref" data-symbol="' + escapeHtmlAttr(ref.symbol) + '"'
+            + (tip ? ' data-tip="' + encodeURIComponent(tip) + '"' : '') + '>';
+    };
     const commentClassRe = /class="[^"]*\bcomment\b/;
     const tagStack = [];
     let commentDepth = 0;
@@ -6114,78 +6127,44 @@ function wrapFieldRefTokens(htmlContent, lineRefs, fields) {
 }
 
 /**
- * Field-ref tokens first, then constant tokens (symbolIndex name match) only outside them,
- * so a position covered by both becomes a field-ref token.
+ * Symbol-ref tokens first, then constant tokens (symbolIndex name match) only outside them,
+ * so a position covered by both becomes a symbol-ref (refs win over the name-based index).
  */
-function decorateCodeLineTokens(htmlContent, lineRefs, fields, symbolIndex, sortedKeys) {
-    const html = wrapFieldRefTokens(htmlContent, lineRefs, fields);
+function decorateCodeLineTokens(htmlContent, lineRefs, symbols, symbolIndex, sortedKeys) {
+    const html = wrapSymbolRefTokens(htmlContent, lineRefs, symbols);
     if (!symbolIndex || !Array.isArray(sortedKeys) || sortedKeys.length === 0) return html;
-    if (html.indexOf('field-ref-token') < 0) {
+    if (html.indexOf('symbol-ref') < 0) {
         return wrapConstantTokens(html, symbolIndex, sortedKeys);
     }
     return html
-        .split(/(<span class="field-ref-token"[^>]*>[^<]*<\/span>)/)
+        .split(/(<span class="symbol-ref"[^>]*>[^<]*<\/span>)/)
         .map((part, idx) => (idx % 2 === 1 ? part : wrapConstantTokens(part, symbolIndex, sortedKeys)))
         .join('');
 }
 
 /**
- * Decide what "Go to Field Declaration" does (pure; DOM side is goToFieldDeclaration).
- * Returns { action: 'select', windowId } when a declaration window for the field already exists,
- * { action: 'create', window, connection } for a new one next to the source window,
- * or { action: 'missing', reason } when the field / source window is unknown.
+ * The symbol a Ctrl/⌘+click opens: the token under the click, else the token pressed at mousedown
+ * when the button came up nearby (the click target fell back to .code-line because the token's
+ * nodes were replaced or moved mid-click). `pressed` = { symbol, x, y } | null, `click` = { x, y }.
  */
-function planFieldDeclaration(data, sourceWindowId, lineNumber, fieldKey, newId) {
-    const windows = (data && Array.isArray(data.windows)) ? data.windows : [];
-    const existing = windows.find(w => w.windowType === 'field' && w.field === fieldKey);
-    if (existing) {
-        return { action: 'select', windowId: existing.id };
-    }
-    const entry = data && data.fields ? data.fields[fieldKey] : null;
-    if (!entry) return { action: 'missing', reason: 'field' };
-    const source = windows.find(w => w.id === sourceWindowId);
-    if (!source) return { action: 'missing', reason: 'source' };
+function resolveSymbolRefClick(clickSymbol, pressed, click) {
+    if (clickSymbol) return clickSymbol;
+    if (!pressed || !pressed.symbol || !click) return null;
+    const SLOP_PX = 12;  // pointer travel still treated as a click on the pressed token (not a drag)
+    if (Math.abs(click.x - pressed.x) > SLOP_PX || Math.abs(click.y - pressed.y) > SLOP_PX) return null;
+    return pressed.symbol;
+}
 
-    const srcPos = source.position || {};
-    const srcFirstLine = (Array.isArray(source.code) && source.code[0] && source.code[0].line) || source.startLine || 1;
-    const lineOffset = Math.max(0, (lineNumber || srcFirstLine) - srcFirstLine);
-    const GAP = 80;
-    const left = (srcPos.left || 0) + (srcPos.width || SETTINGS.windowWidth) + GAP;
-    // Don't land inside a window of that column that starts above (adjustColumnOverlaps only pushes
-    // the windows below the new one down): go just below its bottom instead.
-    let top = (srcPos.top || 0) + lineOffset * LINE_HEIGHT;
-    for (const w of windows.slice().sort((a, b) => ((a.position || {}).top || 0) - ((b.position || {}).top || 0))) {
-        const p = w.position || {};
-        if (w.visible === false || Math.abs((p.left || 0) - left) >= 50 || (p.top || 0) > top) continue;
-        const height = w.collapsed === true ? TITLE_BAR_HEIGHT : (p.height || SETTINGS.minWindowHeight);
-        const bottom = (p.top || 0) + height + 20;
-        if (bottom > top) top = bottom;
-    }
-    const win = {
-        id: newId,
-        windowType: 'field',
-        field: fieldKey,
-        displayName: entry.displayName || fieldKey,
-        filePath: entry.filePath,
-        startLine: entry.startLine || 1,
-        code: entry.code || '',
-        position: {
-            top,
-            left,
-            width: SETTINGS.windowWidth,
-            height: SETTINGS.minWindowHeight
-        },
-        collapsed: false,
-        visible: true,
-        fullHeight: false
-    };
-    const connection = { from: sourceWindowId, to: newId, callLine: lineNumber, callEndLine: lineNumber, kind: 'fieldRef' };
-    return { action: 'create', window: win, connection };
+/** The openFile message for a symbol's declaration, or null when the symbol is unknown. */
+function buildOpenDeclarationMessage(symbols, symbolKey) {
+    const entry = symbols && symbolKey ? symbols[symbolKey] : null;
+    if (!entry || !entry.filePath) return null;
+    return { command: 'openFile', filePath: entry.filePath, line: entry.line || 1 };
 }
 
 /**
  * Windows removed when `initialIds` are deleted: a child goes too once all of its parents are
- * deleted (same rule for call and fieldRef connections). Returns { deleteIds (sorted), connections }.
+ * deleted. Returns { deleteIds (sorted), connections }.
  */
 function computeWindowDeletion(connections, initialIds) {
     const toDelete = new Set(initialIds);
@@ -6215,29 +6194,44 @@ function computeWindowDeletion(connections, initialIds) {
 }
 
 /**
- * Merge `fields` and `fieldRefs` of an analysis result into the canvas data (in place).
- * idMapping: analysis window id → canvas window id (root → source window, duplicates → existing).
- * An existing window adopts the analysis' fieldRefs only when it has none (never overwrites).
- * Returns { fieldsChanged, updatedWindowIds }.
+ * Merge the analysis result's `symbols` (declarations) into the canvas data (in place). Incoming
+ * entries win: a declaration's file/line is the freshest in the latest analysis. Returns the keys
+ * that were added or changed.
  */
-function mergeFieldData(data, newData, idMapping) {
-    const result = { fieldsChanged: false, updatedWindowIds: [] };
-    if (!data || !newData) return result;
-    if (newData.fields && typeof newData.fields === 'object' && Object.keys(newData.fields).length > 0) {
-        data.fields = Object.assign({}, data.fields || {}, newData.fields);
-        result.fieldsChanged = true;
-    }
+function mergeSymbols(data, newData) {
+    const changed = [];
+    if (!data || !newData) return changed;
+    const incoming = newData.symbols;
+    if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) return changed;
+    const current = (data.symbols && typeof data.symbols === 'object') ? data.symbols : {};
+    Object.keys(incoming).forEach(key => {
+        if (JSON.stringify(current[key]) === JSON.stringify(incoming[key])) return;
+        current[key] = incoming[key];
+        changed.push(key);
+    });
+    data.symbols = current;
+    return changed;
+}
+
+/**
+ * Windows already on the canvas adopt the analysis result's `refs` (in place).
+ * idMapping: analysis window id → canvas window id (root → source window, duplicates → existing).
+ * An existing window adopts refs only when it has none (never overwrites). Returns the updated ids.
+ */
+function adoptWindowRefs(data, newData, idMapping) {
+    const updated = [];
+    if (!data || !newData) return updated;
     const mapping = idMapping || {};
     (newData.windows || []).forEach(nw => {
-        if (!Array.isArray(nw.fieldRefs) || nw.fieldRefs.length === 0) return;
+        if (!Array.isArray(nw.refs) || nw.refs.length === 0) return;
         const targetId = mapping[nw.id];
         if (!targetId) return;
         const target = (data.windows || []).find(w => w.id === targetId);
-        if (!target || (Array.isArray(target.fieldRefs) && target.fieldRefs.length > 0)) return;
-        target.fieldRefs = nw.fieldRefs.map(r => ({ ...r }));
-        result.updatedWindowIds.push(target.id);
+        if (!target || (Array.isArray(target.refs) && target.refs.length > 0)) return;
+        target.refs = nw.refs.map(r => ({ ...r }));
+        updated.push(target.id);
     });
-    return result;
+    return updated;
 }
 
 /**
@@ -6358,15 +6352,6 @@ function renderArrows(data, container, noAnimation = false) {
         const svg = conn.from === conn.to
             ? calculateSelfReferenceArrow(fromWindow, index, noAnimation, conn.from, elementMap)
             : calculateArrow(fromWindow, toWindow, index, noAnimation, conn.from, conn.to, elementMap);
-        if (isFieldRefConnection(conn)) {
-            // Field reference: dashed + own color (CSS .arrow.field-ref), no draw-in animation
-            svg.classList.add('field-ref');
-            const lineEl = svg.querySelector('.arrow-line');
-            if (lineEl) {
-                lineEl.style.strokeDasharray = '6 4';
-                lineEl.style.strokeDashoffset = '0';
-            }
-        }
         fragment.appendChild(svg);
     });
     container.appendChild(fragment);

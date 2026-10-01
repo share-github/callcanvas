@@ -200,41 +200,5 @@
       "lineNumber": 207
     },
     "expected": []
-  },
-  {
-    "label": "fieldRef connection at the line is not an F12 call target",
-    "input": {
-      "currentData": {
-        "connections": [
-          {
-            "from": "w1",
-            "to": "w2",
-            "callLine": 10
-          },
-          {
-            "from": "w1",
-            "to": "f1",
-            "callLine": 10,
-            "callEndLine": 10,
-            "kind": "fieldRef"
-          },
-          {
-            "from": "w1",
-            "to": "f2",
-            "callLine": 12,
-            "kind": "fieldRef"
-          }
-        ]
-      },
-      "windowId": "w1",
-      "lineNumber": 10
-    },
-    "expected": [
-      {
-        "from": "w1",
-        "to": "w2",
-        "callLine": 10
-      }
-    ]
   }
 ]

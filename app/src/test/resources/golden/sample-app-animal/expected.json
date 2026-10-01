@@ -8,138 +8,105 @@
       "id": "window-3"
     },
     {
-      "fieldRefs": [{
+      "code": "    /**\n     * すべての動物に鳴かせる\n     */\n    @GetMapping(\"/sounds\")\n    public List<String> getAllSounds() {\n        return animalService.makeAllAnimalsSound();\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.animal.controller.AnimalController#animalService",
         "len": 13,
-        "field": "com.example.animal.controller.AnimalController#animalService",
         "line": 30
       }],
-      "code": "    /**\n     * すべての動物に鳴かせる\n     */\n    @GetMapping(\"/sounds\")\n    public List<String> getAllSounds() {\n        return animalService.makeAllAnimalsSound();\n    }",
       "displayName": "AnimalController # getAllSounds",
       "startLine": 25,
       "filePath": "src/main/java/com/example/animal/controller/AnimalController.java",
       "id": "window-1"
     },
     {
-      "fieldRefs": [{
-        "col": 15,
-        "len": 7,
-        "field": "com.example.animal.service.AnimalService#animals",
-        "line": 36
-      }],
       "code": "    /**\n     * すべての動物に鳴かせる（ポリモーフィズム）\n     */\n    public List<String> makeAllAnimalsSound() {\n        return animals.stream()\n                .map(Animal::makeSound)\n                .collect(Collectors.toList());\n    }",
+      "refs": [
+        {
+          "col": 15,
+          "symbol": "com.example.animal.service.AnimalService#animals",
+          "len": 7,
+          "line": 36
+        },
+        {
+          "col": 21,
+          "symbol": "com.example.animal.domain.animal.Animal",
+          "len": 6,
+          "line": 37
+        }
+      ],
       "displayName": "AnimalService # makeAllAnimalsSound",
       "startLine": 32,
       "filePath": "src/main/java/com/example/animal/service/AnimalService.java",
       "id": "window-2"
     },
     {
-      "fieldRefs": [{
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" meows: Meow! Meow!\";\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.animal.domain.animal.Animal#name",
         "len": 4,
-        "field": "com.example.animal.domain.animal.Animal#name",
         "line": 16
       }],
-      "code": "    @Override\n    public String makeSound() {\n        return name + \" meows: Meow! Meow!\";\n    }",
       "displayName": "Cat # makeSound",
       "startLine": 14,
       "filePath": "src/main/java/com/example/animal/domain/animal/Cat.java",
       "id": "window-7"
     },
     {
-      "fieldRefs": [{
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" barks: Woof! Woof!\";\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.animal.domain.animal.Animal#name",
         "len": 4,
-        "field": "com.example.animal.domain.animal.Animal#name",
         "line": 16
       }],
-      "code": "    @Override\n    public String makeSound() {\n        return name + \" barks: Woof! Woof!\";\n    }",
       "displayName": "Dog # makeSound",
       "startLine": 14,
       "filePath": "src/main/java/com/example/animal/domain/animal/Dog.java",
       "id": "window-5"
     },
     {
-      "fieldRefs": [{
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" barks happily: Woof! Woof! (Golden Retriever style)\";\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.animal.domain.animal.Animal#name",
         "len": 4,
-        "field": "com.example.animal.domain.animal.Animal#name",
         "line": 16
       }],
-      "code": "    @Override\n    public String makeSound() {\n        return name + \" barks happily: Woof! Woof! (Golden Retriever style)\";\n    }",
       "displayName": "GoldenRetriever # makeSound",
       "startLine": 14,
       "filePath": "src/main/java/com/example/animal/domain/animal/GoldenRetriever.java",
       "id": "window-6"
     },
     {
-      "fieldRefs": [{
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" meows elegantly: Meow! (Persian style)\";\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.animal.domain.animal.Animal#name",
         "len": 4,
-        "field": "com.example.animal.domain.animal.Animal#name",
         "line": 16
       }],
-      "code": "    @Override\n    public String makeSound() {\n        return name + \" meows elegantly: Meow! (Persian style)\";\n    }",
       "displayName": "PersianCat # makeSound",
       "startLine": 14,
       "filePath": "src/main/java/com/example/animal/domain/animal/PersianCat.java",
       "id": "window-8"
     },
     {
-      "fieldRefs": [{
+      "code": "    @Override\n    public String makeSound() {\n        return name + \" chirps: Chirp! Chirp!\";\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.animal.domain.animal.Animal#name",
         "len": 4,
-        "field": "com.example.animal.domain.animal.Animal#name",
         "line": 16
       }],
-      "code": "    @Override\n    public String makeSound() {\n        return name + \" chirps: Chirp! Chirp!\";\n    }",
       "displayName": "Sparrow # makeSound",
       "startLine": 14,
       "filePath": "src/main/java/com/example/animal/domain/animal/Sparrow.java",
       "id": "window-4"
     }
   ],
-  "fields": {
-    "com.example.animal.controller.AnimalController#animalService": {
-      "endLine": 19,
-      "code": "    private final AnimalService animalService;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "AnimalController # animalService",
-      "filePath": "src/main/java/com/example/animal/controller/AnimalController.java",
-      "startLine": 19,
-      "final": true,
-      "type": "AnimalService",
-      "value": null,
-      "declaringClass": "com.example.animal.controller.AnimalController"
-    },
-    "com.example.animal.service.AnimalService#animals": {
-      "endLine": 15,
-      "code": "    private final List<Animal> animals = new ArrayList<>();",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "AnimalService # animals",
-      "filePath": "src/main/java/com/example/animal/service/AnimalService.java",
-      "startLine": 15,
-      "final": true,
-      "type": "List<Animal>",
-      "value": null,
-      "declaringClass": "com.example.animal.service.AnimalService"
-    },
-    "com.example.animal.domain.animal.Animal#name": {
-      "endLine": 12,
-      "code": "    protected String name;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Animal # name",
-      "filePath": "src/main/java/com/example/animal/domain/animal/Animal.java",
-      "startLine": 12,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.animal.domain.animal.Animal"
-    }
-  },
   "connections": [
     {
       "callLine": 30,
@@ -184,5 +151,50 @@
       "to": "window-8"
     }
   ],
+  "symbols": {
+    "com.example.animal.controller.AnimalController#animalService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "AnimalController # animalService",
+      "line": 19,
+      "filePath": "src/main/java/com/example/animal/controller/AnimalController.java",
+      "final": true,
+      "type": "AnimalService",
+      "value": null,
+      "declaringClass": "com.example.animal.controller.AnimalController"
+    },
+    "com.example.animal.service.AnimalService#animals": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "AnimalService # animals",
+      "line": 15,
+      "filePath": "src/main/java/com/example/animal/service/AnimalService.java",
+      "final": true,
+      "type": "List<Animal>",
+      "value": null,
+      "declaringClass": "com.example.animal.service.AnimalService"
+    },
+    "com.example.animal.domain.animal.Animal#name": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Animal # name",
+      "line": 12,
+      "filePath": "src/main/java/com/example/animal/domain/animal/Animal.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.animal.domain.animal.Animal"
+    },
+    "com.example.animal.domain.animal.Animal": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Animal",
+      "line": 11,
+      "filePath": "src/main/java/com/example/animal/domain/animal/Animal.java"
+    }
+  },
   "autoLayout": true
 }

@@ -1,6 +1,6 @@
 [
   {
-    "label": "delete the declaration window: its fieldRef connection goes, source stays",
+    "label": "delete a leaf: its connection goes, caller stays",
     "input": {
       "connections": [
         {
@@ -11,19 +11,18 @@
         },
         {
           "from": "window-1",
-          "to": "window-field-1",
+          "to": "window-3",
           "callLine": 36,
-          "callEndLine": 36,
-          "kind": "fieldRef"
+          "callEndLine": 36
         }
       ],
       "ids": [
-        "window-field-1"
+        "window-3"
       ]
     },
     "expected": {
       "deleteIds": [
-        "window-field-1"
+        "window-3"
       ],
       "connections": [
         {
@@ -36,7 +35,7 @@
     }
   },
   {
-    "label": "delete the source: declaration window referenced only from it cascades",
+    "label": "delete the caller: callees reached only from it cascade",
     "input": {
       "connections": [
         {
@@ -47,10 +46,9 @@
         },
         {
           "from": "window-1",
-          "to": "window-field-1",
+          "to": "window-3",
           "callLine": 36,
-          "callEndLine": 36,
-          "kind": "fieldRef"
+          "callEndLine": 36
         }
       ],
       "ids": [
@@ -61,28 +59,26 @@
       "deleteIds": [
         "window-1",
         "window-2",
-        "window-field-1"
+        "window-3"
       ],
       "connections": []
     }
   },
   {
-    "label": "declaration referenced from two windows survives deleting one of them",
+    "label": "callee called from two windows survives deleting one of them",
     "input": {
       "connections": [
         {
           "from": "window-1",
-          "to": "window-field-1",
+          "to": "window-3",
           "callLine": 36,
-          "callEndLine": 36,
-          "kind": "fieldRef"
+          "callEndLine": 36
         },
         {
           "from": "window-2",
-          "to": "window-field-1",
+          "to": "window-3",
           "callLine": 23,
-          "callEndLine": 23,
-          "kind": "fieldRef"
+          "callEndLine": 23
         }
       ],
       "ids": [
@@ -96,10 +92,9 @@
       "connections": [
         {
           "from": "window-2",
-          "to": "window-field-1",
+          "to": "window-3",
           "callLine": 23,
-          "callEndLine": 23,
-          "kind": "fieldRef"
+          "callEndLine": 23
         }
       ]
     }

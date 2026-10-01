@@ -1,27 +1,27 @@
 {
   "windows": [
     {
-      "fieldRefs": [
+      "code": "    /**\n     * ★ このメソッドを \"CallCanvas: Open Viewer with File\" で解析すると、\n     *   IService#execute(String, String[], ...) の先が解析されない（不具合）\n     *\n     * 原因: config.getString() の型 (org.apache.commons.configuration.Configuration) が\n     *       tool の --classes に未登録のため facade.solve() が失敗し、\n     *       フォールバックが引数の数のみで誤ったオーバーロードを選択する。\n     *\n     * @param to        送信先アドレス\n     * @param customArgs カスタムパラメーター\n     * @return 処理結果\n     */\n    public boolean doProcess(String to, Map<String, String> customArgs) {\n        // ★ ここで IService#execute(String, String[], ...) を呼び出す\n        // config.getString() の戻り型が facade で解決できないため\n        // call-index.json には execute(String[], String[], ...) と誤って記録される\n        boolean result = service.execute(\n                to,\n                null,\n                customArgs.get(\"title\"),\n                customArgs.get(\"body\"),\n                config.getString(\"name\"),   // ← Configuration は --classes 外 → facade 失敗の原因\n                \"SystemName\",\n                null,\n                customArgs,\n                config.getString(\"key\")         // ← 同上\n        );\n\n        return result;\n    }",
+      "refs": [
         {
           "col": 25,
+          "symbol": "com.example.app.CallerImpl#service",
           "len": 7,
-          "field": "com.example.app.CallerImpl#service",
           "line": 27
         },
         {
           "col": 16,
+          "symbol": "com.example.app.CallerImpl#config",
           "len": 6,
-          "field": "com.example.app.CallerImpl#config",
           "line": 32
         },
         {
           "col": 16,
+          "symbol": "com.example.app.CallerImpl#config",
           "len": 6,
-          "field": "com.example.app.CallerImpl#config",
           "line": 36
         }
       ],
-      "code": "    /**\n     * ★ このメソッドを \"CallCanvas: Open Viewer with File\" で解析すると、\n     *   IService#execute(String, String[], ...) の先が解析されない（不具合）\n     *\n     * 原因: config.getString() の型 (org.apache.commons.configuration.Configuration) が\n     *       tool の --classes に未登録のため facade.solve() が失敗し、\n     *       フォールバックが引数の数のみで誤ったオーバーロードを選択する。\n     *\n     * @param to        送信先アドレス\n     * @param customArgs カスタムパラメーター\n     * @return 処理結果\n     */\n    public boolean doProcess(String to, Map<String, String> customArgs) {\n        // ★ ここで IService#execute(String, String[], ...) を呼び出す\n        // config.getString() の戻り型が facade で解決できないため\n        // call-index.json には execute(String[], String[], ...) と誤って記録される\n        boolean result = service.execute(\n                to,\n                null,\n                customArgs.get(\"title\"),\n                customArgs.get(\"body\"),\n                config.getString(\"name\"),   // ← Configuration は --classes 外 → facade 失敗の原因\n                \"SystemName\",\n                null,\n                customArgs,\n                config.getString(\"key\")         // ← 同上\n        );\n\n        return result;\n    }",
       "displayName": "CallerImpl # doProcess",
       "startLine": 11,
       "filePath": "src/main/java/com/example/app/CallerImpl.java",
@@ -49,34 +49,6 @@
       "id": "window-4"
     }
   ],
-  "fields": {
-    "com.example.app.CallerImpl#service": {
-      "endLine": 9,
-      "code": "    private IService service;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "CallerImpl # service",
-      "filePath": "src/main/java/com/example/app/CallerImpl.java",
-      "startLine": 9,
-      "final": false,
-      "type": "IService",
-      "value": null,
-      "declaringClass": "com.example.app.CallerImpl"
-    },
-    "com.example.app.CallerImpl#config": {
-      "endLine": 42,
-      "code": "    private Configuration config;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "CallerImpl # config",
-      "filePath": "src/main/java/com/example/app/CallerImpl.java",
-      "startLine": 42,
-      "final": false,
-      "type": "Configuration",
-      "value": null,
-      "declaringClass": "com.example.app.CallerImpl"
-    }
-  },
   "connections": [
     {
       "callLine": 27,
@@ -97,5 +69,31 @@
       "to": "window-4"
     }
   ],
+  "symbols": {
+    "com.example.app.CallerImpl#service": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "CallerImpl # service",
+      "line": 9,
+      "filePath": "src/main/java/com/example/app/CallerImpl.java",
+      "final": false,
+      "type": "IService",
+      "value": null,
+      "declaringClass": "com.example.app.CallerImpl"
+    },
+    "com.example.app.CallerImpl#config": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "CallerImpl # config",
+      "line": 42,
+      "filePath": "src/main/java/com/example/app/CallerImpl.java",
+      "final": false,
+      "type": "Configuration",
+      "value": null,
+      "declaringClass": "com.example.app.CallerImpl"
+    }
+  },
   "autoLayout": true
 }

@@ -310,12 +310,30 @@ function findJavaProjectsInWorkspace(): { name: string; path: string }[] {
     return uniqueProjects;
 }
 
+/** Index generation the bundled analyzer writes (CallIndex.CURRENT_VERSION in app/). Bump both together. */
+const CALL_INDEX_VERSION = '1.3';
+
 /**
- * Check if call index exists for a project
+ * Check if a usable call index exists for a project.
+ * An index from another analyzer generation counts as missing so that callers rebuild it in the background
+ * (the analyzer ignores such an index for analysis: e.g. 1.2 has no symbols/refs).
  */
 function indexExists(projectRoot: string): boolean {
-    const indexPath = path.join(projectRoot, '.callcanvas-cache', 'call-index.json');
-    return fs.existsSync(indexPath);
+    const cacheDir = path.join(projectRoot, '.callcanvas-cache');
+    if (!fs.existsSync(path.join(cacheDir, 'call-index.json'))) {
+        return false;
+    }
+    let version: string | undefined;
+    try {
+        version = JSON.parse(fs.readFileSync(path.join(cacheDir, 'call-index.meta'), 'utf-8')).version;
+    } catch {
+        // no/broken meta: an old index (meta has existed since lazy loading) → rebuild
+    }
+    if (version !== CALL_INDEX_VERSION) {
+        outputChannel?.appendLine(`[Auto-Index] Index at ${cacheDir} is version ${version ?? 'unknown'} (expected ${CALL_INDEX_VERSION}), treating as missing`);
+        return false;
+    }
+    return true;
 }
 
 export function activate(context: vscode.ExtensionContext) {

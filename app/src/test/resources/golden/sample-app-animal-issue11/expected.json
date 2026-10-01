@@ -15,13 +15,13 @@
       "id": "window-4"
     },
     {
-      "fieldRefs": [{
+      "code": "    /**\n     * issue11: インターフェース経由の呼び出し\n     * MailServiceInterface#sendMail() → BaseMailService#sendMail() への解決を検証\n     */\n    public void execute() {\n        mailService.sendMail();\n    }",
+      "refs": [{
         "col": 8,
+        "symbol": "com.example.animal.issue11.MailAction#mailService",
         "len": 11,
-        "field": "com.example.animal.issue11.MailAction#mailService",
         "line": 12
       }],
-      "code": "    /**\n     * issue11: インターフェース経由の呼び出し\n     * MailServiceInterface#sendMail() → BaseMailService#sendMail() への解決を検証\n     */\n    public void execute() {\n        mailService.sendMail();\n    }",
       "displayName": "MailAction # execute",
       "startLine": 7,
       "filePath": "src/main/java/com/example/animal/issue11/MailAction.java",
@@ -35,19 +35,6 @@
       "id": "window-2"
     }
   ],
-  "fields": {"com.example.animal.issue11.MailAction#mailService": {
-    "endLine": 5,
-    "code": "    private MailServiceInterface mailService;",
-    "static": false,
-    "enumConstant": false,
-    "displayName": "MailAction # mailService",
-    "filePath": "src/main/java/com/example/animal/issue11/MailAction.java",
-    "startLine": 5,
-    "final": false,
-    "type": "MailServiceInterface",
-    "value": null,
-    "declaringClass": "com.example.animal.issue11.MailAction"
-  }},
   "connections": [
     {
       "callLine": 12,
@@ -68,5 +55,17 @@
       "to": "window-4"
     }
   ],
+  "symbols": {"com.example.animal.issue11.MailAction#mailService": {
+    "static": false,
+    "enumConstant": false,
+    "kind": "field",
+    "displayName": "MailAction # mailService",
+    "line": 5,
+    "filePath": "src/main/java/com/example/animal/issue11/MailAction.java",
+    "final": false,
+    "type": "MailServiceInterface",
+    "value": null,
+    "declaringClass": "com.example.animal.issue11.MailAction"
+  }},
   "autoLayout": true
 }

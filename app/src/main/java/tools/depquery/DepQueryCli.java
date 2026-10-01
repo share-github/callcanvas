@@ -308,10 +308,18 @@ public class DepQueryCli {
             endTiming("Index Load", indexLoadStart);
             debug("Failed to load call index: " + e.getMessage());
         }
+        // 世代違いのインデックス（1.2 以前は refs/symbols を持たない）は呼び出しの解析に使わずソースを解析する。
+        // メソッド一覧は世代で変わらないので root-class の展開にだけ使う（再構築は拡張・--build-index 側が行う）
+        CallIndex listingIndex = callIndex;
+        if (callIndex != null && !CallIndex.CURRENT_VERSION.equals(callIndex.version)) {
+            info("[INFO] Call index was built by an older analyzer (version " + callIndex.version
+                    + "). Analyzing sources instead; rebuild the index (--build-index) to use it again.");
+            callIndex = null;
+        }
         final CallIndex finalCallIndex = callIndex;
 
         // root-class 指定時のみ cfg.roots をクラス内メソッド一覧で上書き（CLI の --root 入力とは別物）
-        expandRootClassIfSet(cfg, finalCallIndex);
+        expandRootClassIfSet(cfg, listingIndex);
 
         if (cfg.roots.isEmpty()) {
             System.err.println("""
@@ -474,23 +482,23 @@ public class DepQueryCli {
         // CallCanvas 形式（コード付き JSON）
         if (cfg.formats.contains("callcanvas")) {
             long callcanvasStart = startTiming("CallCanvas Output");
-            // インデックス無しでは、フィールド参照の宣言が未解析のファイルにあれば解析しておく
+            // インデックス無しでは、型・フィールド参照の宣言が未解析のファイルにあれば解析しておく
             if (onDemandIndexer != null) {
-                Set<String> fieldKeys = new HashSet<>();
+                Set<String> symbolKeys = new HashSet<>();
                 for (var node : graph.nodes.values()) {
                     if (node.lineStart <= 0) continue;
-                    for (String ref : node.fieldRefs) {
-                        var r = FieldRef.decode(ref);
-                        if (r != null) fieldKeys.add(r.field());
+                    for (String ref : node.refs) {
+                        var r = SymbolRef.decode(ref);
+                        if (r != null) symbolKeys.add(r.symbol());
                     }
                 }
-                onDemandIndexer.ensureFieldDeclarations(fieldKeys);
+                onDemandIndexer.ensureSymbolDeclarations(symbolKeys);
             }
             // code は toCallCanvasJson 内でファイルから Javadoc 含めて取得するためここでは埋めない
             JSONObject callcanvasJson = toCallCanvasJson(graph, cfg.srcRoots, resolvedRoots, cfg.workspace,
                     cfg.windowWidth,
                     onDemand ? null : bfsIndex.symbolIndex,
-                    bfsIndex::getField);
+                    bfsIndex::getSymbol);
 
             // 動的ファイル名生成（rootClass 時は 0 件で既に exit しているため、この分岐では resolvedRoots を参照しない）
             String callcanvasFilename;

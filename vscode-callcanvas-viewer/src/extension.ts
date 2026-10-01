@@ -10,7 +10,6 @@ import {
     buildReanalysisPlan,
     pickRootWindow,
     preserveLineComments,
-    preserveFieldWindows,
     readAnalysisRecord,
     summarizeReanalysis,
     withAnalysisMetadata
@@ -829,10 +828,8 @@ async function reanalyzeRootMethod(
         return;
     }
 
-    // Field declaration windows the user opened are kept when their referencing window is reproduced
-    const carriedData = preserveFieldWindows(currentJson, preserveLineComments(currentJson, result.data));
-    const summary = summarizeReanalysis(currentJson, carriedData);
-    const newData = withAnalysisMetadata(carriedData, {
+    const summary = summarizeReanalysis(currentJson, result.data);
+    const newData = withAnalysisMetadata(preserveLineComments(currentJson, result.data), {
         language: lang,
         root: plan.rootClass ? undefined : (result.signature || plan.methodSignature || undefined),
         rootClass: plan.rootClass || undefined,

@@ -1,0 +1,532 @@
+{
+  "symbolIndex": {
+    "Kind.ROUND": {
+      "qualifier": "com.example.typerefs.Kind",
+      "type": "enum",
+      "value": "0"
+    },
+    "LIMIT": {
+      "qualifier": "com.example.typerefs.Registry",
+      "type": "int",
+      "value": "8"
+    },
+    "DEPTH": {
+      "qualifier": "com.example.typerefs.Outer.Inner.Deep",
+      "type": "int",
+      "value": "2"
+    },
+    "Kind.SQUARE": {
+      "qualifier": "com.example.typerefs.Kind",
+      "type": "enum",
+      "value": "1"
+    }
+  },
+  "windows": [
+    {
+      "code": "    @Tag(\"make\")\n    public Shape make(Size size, List<Circle> circles) throws ShapeException {\n        Circle c = new Circle(size.w());\n        Shape s = (Shape) c;\n        if (s instanceof Circle) {\n            Registry.register(c);\n        }\n        int n = Registry.LIMIT + Outer.Inner.Deep.DEPTH;\n        Map<String, Outer.Inner> byName = new java.util.HashMap<>();\n        com.example.typerefs.Circle full = c;\n        Outer.Inner.Deep deep = new Outer.Inner.Deep();\n        circles.forEach(Circle::area);\n        List<String> names = new ArrayList<>();\n        try {\n            names.add(String.valueOf(n + byName.size() + full.area() + deep.hashCode()));\n        } catch (ShapeException e) {\n            throw e;\n        }\n        Shape anon = new Shape() {\n            public double area() { return 0; }\n        };\n        class Local extends Circle implements Shape {\n            Local() { super(1); }\n        }\n        Kind kind = Kind.ROUND;\n        return kind == Kind.SQUARE ? anon : new Local();\n    }",
+      "refs": [
+        {
+          "col": 5,
+          "symbol": "com.example.typerefs.Tag",
+          "len": 3,
+          "line": 9
+        },
+        {
+          "col": 11,
+          "symbol": "com.example.typerefs.Shape",
+          "len": 5,
+          "line": 10
+        },
+        {
+          "col": 22,
+          "symbol": "com.example.typerefs.Size",
+          "len": 4,
+          "line": 10
+        },
+        {
+          "col": 38,
+          "symbol": "com.example.typerefs.Circle",
+          "len": 6,
+          "line": 10
+        },
+        {
+          "col": 62,
+          "symbol": "com.example.typerefs.ShapeException",
+          "len": 14,
+          "line": 10
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.typerefs.Circle",
+          "len": 6,
+          "line": 11
+        },
+        {
+          "col": 23,
+          "symbol": "com.example.typerefs.Circle",
+          "len": 6,
+          "line": 11
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.typerefs.Shape",
+          "len": 5,
+          "line": 12
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.typerefs.Shape",
+          "len": 5,
+          "line": 12
+        },
+        {
+          "col": 25,
+          "symbol": "com.example.typerefs.Circle",
+          "len": 6,
+          "line": 13
+        },
+        {
+          "col": 12,
+          "symbol": "com.example.typerefs.Registry",
+          "len": 8,
+          "line": 14
+        },
+        {
+          "col": 16,
+          "symbol": "com.example.typerefs.Registry",
+          "len": 8,
+          "line": 16
+        },
+        {
+          "col": 25,
+          "symbol": "com.example.typerefs.Registry#LIMIT",
+          "len": 5,
+          "line": 16
+        },
+        {
+          "col": 33,
+          "symbol": "com.example.typerefs.Outer",
+          "len": 5,
+          "line": 16
+        },
+        {
+          "col": 39,
+          "symbol": "com.example.typerefs.Outer.Inner",
+          "len": 5,
+          "line": 16
+        },
+        {
+          "col": 45,
+          "symbol": "com.example.typerefs.Outer.Inner.Deep",
+          "len": 4,
+          "line": 16
+        },
+        {
+          "col": 50,
+          "symbol": "com.example.typerefs.Outer.Inner.Deep#DEPTH",
+          "len": 5,
+          "line": 16
+        },
+        {
+          "col": 20,
+          "symbol": "com.example.typerefs.Outer",
+          "len": 5,
+          "line": 17
+        },
+        {
+          "col": 26,
+          "symbol": "com.example.typerefs.Outer.Inner",
+          "len": 5,
+          "line": 17
+        },
+        {
+          "col": 29,
+          "symbol": "com.example.typerefs.Circle",
+          "len": 6,
+          "line": 18
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.typerefs.Outer",
+          "len": 5,
+          "line": 19
+        },
+        {
+          "col": 14,
+          "symbol": "com.example.typerefs.Outer.Inner",
+          "len": 5,
+          "line": 19
+        },
+        {
+          "col": 20,
+          "symbol": "com.example.typerefs.Outer.Inner.Deep",
+          "len": 4,
+          "line": 19
+        },
+        {
+          "col": 36,
+          "symbol": "com.example.typerefs.Outer",
+          "len": 5,
+          "line": 19
+        },
+        {
+          "col": 42,
+          "symbol": "com.example.typerefs.Outer.Inner",
+          "len": 5,
+          "line": 19
+        },
+        {
+          "col": 48,
+          "symbol": "com.example.typerefs.Outer.Inner.Deep",
+          "len": 4,
+          "line": 19
+        },
+        {
+          "col": 24,
+          "symbol": "com.example.typerefs.Circle",
+          "len": 6,
+          "line": 20
+        },
+        {
+          "col": 17,
+          "symbol": "com.example.typerefs.ShapeException",
+          "len": 14,
+          "line": 24
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.typerefs.Shape",
+          "len": 5,
+          "line": 27
+        },
+        {
+          "col": 25,
+          "symbol": "com.example.typerefs.Shape",
+          "len": 5,
+          "line": 27
+        },
+        {
+          "col": 28,
+          "symbol": "com.example.typerefs.Circle",
+          "len": 6,
+          "line": 30
+        },
+        {
+          "col": 46,
+          "symbol": "com.example.typerefs.Shape",
+          "len": 5,
+          "line": 30
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.typerefs.Kind",
+          "len": 4,
+          "line": 33
+        },
+        {
+          "col": 20,
+          "symbol": "com.example.typerefs.Kind",
+          "len": 4,
+          "line": 33
+        },
+        {
+          "col": 25,
+          "symbol": "com.example.typerefs.Kind#ROUND",
+          "len": 5,
+          "line": 33
+        },
+        {
+          "col": 23,
+          "symbol": "com.example.typerefs.Kind",
+          "len": 4,
+          "line": 34
+        },
+        {
+          "col": 28,
+          "symbol": "com.example.typerefs.Kind#SQUARE",
+          "len": 6,
+          "line": 34
+        }
+      ],
+      "displayName": "TypeRefs # make",
+      "filePath": "src/main/java/com/example/typerefs/TypeRefs.java",
+      "startLine": 9,
+      "id": "window-1",
+      "position": {
+        "top": 40,
+        "left": 40,
+        "width": 600,
+        "height": 320
+      }
+    },
+    {
+      "code": "    public Circle(int r) {\n        this.r = r;\n    }",
+      "refs": [
+        {
+          "col": 13,
+          "symbol": "com.example.typerefs.Circle#r",
+          "len": 1,
+          "line": 7
+        }
+      ],
+      "displayName": "Circle # Circle",
+      "filePath": "src/main/java/com/example/typerefs/Circle.java",
+      "startLine": 6,
+      "id": "window-2",
+      "position": {
+        "top": 40,
+        "left": 740,
+        "width": 600,
+        "height": 320
+      }
+    },
+    {
+      "code": "    public static void register(Shape shape) {\n        shape.area();\n    }",
+      "refs": [
+        {
+          "col": 32,
+          "symbol": "com.example.typerefs.Shape",
+          "len": 5,
+          "line": 8
+        }
+      ],
+      "displayName": "Registry # register",
+      "filePath": "src/main/java/com/example/typerefs/Registry.java",
+      "startLine": 8,
+      "id": "window-3",
+      "position": {
+        "top": 40,
+        "left": 1440,
+        "width": 600,
+        "height": 320
+      }
+    },
+    {
+      "code": "    @Override\n    public double area() {\n        return Math.PI * r * r;\n    }",
+      "refs": [
+        {
+          "col": 25,
+          "symbol": "com.example.typerefs.Circle#r",
+          "len": 1,
+          "line": 12
+        },
+        {
+          "col": 29,
+          "symbol": "com.example.typerefs.Circle#r",
+          "len": 1,
+          "line": 12
+        }
+      ],
+      "displayName": "Circle # area",
+      "filePath": "src/main/java/com/example/typerefs/Circle.java",
+      "startLine": 10,
+      "id": "window-4",
+      "position": {
+        "top": 40,
+        "left": 40,
+        "width": 600,
+        "height": 320
+      }
+    },
+    {
+      "code": "    double area();",
+      "displayName": "Shape # area",
+      "filePath": "src/main/java/com/example/typerefs/Shape.java",
+      "startLine": 4,
+      "id": "window-5",
+      "position": {
+        "top": 40,
+        "left": 740,
+        "width": 600,
+        "height": 320
+      }
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 9,
+      "from": "window-3",
+      "callEndLine": 9,
+      "to": "window-5"
+    },
+    {
+      "callLine": 4,
+      "from": "window-5",
+      "callEndLine": 4,
+      "to": "window-4"
+    },
+    {
+      "callLine": 11,
+      "from": "window-1",
+      "callEndLine": 11,
+      "to": "window-2"
+    },
+    {
+      "callLine": 14,
+      "from": "window-1",
+      "callEndLine": 14,
+      "to": "window-3"
+    },
+    {
+      "callLine": 20,
+      "from": "window-1",
+      "callEndLine": 20,
+      "to": "window-4"
+    },
+    {
+      "callLine": 23,
+      "from": "window-1",
+      "callEndLine": 23,
+      "to": "window-4"
+    },
+    {
+      "callLine": 31,
+      "from": "window-1",
+      "callEndLine": 31,
+      "to": "window-2"
+    }
+  ],
+  "symbols": {
+    "com.example.typerefs.Kind#SQUARE": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "Kind # SQUARE",
+      "line": 5,
+      "filePath": "src/main/java/com/example/typerefs/Kind.java",
+      "final": true,
+      "type": "Kind",
+      "value": null,
+      "declaringClass": "com.example.typerefs.Kind"
+    },
+    "com.example.typerefs.Circle": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Circle",
+      "line": 3,
+      "filePath": "src/main/java/com/example/typerefs/Circle.java"
+    },
+    "com.example.typerefs.Tag": {
+      "typeKind": "annotation",
+      "kind": "type",
+      "displayName": "Tag",
+      "line": 7,
+      "filePath": "src/main/java/com/example/typerefs/Tag.java"
+    },
+    "com.example.typerefs.Outer.Inner.Deep": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Outer.Inner.Deep",
+      "line": 5,
+      "filePath": "src/main/java/com/example/typerefs/Outer.java"
+    },
+    "com.example.typerefs.Circle#r": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Circle # r",
+      "line": 4,
+      "filePath": "src/main/java/com/example/typerefs/Circle.java",
+      "final": true,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.typerefs.Circle"
+    },
+    "com.example.typerefs.Registry#LIMIT": {
+      "static": true,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Registry # LIMIT",
+      "line": 4,
+      "filePath": "src/main/java/com/example/typerefs/Registry.java",
+      "final": true,
+      "type": "int",
+      "value": "8",
+      "declaringClass": "com.example.typerefs.Registry"
+    },
+    "com.example.typerefs.Kind": {
+      "typeKind": "enum",
+      "kind": "type",
+      "displayName": "Kind",
+      "line": 3,
+      "filePath": "src/main/java/com/example/typerefs/Kind.java"
+    },
+    "com.example.typerefs.Outer.Inner": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Outer.Inner",
+      "line": 4,
+      "filePath": "src/main/java/com/example/typerefs/Outer.java"
+    },
+    "com.example.typerefs.Shape": {
+      "typeKind": "interface",
+      "kind": "type",
+      "displayName": "Shape",
+      "line": 3,
+      "filePath": "src/main/java/com/example/typerefs/Shape.java"
+    },
+    "com.example.typerefs.Kind#ROUND": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "Kind # ROUND",
+      "line": 4,
+      "filePath": "src/main/java/com/example/typerefs/Kind.java",
+      "final": true,
+      "type": "Kind",
+      "value": null,
+      "declaringClass": "com.example.typerefs.Kind"
+    },
+    "com.example.typerefs.Outer.Inner.Deep#DEPTH": {
+      "static": true,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Deep # DEPTH",
+      "line": 6,
+      "filePath": "src/main/java/com/example/typerefs/Outer.java",
+      "final": true,
+      "type": "int",
+      "value": "2",
+      "declaringClass": "com.example.typerefs.Outer.Inner.Deep"
+    },
+    "com.example.typerefs.Registry": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Registry",
+      "line": 3,
+      "filePath": "src/main/java/com/example/typerefs/Registry.java"
+    },
+    "com.example.typerefs.Outer": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Outer",
+      "line": 3,
+      "filePath": "src/main/java/com/example/typerefs/Outer.java"
+    },
+    "com.example.typerefs.ShapeException": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "ShapeException",
+      "line": 3,
+      "filePath": "src/main/java/com/example/typerefs/ShapeException.java"
+    },
+    "com.example.typerefs.Size": {
+      "typeKind": "record",
+      "kind": "type",
+      "displayName": "Size",
+      "line": 3,
+      "filePath": "src/main/java/com/example/typerefs/Size.java"
+    }
+  },
+  "autoLayout": true,
+  "metadata": {
+    "analysis": {
+      "language": "java",
+      "rootFilePath": "src/main/java/com/example/typerefs/TypeRefs.java",
+      "direction": "outgoing",
+      "depth": 10,
+      "root": "com.example.typerefs.TypeRefs#make(com.example.typerefs.Size,java.util.List<com.example.typerefs.Circle>)",
+      "rootWindowId": "window-1"
+    }
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "autoLayout": false,
+  "symbolIndex": {
+    "FAILED": {
+      "qualifier": "OrderStatus",
+      "type": "OrderStatus"
+    }
+  },
+  "symbols": {
+    "com.example.domain.Order": {
+      "kind": "type",
+      "displayName": "Order",
+      "filePath": "module-domain/src/main/java/com/example/domain/Order.java",
+      "line": 5,
+      "typeKind": "class"
+    },
+    "com.example.domain.PaymentResult": {
+      "kind": "type",
+      "displayName": "PaymentResult",
+      "filePath": "module-domain/src/main/java/com/example/domain/PaymentResult.java",
+      "line": 3,
+      "typeKind": "class"
+    },
+    "com.example.domain.OrderStatus": {
+      "kind": "type",
+      "displayName": "OrderStatus",
+      "filePath": "module-domain/src/main/java/com/example/domain/OrderStatus.java",
+      "line": 3,
+      "typeKind": "enum"
+    },
+    "com.example.app.controller.OrderController#orderService": {
+      "kind": "field",
+      "displayName": "OrderController # orderService",
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "line": 16,
+      "type": "OrderService",
+      "declaringClass": "com.example.app.controller.OrderController",
+      "static": false,
+      "final": true,
+      "enumConstant": false,
+      "value": null
+    },
+    "com.example.service.OrderService#orderProcessor": {
+      "kind": "field",
+      "displayName": "OrderService # orderProcessor",
+      "filePath": "module-service/src/main/java/com/example/service/OrderService.java",
+      "line": 8,
+      "type": "OrderProcessor",
+      "declaringClass": "com.example.service.OrderService",
+      "static": false,
+      "final": true,
+      "enumConstant": false,
+      "value": null
+    },
+    "com.example.service.OrderService#paymentService": {
+      "kind": "field",
+      "displayName": "OrderService # paymentService",
+      "filePath": "module-service/src/main/java/com/example/service/OrderService.java",
+      "line": 9,
+      "type": "PaymentService",
+      "declaringClass": "com.example.service.OrderService",
+      "static": false,
+      "final": true,
+      "enumConstant": false,
+      "value": null
+    },
+    "com.example.domain.OrderStatus#FAILED": {
+      "kind": "field",
+      "displayName": "OrderStatus # FAILED",
+      "filePath": "module-domain/src/main/java/com/example/domain/OrderStatus.java",
+      "line": 8,
+      "type": "OrderStatus",
+      "declaringClass": "com.example.domain.OrderStatus",
+      "static": true,
+      "final": true,
+      "enumConstant": true,
+      "value": null
+    }
+  },
+  "windows": [
+    {
+      "id": "window-1",
+      "displayName": "OrderController # handleNewOrder",
+      "filePath": "module-app/src/main/java/com/example/app/controller/OrderController.java",
+      "startLine": 31,
+      "code": "    public Order handleNewOrder(String productName, String amount, String paymentMethod) {\n        Order order = createOrder(productName, amount);\n        return orderService.createAndProcessOrder(order, paymentMethod);\n    }",
+      "highlightLines": [
+        33
+      ],
+      "position": {
+        "top": 80,
+        "left": 40,
+        "width": 600,
+        "height": 157
+      },
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "refs": [
+        {
+          "line": 31,
+          "col": 11,
+          "len": 5,
+          "symbol": "com.example.domain.Order"
+        },
+        {
+          "line": 32,
+          "col": 8,
+          "len": 5,
+          "symbol": "com.example.domain.Order"
+        },
+        {
+          "line": 33,
+          "col": 15,
+          "len": 12,
+          "symbol": "com.example.app.controller.OrderController#orderService"
+        }
+      ]
+    },
+    {
+      "id": "window-2",
+      "displayName": "OrderService # createAndProcessOrder",
+      "filePath": "module-service/src/main/java/com/example/service/OrderService.java",
+      "startLine": 20,
+      "code": "    public Order createAndProcessOrder(Order order, String paymentMethod) {\n        // Validate\n        orderProcessor.validate(order);\n\n        // Process payment\n        PaymentResult paymentResult = paymentService.processPayment(order, paymentMethod);\n        if (!paymentResult.isSuccess()) {\n            order.setStatus(OrderStatus.FAILED);\n            throw new RuntimeException(\"Payment failed: \" + paymentResult.getMessage());\n        }\n\n        // Process order\n        orderProcessor.process(order);\n\n        notifyCompletion(order);\n        return order;\n    }",
+      "highlightLines": [],
+      "position": {
+        "top": 80,
+        "left": 740,
+        "width": 600,
+        "height": 420
+      },
+      "collapsed": false,
+      "visible": true,
+      "fullHeight": false,
+      "refs": [
+        {
+          "line": 20,
+          "col": 11,
+          "len": 5,
+          "symbol": "com.example.domain.Order"
+        },
+        {
+          "line": 20,
+          "col": 39,
+          "len": 5,
+          "symbol": "com.example.domain.Order"
+        },
+        {
+          "line": 22,
+          "col": 8,
+          "len": 14,
+          "symbol": "com.example.service.OrderService#orderProcessor"
+        },
+        {
+          "line": 25,
+          "col": 8,
+          "len": 13,
+          "symbol": "com.example.domain.PaymentResult"
+        },
+        {
+          "line": 25,
+          "col": 38,
+          "len": 14,
+          "symbol": "com.example.service.OrderService#paymentService"
+        },
+        {
+          "line": 27,
+          "col": 28,
+          "len": 11,
+          "symbol": "com.example.domain.OrderStatus"
+        },
+        {
+          "line": 27,
+          "col": 40,
+          "len": 6,
+          "symbol": "com.example.domain.OrderStatus#FAILED"
+        },
+        {
+          "line": 32,
+          "col": 8,
+          "len": 14,
+          "symbol": "com.example.service.OrderService#orderProcessor"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "window-1",
+      "to": "window-2",
+      "callLine": 33,
+      "callEndLine": 33
+    }
+  ]
+}

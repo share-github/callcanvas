@@ -187,82 +187,91 @@ const testRegistry = {
         fn: ext.summarizeReanalysis,
         args: (input) => [input.oldJson, input.newData],
     },
-    // ---- Field references (fieldRefs → declaration windows) ----
+    // ---- Go to Declaration (symbols / refs) ----
     'decorate-code-line-tokens': {
         fn: wv.decorateCodeLineTokens,
         args: (input) => {
             const sym = input.symbolIndex || null;
             const sortedKeys = sym ? Object.keys(sym).sort((a, b) => b.length - a.length) : [];
-            return [input.html, input.refs, input.fields, sym, sortedKeys];
+            return [input.html, input.refs, input.symbols, sym, sortedKeys];
         },
     },
-    'plan-field-declaration': {
-        fn: wv.planFieldDeclaration,
-        args: (input) => [input.data, input.sourceWindowId, input.lineNumber, input.fieldKey, input.newId],
-        clone: true,
+    // Ctrl/⌘+click: the token under the click, else the one pressed at mousedown when the click fell
+    // back to .code-line (line nodes replaced by the selection-highlight clear / window moved mid-click)
+    'resolve-symbol-ref-click': {
+        fn: wv.resolveSymbolRefClick,
+        args: (input) => [input.clickSymbol, input.pressed, input.click],
     },
     'compute-window-deletion': {
         fn: wv.computeWindowDeletion,
         args: (input) => [input.connections, input.ids],
         clone: true,
     },
-    'merge-field-data': {
-        fn: (data, newData, idMapping) => {
-            const result = wv.mergeFieldData(data, newData, idMapping);
-            return { result, data };
-        },
-        args: (input) => [input.data, input.newData, input.idMapping],
-        clone: true,
-    },
-    'preserve-field-windows': {
-        fn: ext.preserveFieldWindows,
-        args: (input) => [input.oldJson, input.newData],
-        clone: true,
-    },
-    // Click → create declaration window + connection, 2nd click selects it, save → reload restores
-    // it (and the tokens), deleting the declaration window drops its connection.
-    'field-ref-flow': {
+    // Ctrl/⌘+click / "Go to Declaration" on each token: openFile with the declaration's filePath + line
+    // is posted, the canvas (save payload) is unchanged; unknown symbol → toast only; Export HTML → nothing.
+    'go-to-declaration-flow': {
         fn: (input) => {
             const data = {
                 ...input.canvas,
                 windows: input.canvas.windows.map(w => wv.normalizeWindowData(w)),
                 connections: input.canvas.connections.slice(),
             };
-            const steps = input.clicks.map(click => {
-                const plan = wv.planFieldDeclaration(data, click.sourceWindowId, click.lineNumber, click.fieldKey, click.newId);
-                if (plan.action === 'create') {
-                    data.windows.push(wv.normalizeWindowData(plan.window));
-                    data.connections.push(plan.connection);
-                    return { action: plan.action, windowId: plan.window.id, connection: plan.connection };
-                }
-                return plan;
+            data._symbolKeys = Object.keys(data.symbolIndex || {}).sort((a, b) => b.length - a.length);
+            const before = JSON.stringify(wv.buildSaveData(data));
+            const click = (symbolKey, exportMode) => {
+                const posted = [];
+                const toasts = [];
+                wv.goToDeclaration(data, symbolKey, { postMessage: m => posted.push(m) },
+                    (msg, type) => toasts.push({ msg, type }), exportMode === true);
+                return { symbol: symbolKey, posted, toasts };
+            };
+            // the symbols a click can reach = the data-symbol of the rendered tokens
+            const tokenSymbols = [];
+            data.windows.forEach(w => {
+                const byLine = wv.groupRefsByLine(w.refs);
+                w.code.forEach(line => {
+                    const html = wv.decorateCodeLineTokens(line.content, byLine.get(line.line), data.symbols,
+                        data.symbolIndex, data._symbolKeys);
+                    const re = /data-symbol="([^"]*)"/g;
+                    let m;
+                    while ((m = re.exec(html)) !== null) tokenSymbols.push(m[1]);
+                });
             });
+            const clicks = tokenSymbols.map(k => click(k));
+            const unknown = click('com.example.Missing');
+            const exported = click(tokenSymbols[0], true);
+            const after = JSON.stringify(wv.buildSaveData(data));
+            return { clicks, unknown, exported, canvasUnchanged: before === after };
+        },
+        args: (input) => [input],
+        clone: true,
+    },
+    // Analyze Next Level merge: symbols are merged (incoming wins), the source / duplicate windows adopt
+    // the result's refs (only when they have none), and symbols + refs survive save → reload (tokens).
+    'merge-symbols-flow': {
+        fn: (input) => {
+            const data = {
+                ...input.canvas,
+                windows: input.canvas.windows.map(w => wv.normalizeWindowData(w)),
+            };
+            const changedSymbols = wv.mergeSymbols(data, input.newData);
+            const adopted = wv.adoptWindowRefs(data, input.newData, input.idMapping);
             const saved = wv.buildSaveData(data);
             const reloaded = { ...saved, windows: saved.windows.map(w => wv.normalizeWindowData(w)) };
-            const src = reloaded.windows.find(w => w.id === 'window-1');
-            const refsByLine = wv.groupFieldRefsByLine(src.fieldRefs);
-            const line36 = src.code.find(l => l.line === 36).content;
-            const html36 = wv.decorateCodeLineTokens(line36, refsByLine.get(36), reloaded.fields, null, []);
-            const deletion = wv.computeWindowDeletion(reloaded.connections, [input.deleteId]);
+            const rendered = {};
+            reloaded.windows.forEach(w => {
+                const byLine = wv.groupRefsByLine(w.refs);
+                rendered[w.id] = w.code
+                    .filter(l => byLine.has(l.line))
+                    .map(l => wv.decorateCodeLineTokens(l.content, byLine.get(l.line), reloaded.symbols, null, []));
+            });
             return {
-                steps,
-                saved: {
-                    fieldKeys: Object.keys(saved.fields || {}),
-                    fieldWindows: saved.windows
-                        .filter(w => w.windowType === 'field')
-                        .map(w => ({ id: w.id, windowType: w.windowType, field: w.field, displayName: w.displayName, filePath: w.filePath, startLine: w.startLine, code: w.code })),
-                    sourceFieldRefCount: (saved.windows.find(w => w.id === 'window-1').fieldRefs || []).length,
-                    connections: saved.connections,
-                },
-                afterReload: {
-                    goToAgain: wv.planFieldDeclaration(reloaded, 'window-1', 36, input.clicks[0].fieldKey, 'window-field-Z'),
-                    tokenizedLine36: html36,
-                },
-                afterDeleteDeclaration: {
-                    deleteIds: deletion.deleteIds,
-                    windowsLeft: reloaded.windows.filter(w => !deletion.deleteIds.includes(w.id)).map(w => w.id),
-                    connections: deletion.connections,
-                },
+                changedSymbols,
+                adopted,
+                symbolKeys: Object.keys(data.symbols || {}).sort(),
+                savedSymbols: saved.symbols || null,
+                savedRefs: Object.fromEntries(saved.windows.map(w => [w.id, w.refs || null])),
+                renderedAfterReload: rendered,
             };
         },
         args: (input) => [input],
@@ -318,7 +327,7 @@ const testRegistry = {
             return {
                 savedHasSymbolIndex: 'symbolIndex' in saved,
                 savedHasDerivedKeys: '_symbolKeys' in saved,
-                savedFieldKeys: Object.keys(saved.fields || {}),
+                savedSymbolKeys: Object.keys(saved.symbols || {}),
                 symbolIndexAfterReload: reloaded.symbolIndex || null,
                 renderedLine: keys.length > 0 ? wv.wrapConstantTokens(line, reloaded.symbolIndex, keys) : line,
             };

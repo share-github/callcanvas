@@ -384,8 +384,8 @@ public class GoldenFileUpdater {
                 if (window.has("collapsed")) {
                     normalizedWindow.put("collapsed", window.getBoolean("collapsed"));
                 }
-                if (window.has("fieldRefs")) {
-                    normalizedWindow.put("fieldRefs", window.getJSONArray("fieldRefs"));
+                if (window.has("refs")) {
+                    normalizedWindow.put("refs", window.getJSONArray("refs"));
                 }
                 
                 // ファイルパスを正規化（ワークスペースルートを除去）
@@ -417,18 +417,18 @@ public class GoldenFileUpdater {
             normalized.put("symbolIndex", json.getJSONObject("symbolIndex"));
         }
 
-        // fields（filePath はウィンドウと同じくワークスペースルートを除去）
-        if (json.has("fields")) {
-            JSONObject fields = json.getJSONObject("fields");
+        // symbols（filePath はウィンドウと同じくワークスペースルートを除去）
+        if (json.has("symbols")) {
+            JSONObject symbols = json.getJSONObject("symbols");
             JSONObject normalizedFields = new JSONObject();
-            for (String key : fields.keySet()) {
-                JSONObject f = new JSONObject(fields.getJSONObject(key).toString());
+            for (String key : symbols.keySet()) {
+                JSONObject f = new JSONObject(symbols.getJSONObject(key).toString());
                 if (f.has("filePath")) {
                     f.put("filePath", f.getString("filePath").replace(workspaceRoot.toString() + "/", ""));
                 }
                 normalizedFields.put(key, f);
             }
-            normalized.put("fields", normalizedFields);
+            normalized.put("symbols", normalizedFields);
         }
 
         return normalized;

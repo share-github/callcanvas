@@ -2,131 +2,183 @@
   "windows": [
     {
       "code": "    private void executeProcessing(Order order) {\n        System.out.println(\"Processing order: \" + order.getId());\n    }",
+      "refs": [{
+        "col": 35,
+        "symbol": "com.example.domain.Order",
+        "len": 5,
+        "line": 26
+      }],
       "displayName": "DefaultOrderProcessor # executeProcessing",
       "startLine": 26,
       "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
       "id": "window-22"
     },
     {
-      "fieldRefs": [
+      "code": "    @Override\n    public void process(Order order) {\n        order.setStatus(OrderStatus.PROCESSING);\n        executeProcessing(order);\n        order.setStatus(OrderStatus.COMPLETED);\n    }",
+      "refs": [
         {
-          "col": 36,
-          "len": 10,
-          "field": "com.example.domain.OrderStatus#PROCESSING",
+          "col": 24,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 20
+        },
+        {
+          "col": 24,
+          "symbol": "com.example.domain.OrderStatus",
+          "len": 11,
           "line": 21
         },
         {
           "col": 36,
+          "symbol": "com.example.domain.OrderStatus#PROCESSING",
+          "len": 10,
+          "line": 21
+        },
+        {
+          "col": 24,
+          "symbol": "com.example.domain.OrderStatus",
+          "len": 11,
+          "line": 23
+        },
+        {
+          "col": 36,
+          "symbol": "com.example.domain.OrderStatus#COMPLETED",
           "len": 9,
-          "field": "com.example.domain.OrderStatus#COMPLETED",
           "line": 23
         }
       ],
-      "code": "    @Override\n    public void process(Order order) {\n        order.setStatus(OrderStatus.PROCESSING);\n        executeProcessing(order);\n        order.setStatus(OrderStatus.COMPLETED);\n    }",
       "displayName": "DefaultOrderProcessor # process",
       "startLine": 19,
       "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
       "id": "window-13"
     },
     {
-      "fieldRefs": [{
-        "col": 36,
-        "len": 9,
-        "field": "com.example.domain.OrderStatus#VALIDATED",
-        "line": 16
-      }],
       "code": "    @Override\n    public void validate(Order order) {\n        if (order.getProductName() == null || order.getProductName().isBlank()) {\n            throw new IllegalArgumentException(\"Product name is required\");\n        }\n        if (order.getAmount() == null || order.getAmount().signum() <= 0) {\n            throw new IllegalArgumentException(\"Amount must be positive\");\n        }\n        order.setStatus(OrderStatus.VALIDATED);\n    }",
+      "refs": [
+        {
+          "col": 25,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 9
+        },
+        {
+          "col": 24,
+          "symbol": "com.example.domain.OrderStatus",
+          "len": 11,
+          "line": 16
+        },
+        {
+          "col": 36,
+          "symbol": "com.example.domain.OrderStatus#VALIDATED",
+          "len": 9,
+          "line": 16
+        }
+      ],
       "displayName": "DefaultOrderProcessor # validate",
       "startLine": 8,
       "filePath": "src/main/java/com/example/service/DefaultOrderProcessor.java",
       "id": "window-7"
     },
     {
-      "fieldRefs": [
+      "code": "    public Order(Long id, String productName, BigDecimal amount) {\n        this.id = id;\n        this.productName = productName;\n        this.amount = amount;\n        this.status = OrderStatus.PENDING;\n    }",
+      "refs": [
         {
           "col": 13,
+          "symbol": "com.example.domain.Order#id",
           "len": 2,
-          "field": "com.example.domain.Order#id",
           "line": 16
         },
         {
           "col": 13,
+          "symbol": "com.example.domain.Order#productName",
           "len": 11,
-          "field": "com.example.domain.Order#productName",
           "line": 17
         },
         {
           "col": 13,
+          "symbol": "com.example.domain.Order#amount",
           "len": 6,
-          "field": "com.example.domain.Order#amount",
           "line": 18
         },
         {
           "col": 13,
+          "symbol": "com.example.domain.Order#status",
           "len": 6,
-          "field": "com.example.domain.Order#status",
+          "line": 19
+        },
+        {
+          "col": 22,
+          "symbol": "com.example.domain.OrderStatus",
+          "len": 11,
           "line": 19
         },
         {
           "col": 34,
+          "symbol": "com.example.domain.OrderStatus#PENDING",
           "len": 7,
-          "field": "com.example.domain.OrderStatus#PENDING",
           "line": 19
         }
       ],
-      "code": "    public Order(Long id, String productName, BigDecimal amount) {\n        this.id = id;\n        this.productName = productName;\n        this.amount = amount;\n        this.status = OrderStatus.PENDING;\n    }",
       "displayName": "Order # Order",
       "startLine": 15,
       "filePath": "src/main/java/com/example/domain/Order.java",
       "id": "window-5"
     },
     {
-      "fieldRefs": [{
+      "code": "    public BigDecimal getAmount() { return amount; }",
+      "refs": [{
         "col": 43,
+        "symbol": "com.example.domain.Order#amount",
         "len": 6,
-        "field": "com.example.domain.Order#amount",
         "line": 26
       }],
-      "code": "    public BigDecimal getAmount() { return amount; }",
       "displayName": "Order # getAmount",
       "startLine": 26,
       "filePath": "src/main/java/com/example/domain/Order.java",
       "id": "window-16"
     },
     {
-      "fieldRefs": [{
+      "code": "    public Long getId() { return id; }",
+      "refs": [{
         "col": 33,
+        "symbol": "com.example.domain.Order#id",
         "len": 2,
-        "field": "com.example.domain.Order#id",
         "line": 22
       }],
-      "code": "    public Long getId() { return id; }",
       "displayName": "Order # getId",
       "startLine": 22,
       "filePath": "src/main/java/com/example/domain/Order.java",
       "id": "window-23"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getProductName() { return productName; }",
+      "refs": [{
         "col": 44,
+        "symbol": "com.example.domain.Order#productName",
         "len": 11,
-        "field": "com.example.domain.Order#productName",
         "line": 24
       }],
-      "code": "    public String getProductName() { return productName; }",
       "displayName": "Order # getProductName",
       "startLine": 24,
       "filePath": "src/main/java/com/example/domain/Order.java",
       "id": "window-15"
     },
     {
-      "fieldRefs": [{
-        "col": 53,
-        "len": 6,
-        "field": "com.example.domain.Order#status",
-        "line": 29
-      }],
       "code": "    public void setStatus(OrderStatus status) { this.status = status; }",
+      "refs": [
+        {
+          "col": 26,
+          "symbol": "com.example.domain.OrderStatus",
+          "len": 11,
+          "line": 29
+        },
+        {
+          "col": 53,
+          "symbol": "com.example.domain.Order#status",
+          "len": 6,
+          "line": 29
+        }
+      ],
       "displayName": "Order # setStatus",
       "startLine": 29,
       "filePath": "src/main/java/com/example/domain/Order.java",
@@ -134,19 +186,47 @@
     },
     {
       "code": "    private Order createOrder(String productName, String amount) {\n        return new Order(null, productName, new BigDecimal(amount));\n    }",
+      "refs": [
+        {
+          "col": 12,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 66
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 67
+        }
+      ],
       "displayName": "OrderController # createOrder",
       "startLine": 66,
       "filePath": "src/main/java/com/example/app/controller/OrderController.java",
       "id": "window-3"
     },
     {
-      "fieldRefs": [{
-        "col": 15,
-        "len": 12,
-        "field": "com.example.app.controller.OrderController#orderService",
-        "line": 33
-      }],
       "code": "    public Order handleNewOrder(String productName, String amount, String paymentMethod) {\n        Order order = createOrder(productName, amount);\n        return orderService.createAndProcessOrder(order, paymentMethod);\n    }",
+      "refs": [
+        {
+          "col": 11,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 31
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 32
+        },
+        {
+          "col": 15,
+          "symbol": "com.example.app.controller.OrderController#orderService",
+          "len": 12,
+          "line": 33
+        }
+      ],
       "displayName": "OrderController # handleNewOrder",
       "startLine": 31,
       "filePath": "src/main/java/com/example/app/controller/OrderController.java",
@@ -154,6 +234,12 @@
     },
     {
       "code": "    /**\n     * Entry point for order creation from external systems (e.g. REST API).\n     * Delegates to handleNewOrder for actual processing.\n     * Used by golden file test to verify Javadoc inclusion in CallCanvas export.\n     */\n    public Order submitOrderFromApi(String productName, String amount, String paymentMethod) {\n        return handleNewOrder(productName, amount, paymentMethod);\n    }",
+      "refs": [{
+        "col": 11,
+        "symbol": "com.example.domain.Order",
+        "len": 5,
+        "line": 121
+      }],
       "displayName": "OrderController # submitOrderFromApi",
       "startLine": 116,
       "filePath": "src/main/java/com/example/app/controller/OrderController.java",
@@ -161,6 +247,12 @@
     },
     {
       "code": "    void process(Order order);",
+      "refs": [{
+        "col": 17,
+        "symbol": "com.example.domain.Order",
+        "len": 5,
+        "line": 7
+      }],
       "displayName": "OrderProcessor # process",
       "startLine": 7,
       "filePath": "src/main/java/com/example/service/OrderProcessor.java",
@@ -168,39 +260,69 @@
     },
     {
       "code": "    void validate(Order order);",
+      "refs": [{
+        "col": 18,
+        "symbol": "com.example.domain.Order",
+        "len": 5,
+        "line": 6
+      }],
       "displayName": "OrderProcessor # validate",
       "startLine": 6,
       "filePath": "src/main/java/com/example/service/OrderProcessor.java",
       "id": "window-6"
     },
     {
-      "fieldRefs": [
+      "code": "    /**\n     * Validates the order, processes payment, runs order processing, then notifies completion.\n     * Used by golden file test to verify Javadoc on callee methods.\n     */\n    public Order createAndProcessOrder(Order order, String paymentMethod) {\n        // Validate\n        orderProcessor.validate(order);\n\n        // Process payment\n        PaymentResult paymentResult = paymentService.processPayment(order, paymentMethod);\n        if (!paymentResult.isSuccess()) {\n            order.setStatus(OrderStatus.FAILED);\n            throw new RuntimeException(\"Payment failed: \" + paymentResult.getMessage());\n        }\n\n        // Process order\n        orderProcessor.process(order);\n\n        notifyCompletion(order);\n        return order;\n    }",
+      "refs": [
+        {
+          "col": 11,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 20
+        },
+        {
+          "col": 39,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 20
+        },
         {
           "col": 8,
+          "symbol": "com.example.service.OrderService#orderProcessor",
           "len": 14,
-          "field": "com.example.service.OrderService#orderProcessor",
           "line": 22
         },
         {
-          "col": 38,
-          "len": 14,
-          "field": "com.example.service.OrderService#paymentService",
+          "col": 8,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
           "line": 25
         },
         {
+          "col": 38,
+          "symbol": "com.example.service.OrderService#paymentService",
+          "len": 14,
+          "line": 25
+        },
+        {
+          "col": 28,
+          "symbol": "com.example.domain.OrderStatus",
+          "len": 11,
+          "line": 27
+        },
+        {
           "col": 40,
+          "symbol": "com.example.domain.OrderStatus#FAILED",
           "len": 6,
-          "field": "com.example.domain.OrderStatus#FAILED",
           "line": 27
         },
         {
           "col": 8,
+          "symbol": "com.example.service.OrderService#orderProcessor",
           "len": 14,
-          "field": "com.example.service.OrderService#orderProcessor",
           "line": 32
         }
       ],
-      "code": "    /**\n     * Validates the order, processes payment, runs order processing, then notifies completion.\n     * Used by golden file test to verify Javadoc on callee methods.\n     */\n    public Order createAndProcessOrder(Order order, String paymentMethod) {\n        // Validate\n        orderProcessor.validate(order);\n\n        // Process payment\n        PaymentResult paymentResult = paymentService.processPayment(order, paymentMethod);\n        if (!paymentResult.isSuccess()) {\n            order.setStatus(OrderStatus.FAILED);\n            throw new RuntimeException(\"Payment failed: \" + paymentResult.getMessage());\n        }\n\n        // Process order\n        orderProcessor.process(order);\n\n        notifyCompletion(order);\n        return order;\n    }",
       "displayName": "OrderService # createAndProcessOrder",
       "startLine": 16,
       "filePath": "src/main/java/com/example/service/OrderService.java",
@@ -208,27 +330,33 @@
     },
     {
       "code": "    private void notifyCompletion(Order order) {\n        System.out.println(\"Order \" + order.getId() + \" completed\");\n    }",
+      "refs": [{
+        "col": 34,
+        "symbol": "com.example.domain.Order",
+        "len": 5,
+        "line": 38
+      }],
       "displayName": "OrderService # notifyCompletion",
       "startLine": 38,
       "filePath": "src/main/java/com/example/service/OrderService.java",
       "id": "window-14"
     },
     {
-      "fieldRefs": [
+      "code": "    private PaymentResult(boolean success, String message) {\n        this.success = success;\n        this.message = message;\n    }",
+      "refs": [
         {
           "col": 13,
+          "symbol": "com.example.domain.PaymentResult#success",
           "len": 7,
-          "field": "com.example.domain.PaymentResult#success",
           "line": 8
         },
         {
           "col": 13,
+          "symbol": "com.example.domain.PaymentResult#message",
           "len": 7,
-          "field": "com.example.domain.PaymentResult#message",
           "line": 9
         }
       ],
-      "code": "    private PaymentResult(boolean success, String message) {\n        this.success = success;\n        this.message = message;\n    }",
       "displayName": "PaymentResult # PaymentResult",
       "startLine": 7,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
@@ -236,32 +364,46 @@
     },
     {
       "code": "    public static PaymentResult failure(String reason) {\n        return new PaymentResult(false, reason);\n    }",
+      "refs": [
+        {
+          "col": 18,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
+          "line": 16
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
+          "line": 17
+        }
+      ],
       "displayName": "PaymentResult # failure",
       "startLine": 16,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
       "id": "window-18"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getMessage() { return message; }",
+      "refs": [{
         "col": 40,
+        "symbol": "com.example.domain.PaymentResult#message",
         "len": 7,
-        "field": "com.example.domain.PaymentResult#message",
         "line": 21
       }],
-      "code": "    public String getMessage() { return message; }",
       "displayName": "PaymentResult # getMessage",
       "startLine": 21,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
       "id": "window-11"
     },
     {
-      "fieldRefs": [{
+      "code": "    public boolean isSuccess() { return success; }",
+      "refs": [{
         "col": 40,
+        "symbol": "com.example.domain.PaymentResult#success",
         "len": 7,
-        "field": "com.example.domain.PaymentResult#success",
         "line": 20
       }],
-      "code": "    public boolean isSuccess() { return success; }",
       "displayName": "PaymentResult # isSuccess",
       "startLine": 20,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
@@ -269,6 +411,20 @@
     },
     {
       "code": "    public static PaymentResult success() {\n        return new PaymentResult(true, \"Payment processed successfully\");\n    }",
+      "refs": [
+        {
+          "col": 18,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
+          "line": 12
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
+          "line": 13
+        }
+      ],
       "displayName": "PaymentResult # success",
       "startLine": 12,
       "filePath": "src/main/java/com/example/domain/PaymentResult.java",
@@ -283,6 +439,12 @@
     },
     {
       "code": "    private void executePayment(Order order, String method) {\n        System.out.println(\"Payment executed for order \" + order.getId() + \" via \" + method);\n    }",
+      "refs": [{
+        "col": 32,
+        "symbol": "com.example.domain.Order",
+        "len": 5,
+        "line": 30
+      }],
       "displayName": "PaymentService # executePayment",
       "startLine": 30,
       "filePath": "src/main/java/com/example/service/PaymentService.java",
@@ -290,6 +452,38 @@
     },
     {
       "code": "    public PaymentResult processPayment(Order order, String paymentMethod) {\n        if (!validatePaymentMethod(paymentMethod)) {\n            return PaymentResult.failure(\"Invalid payment method\");\n        }\n\n        if (!checkFunds(order.getAmount())) {\n            return PaymentResult.failure(\"Insufficient funds\");\n        }\n\n        executePayment(order, paymentMethod);\n        return PaymentResult.success();\n    }",
+      "refs": [
+        {
+          "col": 11,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
+          "line": 9
+        },
+        {
+          "col": 40,
+          "symbol": "com.example.domain.Order",
+          "len": 5,
+          "line": 9
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
+          "line": 11
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
+          "line": 15
+        },
+        {
+          "col": 15,
+          "symbol": "com.example.domain.PaymentResult",
+          "len": 13,
+          "line": 19
+        }
+      ],
       "displayName": "PaymentService # processPayment",
       "startLine": 9,
       "filePath": "src/main/java/com/example/service/PaymentService.java",
@@ -303,190 +497,6 @@
       "id": "window-17"
     }
   ],
-  "fields": {
-    "com.example.domain.Order#amount": {
-      "endLine": 8,
-      "code": "    private BigDecimal amount;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Order # amount",
-      "filePath": "src/main/java/com/example/domain/Order.java",
-      "startLine": 8,
-      "final": false,
-      "type": "BigDecimal",
-      "value": null,
-      "declaringClass": "com.example.domain.Order"
-    },
-    "com.example.domain.Order#id": {
-      "endLine": 6,
-      "code": "    private Long id;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Order # id",
-      "filePath": "src/main/java/com/example/domain/Order.java",
-      "startLine": 6,
-      "final": false,
-      "type": "Long",
-      "value": null,
-      "declaringClass": "com.example.domain.Order"
-    },
-    "com.example.domain.OrderStatus#FAILED": {
-      "endLine": 8,
-      "code": "    FAILED(94);",
-      "static": true,
-      "enumConstant": true,
-      "displayName": "OrderStatus # FAILED",
-      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
-      "startLine": 8,
-      "final": true,
-      "type": "OrderStatus",
-      "value": null,
-      "declaringClass": "com.example.domain.OrderStatus"
-    },
-    "com.example.domain.OrderStatus#VALIDATED": {
-      "endLine": 5,
-      "code": "    VALIDATED(91),",
-      "static": true,
-      "enumConstant": true,
-      "displayName": "OrderStatus # VALIDATED",
-      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
-      "startLine": 5,
-      "final": true,
-      "type": "OrderStatus",
-      "value": null,
-      "declaringClass": "com.example.domain.OrderStatus"
-    },
-    "com.example.service.OrderService#orderProcessor": {
-      "endLine": 8,
-      "code": "    private final OrderProcessor orderProcessor;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "OrderService # orderProcessor",
-      "filePath": "src/main/java/com/example/service/OrderService.java",
-      "startLine": 8,
-      "final": true,
-      "type": "OrderProcessor",
-      "value": null,
-      "declaringClass": "com.example.service.OrderService"
-    },
-    "com.example.domain.OrderStatus#PENDING": {
-      "endLine": 4,
-      "code": "    PENDING(90),",
-      "static": true,
-      "enumConstant": true,
-      "displayName": "OrderStatus # PENDING",
-      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
-      "startLine": 4,
-      "final": true,
-      "type": "OrderStatus",
-      "value": null,
-      "declaringClass": "com.example.domain.OrderStatus"
-    },
-    "com.example.domain.Order#productName": {
-      "endLine": 7,
-      "code": "    private String productName;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Order # productName",
-      "filePath": "src/main/java/com/example/domain/Order.java",
-      "startLine": 7,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.domain.Order"
-    },
-    "com.example.domain.OrderStatus#COMPLETED": {
-      "endLine": 7,
-      "code": "    COMPLETED(93),",
-      "static": true,
-      "enumConstant": true,
-      "displayName": "OrderStatus # COMPLETED",
-      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
-      "startLine": 7,
-      "final": true,
-      "type": "OrderStatus",
-      "value": null,
-      "declaringClass": "com.example.domain.OrderStatus"
-    },
-    "com.example.domain.OrderStatus#PROCESSING": {
-      "endLine": 6,
-      "code": "    PROCESSING(92),",
-      "static": true,
-      "enumConstant": true,
-      "displayName": "OrderStatus # PROCESSING",
-      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
-      "startLine": 6,
-      "final": true,
-      "type": "OrderStatus",
-      "value": null,
-      "declaringClass": "com.example.domain.OrderStatus"
-    },
-    "com.example.domain.PaymentResult#success": {
-      "endLine": 4,
-      "code": "    private final boolean success;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "PaymentResult # success",
-      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
-      "startLine": 4,
-      "final": true,
-      "type": "boolean",
-      "value": null,
-      "declaringClass": "com.example.domain.PaymentResult"
-    },
-    "com.example.domain.Order#status": {
-      "endLine": 9,
-      "code": "    private OrderStatus status;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Order # status",
-      "filePath": "src/main/java/com/example/domain/Order.java",
-      "startLine": 9,
-      "final": false,
-      "type": "OrderStatus",
-      "value": null,
-      "declaringClass": "com.example.domain.Order"
-    },
-    "com.example.app.controller.OrderController#orderService": {
-      "endLine": 16,
-      "code": "    private final OrderService orderService;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "OrderController # orderService",
-      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
-      "startLine": 16,
-      "final": true,
-      "type": "OrderService",
-      "value": null,
-      "declaringClass": "com.example.app.controller.OrderController"
-    },
-    "com.example.domain.PaymentResult#message": {
-      "endLine": 5,
-      "code": "    private final String message;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "PaymentResult # message",
-      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
-      "startLine": 5,
-      "final": true,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.domain.PaymentResult"
-    },
-    "com.example.service.OrderService#paymentService": {
-      "endLine": 9,
-      "code": "    private final PaymentService paymentService;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "OrderService # paymentService",
-      "filePath": "src/main/java/com/example/service/OrderService.java",
-      "startLine": 9,
-      "final": true,
-      "type": "PaymentService",
-      "value": null,
-      "declaringClass": "com.example.service.OrderService"
-    }
-  },
   "connections": [
     {
       "callLine": 122,
@@ -675,5 +685,196 @@
       "to": "window-21"
     }
   ],
+  "symbols": {
+    "com.example.domain.Order#amount": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Order # amount",
+      "line": 8,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "final": false,
+      "type": "BigDecimal",
+      "value": null,
+      "declaringClass": "com.example.domain.Order"
+    },
+    "com.example.domain.Order#id": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Order # id",
+      "line": 6,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "final": false,
+      "type": "Long",
+      "value": null,
+      "declaringClass": "com.example.domain.Order"
+    },
+    "com.example.domain.OrderStatus#FAILED": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "OrderStatus # FAILED",
+      "line": 8,
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.OrderStatus#VALIDATED": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "OrderStatus # VALIDATED",
+      "line": 5,
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.Order": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Order",
+      "line": 5,
+      "filePath": "src/main/java/com/example/domain/Order.java"
+    },
+    "com.example.domain.PaymentResult": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "PaymentResult",
+      "line": 3,
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java"
+    },
+    "com.example.service.OrderService#orderProcessor": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "OrderService # orderProcessor",
+      "line": 8,
+      "filePath": "src/main/java/com/example/service/OrderService.java",
+      "final": true,
+      "type": "OrderProcessor",
+      "value": null,
+      "declaringClass": "com.example.service.OrderService"
+    },
+    "com.example.domain.OrderStatus#PENDING": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "OrderStatus # PENDING",
+      "line": 4,
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.Order#productName": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Order # productName",
+      "line": 7,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.domain.Order"
+    },
+    "com.example.domain.OrderStatus#COMPLETED": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "OrderStatus # COMPLETED",
+      "line": 7,
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.OrderStatus#PROCESSING": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "OrderStatus # PROCESSING",
+      "line": 6,
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java",
+      "final": true,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.OrderStatus"
+    },
+    "com.example.domain.PaymentResult#success": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "PaymentResult # success",
+      "line": 4,
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "final": true,
+      "type": "boolean",
+      "value": null,
+      "declaringClass": "com.example.domain.PaymentResult"
+    },
+    "com.example.domain.Order#status": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Order # status",
+      "line": 9,
+      "filePath": "src/main/java/com/example/domain/Order.java",
+      "final": false,
+      "type": "OrderStatus",
+      "value": null,
+      "declaringClass": "com.example.domain.Order"
+    },
+    "com.example.app.controller.OrderController#orderService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "OrderController # orderService",
+      "line": 16,
+      "filePath": "src/main/java/com/example/app/controller/OrderController.java",
+      "final": true,
+      "type": "OrderService",
+      "value": null,
+      "declaringClass": "com.example.app.controller.OrderController"
+    },
+    "com.example.domain.PaymentResult#message": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "PaymentResult # message",
+      "line": 5,
+      "filePath": "src/main/java/com/example/domain/PaymentResult.java",
+      "final": true,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.domain.PaymentResult"
+    },
+    "com.example.service.OrderService#paymentService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "OrderService # paymentService",
+      "line": 9,
+      "filePath": "src/main/java/com/example/service/OrderService.java",
+      "final": true,
+      "type": "PaymentService",
+      "value": null,
+      "declaringClass": "com.example.service.OrderService"
+    },
+    "com.example.domain.OrderStatus": {
+      "typeKind": "enum",
+      "kind": "type",
+      "displayName": "OrderStatus",
+      "line": 3,
+      "filePath": "src/main/java/com/example/domain/OrderStatus.java"
+    }
+  },
   "autoLayout": true
 }

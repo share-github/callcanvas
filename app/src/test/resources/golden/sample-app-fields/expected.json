@@ -23,483 +23,334 @@
   },
   "windows": [
     {
-      "fieldRefs": [{
+      "code": "    public String code() {\n        return code;\n    }",
+      "refs": [{
         "col": 15,
+        "symbol": "com.example.fields.Color#code",
         "len": 4,
-        "field": "com.example.fields.Color#code",
         "line": 16
       }],
-      "code": "    public String code() {\n        return code;\n    }",
       "displayName": "Color # code",
       "startLine": 15,
       "filePath": "src/main/java/com/example/fields/Color.java",
       "id": "window-8"
     },
     {
-      "fieldRefs": [
+      "code": "    private String DEFAULT() {\n        return names.isEmpty() ? Constants.DEFAULT_NAME : names.get(0);\n    }",
+      "refs": [
         {
           "col": 15,
+          "symbol": "com.example.fields.Counter#names",
           "len": 5,
-          "field": "com.example.fields.Counter#names",
+          "line": 59
+        },
+        {
+          "col": 33,
+          "symbol": "com.example.fields.Constants",
+          "len": 9,
           "line": 59
         },
         {
           "col": 43,
+          "symbol": "com.example.fields.Constants#DEFAULT_NAME",
           "len": 12,
-          "field": "com.example.fields.Constants#DEFAULT_NAME",
           "line": 59
         },
         {
           "col": 58,
+          "symbol": "com.example.fields.Counter#names",
           "len": 5,
-          "field": "com.example.fields.Counter#names",
           "line": 59
         }
       ],
-      "code": "    private String DEFAULT() {\n        return names.isEmpty() ? Constants.DEFAULT_NAME : names.get(0);\n    }",
       "displayName": "Counter # DEFAULT",
       "startLine": 58,
       "filePath": "src/main/java/com/example/fields/Counter.java",
       "id": "window-10"
     },
     {
-      "fieldRefs": [
+      "code": "    public int all(Point p) {\n        int local = increment() + describe(Color.GREEN).length() + inherited() + lambda().get()\n                + sameLine(p);\n        tabs();\n        return local + (int) Constants.TIMEOUT_MS;\n    }",
+      "refs": [
         {
-          "col": 49,
+          "col": 19,
+          "symbol": "com.example.fields.Point",
           "len": 5,
-          "field": "com.example.fields.Color#GREEN",
+          "line": 62
+        },
+        {
+          "col": 43,
+          "symbol": "com.example.fields.Color",
+          "len": 5,
           "line": 63
         },
         {
+          "col": 49,
+          "symbol": "com.example.fields.Color#GREEN",
+          "len": 5,
+          "line": 63
+        },
+        {
+          "col": 29,
+          "symbol": "com.example.fields.Constants",
+          "len": 9,
+          "line": 66
+        },
+        {
           "col": 39,
+          "symbol": "com.example.fields.Constants#TIMEOUT_MS",
           "len": 10,
-          "field": "com.example.fields.Constants#TIMEOUT_MS",
           "line": 66
         }
       ],
-      "code": "    public int all(Point p) {\n        int local = increment() + describe(Color.GREEN).length() + inherited() + lambda().get()\n                + sameLine(p);\n        tabs();\n        return local + (int) Constants.TIMEOUT_MS;\n    }",
       "displayName": "Counter # all",
       "startLine": 62,
       "filePath": "src/main/java/com/example/fields/Counter.java",
       "id": "window-1"
     },
     {
-      "fieldRefs": [
+      "code": "    public String describe(Color color) {\n        String n = Constants.DEFAULT_NAME;\n        if (count > MAX) {\n            n = n + MAX;\n        }\n        switch (color) {\n            case RED:\n                return n + Color.RED.code();\n            default:\n                return n + color.code() + prefix;\n        }\n    }",
+      "refs": [
+        {
+          "col": 27,
+          "symbol": "com.example.fields.Color",
+          "len": 5,
+          "line": 25
+        },
+        {
+          "col": 19,
+          "symbol": "com.example.fields.Constants",
+          "len": 9,
+          "line": 26
+        },
         {
           "col": 29,
+          "symbol": "com.example.fields.Constants#DEFAULT_NAME",
           "len": 12,
-          "field": "com.example.fields.Constants#DEFAULT_NAME",
           "line": 26
         },
         {
           "col": 12,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 27
         },
         {
           "col": 20,
+          "symbol": "com.example.fields.Constants#MAX",
           "len": 3,
-          "field": "com.example.fields.Constants#MAX",
           "line": 27
         },
         {
           "col": 20,
+          "symbol": "com.example.fields.Constants#MAX",
           "len": 3,
-          "field": "com.example.fields.Constants#MAX",
           "line": 28
         },
         {
           "col": 17,
+          "symbol": "com.example.fields.Color#RED",
           "len": 3,
-          "field": "com.example.fields.Color#RED",
           "line": 31
         },
         {
+          "col": 27,
+          "symbol": "com.example.fields.Color",
+          "len": 5,
+          "line": 32
+        },
+        {
           "col": 33,
+          "symbol": "com.example.fields.Color#RED",
           "len": 3,
-          "field": "com.example.fields.Color#RED",
           "line": 32
         },
         {
           "col": 42,
+          "symbol": "com.example.fields.Base#prefix",
           "len": 6,
-          "field": "com.example.fields.Base#prefix",
           "line": 34
         }
       ],
-      "code": "    public String describe(Color color) {\n        String n = Constants.DEFAULT_NAME;\n        if (count > MAX) {\n            n = n + MAX;\n        }\n        switch (color) {\n            case RED:\n                return n + Color.RED.code();\n            default:\n                return n + color.code() + prefix;\n        }\n    }",
       "displayName": "Counter # describe",
       "startLine": 25,
       "filePath": "src/main/java/com/example/fields/Counter.java",
       "id": "window-3"
     },
     {
-      "fieldRefs": [
+      "code": "    public int increment() {\n        this.count++;\n        count = count + 1;\n        return count;\n    }",
+      "refs": [
         {
           "col": 13,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 20
         },
         {
           "col": 8,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 21
         },
         {
           "col": 16,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 21
         },
         {
           "col": 15,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 22
         }
       ],
-      "code": "    public int increment() {\n        this.count++;\n        count = count + 1;\n        return count;\n    }",
       "displayName": "Counter # increment",
       "startLine": 19,
       "filePath": "src/main/java/com/example/fields/Counter.java",
       "id": "window-2"
     },
     {
-      "fieldRefs": [
+      "code": "    public int inherited() {\n        baseCount += 1;\n        return this.baseCount + super.baseCount;\n    }",
+      "refs": [
         {
           "col": 8,
+          "symbol": "com.example.fields.Base#baseCount",
           "len": 9,
-          "field": "com.example.fields.Base#baseCount",
           "line": 39
         },
         {
           "col": 20,
+          "symbol": "com.example.fields.Base#baseCount",
           "len": 9,
-          "field": "com.example.fields.Base#baseCount",
           "line": 40
         },
         {
           "col": 38,
+          "symbol": "com.example.fields.Base#baseCount",
           "len": 9,
-          "field": "com.example.fields.Base#baseCount",
           "line": 40
         }
       ],
-      "code": "    public int inherited() {\n        baseCount += 1;\n        return this.baseCount + super.baseCount;\n    }",
       "displayName": "Counter # inherited",
       "startLine": 38,
       "filePath": "src/main/java/com/example/fields/Counter.java",
       "id": "window-4"
     },
     {
-      "fieldRefs": [
+      "code": "    public Supplier<Integer> lambda() {\n        return () -> count + baseCount;\n    }",
+      "refs": [
         {
           "col": 21,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 44
         },
         {
           "col": 29,
+          "symbol": "com.example.fields.Base#baseCount",
           "len": 9,
-          "field": "com.example.fields.Base#baseCount",
           "line": 44
         }
       ],
-      "code": "    public Supplier<Integer> lambda() {\n        return () -> count + baseCount;\n    }",
       "displayName": "Counter # lambda",
       "startLine": 43,
       "filePath": "src/main/java/com/example/fields/Counter.java",
       "id": "window-5"
     },
     {
-      "fieldRefs": [
+      "code": "    public int sameLine(Point p) {\n        return count + count * baseCount + history.length + p.sum();\n    }",
+      "refs": [
+        {
+          "col": 24,
+          "symbol": "com.example.fields.Point",
+          "len": 5,
+          "line": 47
+        },
         {
           "col": 15,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 48
         },
         {
           "col": 23,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 48
         },
         {
           "col": 31,
+          "symbol": "com.example.fields.Base#baseCount",
           "len": 9,
-          "field": "com.example.fields.Base#baseCount",
           "line": 48
         },
         {
           "col": 43,
+          "symbol": "com.example.fields.Counter#history",
           "len": 7,
-          "field": "com.example.fields.Counter#history",
           "line": 48
         }
       ],
-      "code": "    public int sameLine(Point p) {\n        return count + count * baseCount + history.length + p.sum();\n    }",
       "displayName": "Counter # sameLine",
       "startLine": 47,
       "filePath": "src/main/java/com/example/fields/Counter.java",
       "id": "window-6"
     },
     {
-      "fieldRefs": [
+      "code": "    public void tabs() {\n\tif (count > 0) {\n\t\tlabel = alias + \tDEFAULT();\n\t}\n\t\tSystem.out.println(label);\n    }",
+      "refs": [
         {
           "col": 5,
+          "symbol": "com.example.fields.Counter#count",
           "len": 5,
-          "field": "com.example.fields.Counter#count",
           "line": 52
         },
         {
           "col": 2,
+          "symbol": "com.example.fields.Counter#label",
           "len": 5,
-          "field": "com.example.fields.Counter#label",
           "line": 53
         },
         {
           "col": 10,
+          "symbol": "com.example.fields.Counter#alias",
           "len": 5,
-          "field": "com.example.fields.Counter#alias",
           "line": 53
         },
         {
           "col": 21,
+          "symbol": "com.example.fields.Counter#label",
           "len": 5,
-          "field": "com.example.fields.Counter#label",
           "line": 55
         }
       ],
-      "code": "    public void tabs() {\n\tif (count > 0) {\n\t\tlabel = alias + \tDEFAULT();\n\t}\n\t\tSystem.out.println(label);\n    }",
       "displayName": "Counter # tabs",
       "startLine": 51,
       "filePath": "src/main/java/com/example/fields/Counter.java",
       "id": "window-7"
     },
     {
-      "fieldRefs": [
+      "code": "    public int sum() {\n        return x + y;\n    }",
+      "refs": [
         {
           "col": 15,
+          "symbol": "com.example.fields.Point#x",
           "len": 1,
-          "field": "com.example.fields.Point#x",
           "line": 5
         },
         {
           "col": 19,
+          "symbol": "com.example.fields.Point#y",
           "len": 1,
-          "field": "com.example.fields.Point#y",
           "line": 5
         }
       ],
-      "code": "    public int sum() {\n        return x + y;\n    }",
       "displayName": "Point # sum",
       "startLine": 4,
       "filePath": "src/main/java/com/example/fields/Point.java",
       "id": "window-9"
     }
   ],
-  "fields": {
-    "com.example.fields.Point#y": {
-      "endLine": 3,
-      "code": "public record Point(int x, int y) {",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Point # y",
-      "filePath": "src/main/java/com/example/fields/Point.java",
-      "startLine": 3,
-      "final": true,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.fields.Point"
-    },
-    "com.example.fields.Counter#label": {
-      "endLine": 13,
-      "code": "    @Deprecated\n    private String label, alias;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Counter # label",
-      "filePath": "src/main/java/com/example/fields/Counter.java",
-      "startLine": 12,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.fields.Counter"
-    },
-    "com.example.fields.Point#x": {
-      "endLine": 3,
-      "code": "public record Point(int x, int y) {",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Point # x",
-      "filePath": "src/main/java/com/example/fields/Point.java",
-      "startLine": 3,
-      "final": true,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.fields.Point"
-    },
-    "com.example.fields.Color#code": {
-      "endLine": 9,
-      "code": "    private final String code;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Color # code",
-      "filePath": "src/main/java/com/example/fields/Color.java",
-      "startLine": 9,
-      "final": true,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.fields.Color"
-    },
-    "com.example.fields.Color#RED": {
-      "endLine": 4,
-      "code": "    RED(\"r\"),",
-      "static": true,
-      "enumConstant": true,
-      "displayName": "Color # RED",
-      "filePath": "src/main/java/com/example/fields/Color.java",
-      "startLine": 4,
-      "final": true,
-      "type": "Color",
-      "value": null,
-      "declaringClass": "com.example.fields.Color"
-    },
-    "com.example.fields.Base#baseCount": {
-      "endLine": 4,
-      "code": "    protected int baseCount;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Base # baseCount",
-      "filePath": "src/main/java/com/example/fields/Base.java",
-      "startLine": 4,
-      "final": false,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.fields.Base"
-    },
-    "com.example.fields.Counter#history": {
-      "endLine": 11,
-      "code": "    private int[] history = new int[4];",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Counter # history",
-      "filePath": "src/main/java/com/example/fields/Counter.java",
-      "startLine": 11,
-      "final": false,
-      "type": "int[]",
-      "value": null,
-      "declaringClass": "com.example.fields.Counter"
-    },
-    "com.example.fields.Counter#alias": {
-      "endLine": 13,
-      "code": "    @Deprecated\n    private String label, alias;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Counter # alias",
-      "filePath": "src/main/java/com/example/fields/Counter.java",
-      "startLine": 12,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.fields.Counter"
-    },
-    "com.example.fields.Base#prefix": {
-      "endLine": 5,
-      "code": "    protected static String prefix = \"p\";",
-      "static": true,
-      "enumConstant": false,
-      "displayName": "Base # prefix",
-      "filePath": "src/main/java/com/example/fields/Base.java",
-      "startLine": 5,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.fields.Base"
-    },
-    "com.example.fields.Color#GREEN": {
-      "endLine": 6,
-      "code": "    /** 緑 */\n    GREEN(\"g\"),",
-      "static": true,
-      "enumConstant": true,
-      "displayName": "Color # GREEN",
-      "filePath": "src/main/java/com/example/fields/Color.java",
-      "startLine": 5,
-      "final": true,
-      "type": "Color",
-      "value": null,
-      "declaringClass": "com.example.fields.Color"
-    },
-    "com.example.fields.Constants#TIMEOUT_MS": {
-      "endLine": 7,
-      "code": "    public static final long TIMEOUT_MS;",
-      "static": true,
-      "enumConstant": false,
-      "displayName": "Constants # TIMEOUT_MS",
-      "filePath": "src/main/java/com/example/fields/Constants.java",
-      "startLine": 7,
-      "final": true,
-      "type": "long",
-      "value": null,
-      "declaringClass": "com.example.fields.Constants"
-    },
-    "com.example.fields.Counter#names": {
-      "endLine": 10,
-      "code": "    private final List<String> names = new java.util.ArrayList<>();",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Counter # names",
-      "filePath": "src/main/java/com/example/fields/Counter.java",
-      "startLine": 10,
-      "final": true,
-      "type": "List<String>",
-      "value": null,
-      "declaringClass": "com.example.fields.Counter"
-    },
-    "com.example.fields.Constants#MAX": {
-      "endLine": 6,
-      "code": "    public static final int MAX = 10 * 2;",
-      "static": true,
-      "enumConstant": false,
-      "displayName": "Constants # MAX",
-      "filePath": "src/main/java/com/example/fields/Constants.java",
-      "startLine": 6,
-      "final": true,
-      "type": "int",
-      "value": "10 * 2",
-      "declaringClass": "com.example.fields.Constants"
-    },
-    "com.example.fields.Counter#count": {
-      "endLine": 9,
-      "code": "    private int count;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "Counter # count",
-      "filePath": "src/main/java/com/example/fields/Counter.java",
-      "startLine": 9,
-      "final": false,
-      "type": "int",
-      "value": null,
-      "declaringClass": "com.example.fields.Counter"
-    },
-    "com.example.fields.Constants#DEFAULT_NAME": {
-      "endLine": 5,
-      "code": "    /** 既定の名前 */\n    public static final String DEFAULT_NAME = \"anon\";",
-      "static": true,
-      "enumConstant": false,
-      "displayName": "Constants # DEFAULT_NAME",
-      "filePath": "src/main/java/com/example/fields/Constants.java",
-      "startLine": 4,
-      "final": true,
-      "type": "String",
-      "value": "\"anon\"",
-      "declaringClass": "com.example.fields.Constants"
-    }
-  },
   "connections": [
     {
       "callLine": 63,
@@ -562,5 +413,208 @@
       "to": "window-10"
     }
   ],
+  "symbols": {
+    "com.example.fields.Point#y": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Point # y",
+      "line": 3,
+      "filePath": "src/main/java/com/example/fields/Point.java",
+      "final": true,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.fields.Point"
+    },
+    "com.example.fields.Counter#label": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Counter # label",
+      "line": 13,
+      "filePath": "src/main/java/com/example/fields/Counter.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.fields.Counter"
+    },
+    "com.example.fields.Point#x": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Point # x",
+      "line": 3,
+      "filePath": "src/main/java/com/example/fields/Point.java",
+      "final": true,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.fields.Point"
+    },
+    "com.example.fields.Color#code": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Color # code",
+      "line": 9,
+      "filePath": "src/main/java/com/example/fields/Color.java",
+      "final": true,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.fields.Color"
+    },
+    "com.example.fields.Color": {
+      "typeKind": "enum",
+      "kind": "type",
+      "displayName": "Color",
+      "line": 3,
+      "filePath": "src/main/java/com/example/fields/Color.java"
+    },
+    "com.example.fields.Color#RED": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "Color # RED",
+      "line": 4,
+      "filePath": "src/main/java/com/example/fields/Color.java",
+      "final": true,
+      "type": "Color",
+      "value": null,
+      "declaringClass": "com.example.fields.Color"
+    },
+    "com.example.fields.Base#baseCount": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Base # baseCount",
+      "line": 4,
+      "filePath": "src/main/java/com/example/fields/Base.java",
+      "final": false,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.fields.Base"
+    },
+    "com.example.fields.Counter#history": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Counter # history",
+      "line": 11,
+      "filePath": "src/main/java/com/example/fields/Counter.java",
+      "final": false,
+      "type": "int[]",
+      "value": null,
+      "declaringClass": "com.example.fields.Counter"
+    },
+    "com.example.fields.Counter#alias": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Counter # alias",
+      "line": 13,
+      "filePath": "src/main/java/com/example/fields/Counter.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.fields.Counter"
+    },
+    "com.example.fields.Base#prefix": {
+      "static": true,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Base # prefix",
+      "line": 5,
+      "filePath": "src/main/java/com/example/fields/Base.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.fields.Base"
+    },
+    "com.example.fields.Color#GREEN": {
+      "static": true,
+      "enumConstant": true,
+      "kind": "field",
+      "displayName": "Color # GREEN",
+      "line": 6,
+      "filePath": "src/main/java/com/example/fields/Color.java",
+      "final": true,
+      "type": "Color",
+      "value": null,
+      "declaringClass": "com.example.fields.Color"
+    },
+    "com.example.fields.Constants#TIMEOUT_MS": {
+      "static": true,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Constants # TIMEOUT_MS",
+      "line": 7,
+      "filePath": "src/main/java/com/example/fields/Constants.java",
+      "final": true,
+      "type": "long",
+      "value": null,
+      "declaringClass": "com.example.fields.Constants"
+    },
+    "com.example.fields.Counter#names": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Counter # names",
+      "line": 10,
+      "filePath": "src/main/java/com/example/fields/Counter.java",
+      "final": true,
+      "type": "List<String>",
+      "value": null,
+      "declaringClass": "com.example.fields.Counter"
+    },
+    "com.example.fields.Constants": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "Constants",
+      "line": 3,
+      "filePath": "src/main/java/com/example/fields/Constants.java"
+    },
+    "com.example.fields.Constants#MAX": {
+      "static": true,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Constants # MAX",
+      "line": 6,
+      "filePath": "src/main/java/com/example/fields/Constants.java",
+      "final": true,
+      "type": "int",
+      "value": "10 * 2",
+      "declaringClass": "com.example.fields.Constants"
+    },
+    "com.example.fields.Counter#count": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Counter # count",
+      "line": 9,
+      "filePath": "src/main/java/com/example/fields/Counter.java",
+      "final": false,
+      "type": "int",
+      "value": null,
+      "declaringClass": "com.example.fields.Counter"
+    },
+    "com.example.fields.Point": {
+      "typeKind": "record",
+      "kind": "type",
+      "displayName": "Point",
+      "line": 3,
+      "filePath": "src/main/java/com/example/fields/Point.java"
+    },
+    "com.example.fields.Constants#DEFAULT_NAME": {
+      "static": true,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Constants # DEFAULT_NAME",
+      "line": 5,
+      "filePath": "src/main/java/com/example/fields/Constants.java",
+      "final": true,
+      "type": "String",
+      "value": "\"anon\"",
+      "declaringClass": "com.example.fields.Constants"
+    }
+  },
   "autoLayout": true
 }

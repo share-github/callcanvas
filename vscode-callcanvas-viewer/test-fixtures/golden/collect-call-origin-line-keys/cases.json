@@ -111,29 +111,5 @@
       "w1\u001f207",
       "w1\u001f214"
     ]
-  },
-  {
-    "label": "fieldRef connections do not mark call-target lines",
-    "input": {
-      "currentData": {
-        "connections": [
-          {
-            "from": "w1",
-            "to": "w2",
-            "callLine": 3
-          },
-          {
-            "from": "w1",
-            "to": "f1",
-            "callLine": 4,
-            "callEndLine": 4,
-            "kind": "fieldRef"
-          }
-        ]
-      }
-    },
-    "expected": [
-      "w1\u001f3"
-    ]
   }
 ]

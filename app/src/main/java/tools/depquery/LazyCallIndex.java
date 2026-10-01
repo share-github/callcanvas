@@ -31,23 +31,24 @@ class LazyCallIndex extends CallIndex {
     /** fqn -> [byteOffset, byteLength]（.dat 内の位置）。 */
     private final Map<String, long[]> offsets = new HashMap<>();
     private final RandomAccessFile data;
-    private final Path fieldsFile;
-    /** key -> JSON（call-index.fields を初回の getField で読む。解析は引かれたものだけ） */
-    private Map<String, String> rawFields;
+    private final Path symbolsFile;
+    /** key -> JSON（call-index.symbols を初回の getSymbol で読む。解析は引かれたものだけ） */
+    private Map<String, String> rawSymbols;
 
     /**
      * @param metaFile version/timestamp/symbolIndex を含む小さな JSON
      * @param offFile  TSV: fqn \t offset \t length（1 行 1 メソッド）
      * @param datFile  1 行 1 メソッドのコンパクト JSON（ランダムアクセス対象）
-     * @param fieldsFile 1 行 1 フィールド（key \t JSON）。無ければフィールドの宣言は無い扱い
+     * @param symbolsFile 1 行 1 シンボル（key \t JSON）。無ければ型・フィールドの宣言は無い扱い
      */
-    LazyCallIndex(Path metaFile, Path offFile, Path datFile, Path fieldsFile) throws IOException {
+    LazyCallIndex(Path metaFile, Path offFile, Path datFile, Path symbolsFile) throws IOException {
         super();
-        this.fieldsFile = fieldsFile;
+        this.symbolsFile = symbolsFile;
         // meta: version / timestamp / symbolIndex
         String metaContent = Files.readString(metaFile);
         JSONObject meta = new JSONObject(metaContent);
-        if (meta.has("version")) this.version = meta.getString("version");
+        // 版の無い meta は世代不明（CallIndex() の既定 CURRENT_VERSION のままにしない）
+        this.version = meta.has("version") ? meta.getString("version") : null;
         if (meta.has("timestamp")) this.timestamp = meta.getString("timestamp");
         if (meta.has("symbolIndex")) {
             JSONObject symObj = meta.getJSONObject("symbolIndex");
@@ -95,30 +96,30 @@ class LazyCallIndex extends CallIndex {
     }
 
     @Override
-    CallIndexModels.FieldEntry getField(String key) {
-        CallIndexModels.FieldEntry cached = fields.get(key);
+    CallIndexModels.SymbolEntry getSymbol(String key) {
+        CallIndexModels.SymbolEntry cached = symbols.get(key);
         if (cached != null) return cached;
-        if (rawFields == null) {
-            rawFields = new HashMap<>();
+        if (rawSymbols == null) {
+            rawSymbols = new HashMap<>();
             try {
-                if (fieldsFile != null && Files.exists(fieldsFile)) {
-                    for (String line : Files.readAllLines(fieldsFile, StandardCharsets.UTF_8)) {
+                if (symbolsFile != null && Files.exists(symbolsFile)) {
+                    for (String line : Files.readAllLines(symbolsFile, StandardCharsets.UTF_8)) {
                         int t = line.indexOf('\t');
-                        if (t > 0) rawFields.put(line.substring(0, t), line.substring(t + 1));
+                        if (t > 0) rawSymbols.put(line.substring(0, t), line.substring(t + 1));
                     }
                 }
             } catch (IOException e) {
-                debugVerbose("LazyCallIndex: failed to read fields: " + e.getMessage());
+                debugVerbose("LazyCallIndex: failed to read symbols: " + e.getMessage());
             }
         }
-        String raw = rawFields.get(key);
+        String raw = rawSymbols.get(key);
         if (raw == null) return null;
         try {
-            CallIndexModels.FieldEntry entry = CallIndexModels.FieldEntry.fromJson(new JSONObject(raw));
-            fields.put(key, entry);
+            CallIndexModels.SymbolEntry entry = CallIndexModels.SymbolEntry.fromJson(new JSONObject(raw));
+            symbols.put(key, entry);
             return entry;
         } catch (Exception e) {
-            debugVerbose("LazyCallIndex.getField failed for " + key + ": " + e.getMessage());
+            debugVerbose("LazyCallIndex.getSymbol failed for " + key + ": " + e.getMessage());
             return null;
         }
     }

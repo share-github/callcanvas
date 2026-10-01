@@ -3,9 +3,9 @@ package tools.depquery;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import tools.depquery.CallIndexModels.ConstantEntry;
-import tools.depquery.CallIndexModels.FieldEntry;
-import tools.depquery.CallIndexModels.FieldRef;
 import tools.depquery.CallIndexModels.MethodEntry;
+import tools.depquery.CallIndexModels.SymbolEntry;
+import tools.depquery.CallIndexModels.SymbolRef;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,10 +44,11 @@ import static tools.depquery.DiagnosticLogger.*;
  * 擬似エントリは呼び出しがある時だけ作り、行番号を持たない（lineStart/lineEnd = -1。--resolve-from-index で
  * カーソル位置に当たらないように）。クラス単位 Export のルートにも含めない。
  *
- * <p>フィールド参照: 呼び出し元の本体内で、宣言がプロジェクトのソースにあるフィールド（enum 定数を含む）を指す
- * 識別子の位置を {@link FieldRef} として集める（修飾 this. / Foo. は含めず識別子部分のみ）。
- * インスタンス初期化子内の参照はコンストラクタには足さない（コンストラクタのウィンドウの範囲外なので）。
- * 併せてファイル内のフィールド宣言（{@link FieldEntry}）を集める。
+ * <p>シンボル参照: 呼び出し元の範囲内（注釈・シグネチャ・本体）で、宣言がプロジェクトのソースにある
+ * 型・フィールド（enum 定数・record のコンポーネントを含む）を指す識別子の位置を {@link SymbolRef} として集める
+ * （修飾 this. / Foo. / パッケージは含めず識別子部分のみ）。インスタンス初期化子内の参照はコンストラクタには
+ * 足さない（コンストラクタのウィンドウの範囲外なので）。併せてファイル内の型・フィールドの宣言
+ * （{@link SymbolEntry}）を集める。
  */
 final class JdtCallCollector {
 
@@ -67,17 +68,17 @@ final class JdtCallCollector {
     static final class Caller {
         final MethodEntry entry;
         final List<RawCall> calls = new ArrayList<>();
-        final List<String> fieldRefs = new ArrayList<>();
+        final List<String> refs = new ArrayList<>();
         Caller(MethodEntry entry) { this.entry = entry; }
     }
 
     /** 1 ファイルの解析結果 */
-    record FileResult(Path file, List<Caller> callers, Map<String, ConstantEntry> symbols,
-                      Map<String, FieldEntry> fields) {}
+    record FileResult(Path file, List<Caller> callers, Map<String, ConstantEntry> constants,
+                      Map<String, SymbolEntry> symbols) {}
 
     /** 解析の統計（--timing / --debug 用） */
     static final class Stats {
-        int units, compileErrors, calls, unresolvedCalls, recoveredCalls, fieldRefs, fields;
+        int units, compileErrors, calls, unresolvedCalls, recoveredCalls, fieldRefs, typeRefs, symbols;
     }
 
     private final AnalyzerConfig cfg;
@@ -152,8 +153,8 @@ final class JdtCallCollector {
                     }
                     Visitor v = new Visitor(cu, orig.toString(), Path.of(sourceFilePath));
                     cu.accept(v);
-                    for (Caller c : v.callers) c.entry.fieldRefs = c.fieldRefs;
-                    results.add(new FileResult(orig, v.callers, v.symbols, v.fields));
+                    for (Caller c : v.callers) c.entry.refs = c.refs;
+                    results.add(new FileResult(orig, v.callers, v.constants, v.symbols));
                 } catch (Throwable ex) {
                     debugVerbose("Failed to collect calls in " + orig + ": " + ex);
                 }
@@ -163,7 +164,7 @@ final class JdtCallCollector {
         timing("SUMMARY jdt=units=" + stats.units + ",compileErrors=" + stats.compileErrors
                 + ",calls=" + stats.calls + ",unresolvedCalls=" + stats.unresolvedCalls
                 + ",recoveredCalls=" + stats.recoveredCalls
-                + ",fieldRefs=" + stats.fieldRefs + ",fields=" + stats.fields);
+                + ",fieldRefs=" + stats.fieldRefs + ",typeRefs=" + stats.typeRefs + ",symbols=" + stats.symbols);
         debug("JDT: units=" + stats.units + " compileErrors=" + stats.compileErrors + " calls=" + stats.calls
                 + " unresolved=" + stats.unresolvedCalls + " recovered=" + stats.recoveredCalls);
         return results;
@@ -356,8 +357,8 @@ final class JdtCallCollector {
         final String file;
         final String pkg;
         final List<Caller> callers = new ArrayList<>();
-        final Map<String, ConstantEntry> symbols = new LinkedHashMap<>();
-        final Map<String, FieldEntry> fields = new LinkedHashMap<>();
+        final Map<String, ConstantEntry> constants = new LinkedHashMap<>();
+        final Map<String, SymbolEntry> symbols = new LinkedHashMap<>();
         /** 元のソース（フィールドの型・定数値の表記に使う。CompilationUnit は元の文字列を持たないので読む） */
         final Path absFile;
         String source;
@@ -404,6 +405,7 @@ final class JdtCallCollector {
                 fqn = outer + simple;
                 ctor = types.isEmpty() ? simple : types.peek().ctorName + "." + simple;
             }
+            putSymbol(fqn, SymbolEntry.type(file, line(td.getName().getStartPosition()), ctor, typeKindOf(td)));
             types.push(new TypeCtx(fqn, simple, ctor, stereotypeOf(td.modifiers()), isClass));
             typeNodes.push(td);
             return true;
@@ -419,7 +421,7 @@ final class JdtCallCollector {
                 if (ctx.ctors.isEmpty()) {
                     // 明示的なコンストラクタが無い → インスタンス初期化の擬似エントリ
                     Caller init = pseudo(ctx, ctx.fqn + "#" + INSTANCE_INIT + "()", INSTANCE_INIT, ctx.simpleName + "." + INSTANCE_INIT + "()");
-                    init.fieldRefs.addAll(ctx.instanceInit.fieldRefs);
+                    init.refs.addAll(ctx.instanceInit.refs);
                     callers.add(init);
                     targets.add(init);
                 }
@@ -570,7 +572,7 @@ final class JdtCallCollector {
             return enterType(n, true);
         }
 
-        // --- フィールドの宣言（fields） ---
+        // --- 型・フィールドの宣言（symbols） ---
 
         String source() {
             if (source == null) {
@@ -600,13 +602,16 @@ final class JdtCallCollector {
             return types.isEmpty() ? (pkg.isEmpty() ? "" : pkg + ".") + "?" : types.peek().fqn;
         }
 
-        void putField(String cls, String name, FieldEntry e) {
-            fields.put(cls + "#" + name, e);
-            stats.fields++;
+        void putSymbol(String key, SymbolEntry e) {
+            symbols.put(key, e);
+            stats.symbols++;
+        }
+
+        void putField(String cls, String name, SymbolEntry e) {
+            putSymbol(cls + "#" + name, e);
         }
 
         void collectFieldDecls(FieldDeclaration fd) {
-            int start = startLine(fd), end = endLine(fd);
             String type = text(fd.getType());
             boolean inInterface = fd.getParent() instanceof TypeDeclaration td && td.isInterface();
             for (Object o : fd.fragments()) {
@@ -620,7 +625,7 @@ final class JdtCallCollector {
                     value = text(f.getInitializer());
                 }
                 String cls = declaringClassOf(vb, currentTypeFqn());
-                putField(cls, f.getName().getIdentifier(), new FieldEntry(file, start, end,
+                putField(cls, f.getName().getIdentifier(), SymbolEntry.field(file, startLine(f.getName()),
                         type + "[]".repeat(f.extraDimensions().size()), cls, isStatic, isFinal, false, value));
             }
         }
@@ -629,7 +634,7 @@ final class JdtCallCollector {
             IVariableBinding vb = ec.resolveVariable();
             String enumName = ec.getParent() instanceof EnumDeclaration ed ? ed.getName().getIdentifier() : "enum";
             String cls = declaringClassOf(vb, currentTypeFqn());
-            putField(cls, ec.getName().getIdentifier(), new FieldEntry(file, startLine(ec), endLine(ec),
+            putField(cls, ec.getName().getIdentifier(), SymbolEntry.field(file, startLine(ec.getName()),
                     enumName, cls, true, true, true, null));
         }
 
@@ -639,27 +644,57 @@ final class JdtCallCollector {
             String cls = vb != null && vb.getDeclaringClass() != null ? className(vb.getDeclaringClass())
                     : (types.isEmpty() ? (pkg.isEmpty() ? "" : pkg + ".") : types.peek().fqn + ".")
                         + ((RecordDeclaration) p.getParent()).getName().getIdentifier();
-            putField(cls, p.getName().getIdentifier(), new FieldEntry(file, startLine(p), endLine(p),
+            putField(cls, p.getName().getIdentifier(), SymbolEntry.field(file, startLine(p.getName()),
                     text(p.getType()) + (p.isVarargs() ? "[]" : ""), cls, false, true, false, null));
         }
 
-        // --- フィールド参照（fieldRefs） ---
+        // --- シンボル参照（refs） ---
 
+        /**
+         * 型名・フィールド名の出現。型は SimpleType / QualifiedType / 修飾名（a.b.Foo・Foo.CONST・Foo::bar）/
+         * 注釈名のどれでも、その単純名の SimpleName が型のバインディングを持つので、ここで一括して拾える
+         * （パッケージ部分は IPackageBinding なので入らない）。
+         */
         @Override public boolean visit(SimpleName n) {
             if (owners.isEmpty() || n.isDeclaration()) return false;
-            if (!(n.resolveBinding() instanceof IVariableBinding vb) || !vb.isField()) return false;
-            IVariableBinding decl = vb.getVariableDeclaration();
-            ITypeBinding cls = decl.getDeclaringClass();
-            // 配列の length（宣言クラス無し）とライブラリのフィールドは対象外
-            if (cls == null || !cls.getErasure().isFromSource()) return false;
+            IBinding b = n.resolveBinding();
+            String key;
+            if (b instanceof IVariableBinding vb) {
+                if (!vb.isField()) return false;
+                IVariableBinding decl = vb.getVariableDeclaration();
+                ITypeBinding cls = decl.getDeclaringClass();
+                // 配列の length（宣言クラス無し）とライブラリのフィールドは対象外
+                if (cls == null || !cls.getErasure().isFromSource()) return false;
+                key = className(cls) + "#" + decl.getName();
+                stats.fieldRefs++;
+            } else if (b instanceof ITypeBinding tb) {
+                // var は推論した型を指すが、型名が書かれているわけではない
+                if (n.getParent() instanceof SimpleType st && st.isVar()) return false;
+                key = sourceTypeKey(tb);
+                if (key == null) return false;
+                stats.typeRefs++;
+            } else {
+                return false;
+            }
             int pos = n.getStartPosition();
             int line = line(pos);
             int col = cu.getColumnNumber(pos);
             if (line < 1 || col < 0) return false;
-            owners.peek().fieldRefs.add(new FieldRef(line, col, n.getLength(),
-                    className(cls) + "#" + decl.getName()).encode());
-            stats.fieldRefs++;
+            owners.peek().refs.add(new SymbolRef(line, col, n.getLength(), key).encode());
             return false;
+        }
+
+        /**
+         * 宣言がプロジェクトのソースにあるメンバー型（トップレベル・ネスト）のキー（FQN）。
+         * ライブラリ・型変数・解決できない型・ローカル / 匿名クラス（とその中の型）は null
+         */
+        String sourceTypeKey(ITypeBinding tb) {
+            while (tb.isArray()) tb = tb.getElementType();
+            ITypeBinding t = tb.getTypeDeclaration();
+            if (t == null || t.isTypeVariable() || t.isRecovered() || t.isPrimitive() || !t.isFromSource()) return null;
+            String q = t.getQualifiedName();
+            if (q == null || q.isEmpty()) return null;
+            return className(t);
         }
 
         // --- 定数（symbolIndex） ---
@@ -675,7 +710,7 @@ final class JdtCallCollector {
                 VariableDeclarationFragment f = (VariableDeclarationFragment) o;
                 if (!f.extraDimensions().isEmpty()) continue;
                 String lit = literalText(f.getInitializer());
-                if (lit != null) symbols.put(f.getName().getIdentifier(), new ConstantEntry(lit, ctx.fqn, type));
+                if (lit != null) constants.put(f.getName().getIdentifier(), new ConstantEntry(lit, ctx.fqn, type));
             }
         }
 
@@ -687,7 +722,7 @@ final class JdtCallCollector {
                 EnumConstantDeclaration ec = (EnumConstantDeclaration) o;
                 String key = ed.getName().getIdentifier() + "." + ec.getName().getIdentifier();
                 String lit = ec.arguments().isEmpty() ? null : literalText((Expression) ec.arguments().get(0));
-                symbols.put(key, new ConstantEntry(lit != null ? lit : String.valueOf(ordinal), enumFqn, "enum"));
+                constants.put(key, new ConstantEntry(lit != null ? lit : String.valueOf(ordinal), enumFqn, "enum"));
                 ordinal++;
             }
         }
@@ -933,6 +968,15 @@ final class JdtCallCollector {
     }
 
     // ===== 補助 =====
+
+    /** symbols の typeKind */
+    static String typeKindOf(AbstractTypeDeclaration td) {
+        if (td instanceof TypeDeclaration t) return t.isInterface() ? "interface" : "class";
+        if (td instanceof EnumDeclaration) return "enum";
+        if (td instanceof RecordDeclaration) return "record";
+        if (td instanceof AnnotationTypeDeclaration) return "annotation";
+        return "class";
+    }
 
     /** JavaParser 版の stereotypeOf と同じ判定（注釈は書かれたとおりの名前で照合） */
     static String stereotypeOf(List<?> modifiers) {

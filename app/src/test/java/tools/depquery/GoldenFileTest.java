@@ -391,8 +391,8 @@ public class GoldenFileTest {
                 if (window.has("collapsed")) {
                     normalizedWindow.put("collapsed", window.getBoolean("collapsed"));
                 }
-                if (window.has("fieldRefs")) {
-                    normalizedWindow.put("fieldRefs", window.getJSONArray("fieldRefs"));
+                if (window.has("refs")) {
+                    normalizedWindow.put("refs", window.getJSONArray("refs"));
                 }
                 
                 // ファイルパスを正規化
@@ -424,18 +424,18 @@ public class GoldenFileTest {
             normalized.put("symbolIndex", json.getJSONObject("symbolIndex"));
         }
 
-        // fields（filePath はウィンドウと同じくワークスペースルートを除去）
-        if (json.has("fields")) {
-            JSONObject fields = json.getJSONObject("fields");
+        // symbols（filePath はウィンドウと同じくワークスペースルートを除去）
+        if (json.has("symbols")) {
+            JSONObject symbols = json.getJSONObject("symbols");
             JSONObject normalizedFields = new JSONObject();
-            for (String key : fields.keySet()) {
-                JSONObject f = new JSONObject(fields.getJSONObject(key).toString());
+            for (String key : symbols.keySet()) {
+                JSONObject f = new JSONObject(symbols.getJSONObject(key).toString());
                 if (f.has("filePath")) {
                     f.put("filePath", f.getString("filePath").replace(workspaceRoot.toString() + "/", ""));
                 }
                 normalizedFields.put(key, f);
             }
-            normalized.put("fields", normalizedFields);
+            normalized.put("symbols", normalizedFields);
         }
 
         return normalized;
@@ -505,14 +505,14 @@ public class GoldenFileTest {
                 }
             }
 
-            // fieldRefs（ウィンドウ内のフィールド参照の位置）
+            // refs（ウィンドウ内の型・フィールド参照の位置）
             for (String name : expMap.keySet()) {
                 if (!actMap.containsKey(name)) continue;
-                JSONArray expRefs = expMap.get(name).optJSONArray("fieldRefs");
-                JSONArray actRefs = actMap.get(name).optJSONArray("fieldRefs");
+                JSONArray expRefs = expMap.get(name).optJSONArray("refs");
+                JSONArray actRefs = actMap.get(name).optJSONArray("refs");
                 boolean same = expRefs == null ? actRefs == null : actRefs != null && expRefs.similar(actRefs);
                 if (!same) {
-                    diff.append("fieldRefs mismatch in window ").append(name)
+                    diff.append("refs mismatch in window ").append(name)
                         .append(": expected=").append(expRefs).append(", actual=").append(actRefs).append("\n");
                 }
             }
@@ -547,24 +547,24 @@ public class GoldenFileTest {
             }
         }
 
-        // fields比較
-        JSONObject expFields = expected.optJSONObject("fields");
-        JSONObject actFields = actual.optJSONObject("fields");
+        // symbols比較
+        JSONObject expFields = expected.optJSONObject("symbols");
+        JSONObject actFields = actual.optJSONObject("symbols");
         if ((expFields == null) != (actFields == null)) {
-            diff.append("fields presence mismatch: expected=").append(expFields != null)
+            diff.append("symbols presence mismatch: expected=").append(expFields != null)
                 .append(", actual=").append(actFields != null).append("\n");
         } else if (expFields != null) {
             for (String key : expFields.keySet()) {
                 if (!actFields.has(key)) {
-                    diff.append("Missing field: ").append(key).append("\n");
+                    diff.append("Missing symbol: ").append(key).append("\n");
                 } else if (!expFields.getJSONObject(key).similar(actFields.getJSONObject(key))) {
-                    diff.append("field value mismatch for '").append(key).append("': expected=")
+                    diff.append("symbol value mismatch for '").append(key).append("': expected=")
                         .append(expFields.getJSONObject(key)).append(", actual=").append(actFields.getJSONObject(key)).append("\n");
                 }
             }
             for (String key : actFields.keySet()) {
                 if (!expFields.has(key)) {
-                    diff.append("Unexpected field: ").append(key).append("\n");
+                    diff.append("Unexpected symbol: ").append(key).append("\n");
                 }
             }
         }

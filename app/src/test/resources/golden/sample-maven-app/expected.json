@@ -1,92 +1,100 @@
 {
   "windows": [
     {
-      "fieldRefs": [
+      "code": "    public User(Long id, String name, String email) {\n        this.id = id;\n        this.name = name;\n        this.email = email;\n    }",
+      "refs": [
         {
           "col": 13,
+          "symbol": "com.example.demo.domain.User#id",
           "len": 2,
-          "field": "com.example.demo.domain.User#id",
           "line": 11
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.domain.User#name",
           "len": 4,
-          "field": "com.example.demo.domain.User#name",
           "line": 12
         },
         {
           "col": 13,
+          "symbol": "com.example.demo.domain.User#email",
           "len": 5,
-          "field": "com.example.demo.domain.User#email",
           "line": 13
         }
       ],
-      "code": "    public User(Long id, String name, String email) {\n        this.id = id;\n        this.name = name;\n        this.email = email;\n    }",
       "displayName": "User # User",
       "startLine": 10,
       "filePath": "src/main/java/com/example/demo/domain/User.java",
       "id": "window-3"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getEmail() { return email; }",
+      "refs": [{
         "col": 38,
+        "symbol": "com.example.demo.domain.User#email",
         "len": 5,
-        "field": "com.example.demo.domain.User#email",
         "line": 20
       }],
-      "code": "    public String getEmail() { return email; }",
       "displayName": "User # getEmail",
       "startLine": 20,
       "filePath": "src/main/java/com/example/demo/domain/User.java",
       "id": "window-10"
     },
     {
-      "fieldRefs": [{
+      "code": "    public Long getId() { return id; }",
+      "refs": [{
         "col": 33,
+        "symbol": "com.example.demo.domain.User#id",
         "len": 2,
-        "field": "com.example.demo.domain.User#id",
         "line": 16
       }],
-      "code": "    public Long getId() { return id; }",
       "displayName": "User # getId",
       "startLine": 16,
       "filePath": "src/main/java/com/example/demo/domain/User.java",
       "id": "window-11"
     },
     {
-      "fieldRefs": [{
+      "code": "    public String getName() { return name; }",
+      "refs": [{
         "col": 37,
+        "symbol": "com.example.demo.domain.User#name",
         "len": 4,
-        "field": "com.example.demo.domain.User#name",
         "line": 18
       }],
-      "code": "    public String getName() { return name; }",
       "displayName": "User # getName",
       "startLine": 18,
       "filePath": "src/main/java/com/example/demo/domain/User.java",
       "id": "window-8"
     },
     {
-      "fieldRefs": [{
+      "code": "    public void setId(Long id) { this.id = id; }",
+      "refs": [{
         "col": 38,
+        "symbol": "com.example.demo.domain.User#id",
         "len": 2,
-        "field": "com.example.demo.domain.User#id",
         "line": 17
       }],
-      "code": "    public void setId(Long id) { this.id = id; }",
       "displayName": "User # setId",
       "startLine": 17,
       "filePath": "src/main/java/com/example/demo/domain/User.java",
       "id": "window-12"
     },
     {
-      "fieldRefs": [{
-        "col": 15,
-        "len": 11,
-        "field": "com.example.demo.controller.UserController#userService",
-        "line": 15
-      }],
       "code": "    public User createUser(String name, String email) {\n        return userService.createUser(name, email);\n    }",
+      "refs": [
+        {
+          "col": 11,
+          "symbol": "com.example.demo.domain.User",
+          "len": 4,
+          "line": 14
+        },
+        {
+          "col": 15,
+          "symbol": "com.example.demo.controller.UserController#userService",
+          "len": 11,
+          "line": 15
+        }
+      ],
       "displayName": "UserController # createUser",
       "startLine": 14,
       "filePath": "src/main/java/com/example/demo/controller/UserController.java",
@@ -94,48 +102,90 @@
     },
     {
       "code": "    private void logSave(User user) {\n        System.out.println(\"Saved user: \" + user.getName());\n    }",
+      "refs": [{
+        "col": 25,
+        "symbol": "com.example.demo.domain.User",
+        "len": 4,
+        "line": 35
+      }],
       "displayName": "UserRepository # logSave",
       "startLine": 35,
       "filePath": "src/main/java/com/example/demo/repository/UserRepository.java",
       "id": "window-13"
     },
     {
-      "fieldRefs": [
+      "code": "    public User save(User user) {\n        if (user.getId() == null) {\n            user.setId(nextId++);\n        }\n        users.add(user);\n        logSave(user);\n        return user;\n    }",
+      "refs": [
+        {
+          "col": 11,
+          "symbol": "com.example.demo.domain.User",
+          "len": 4,
+          "line": 12
+        },
+        {
+          "col": 21,
+          "symbol": "com.example.demo.domain.User",
+          "len": 4,
+          "line": 12
+        },
         {
           "col": 23,
+          "symbol": "com.example.demo.repository.UserRepository#nextId",
           "len": 6,
-          "field": "com.example.demo.repository.UserRepository#nextId",
           "line": 14
         },
         {
           "col": 8,
+          "symbol": "com.example.demo.repository.UserRepository#users",
           "len": 5,
-          "field": "com.example.demo.repository.UserRepository#users",
           "line": 16
         }
       ],
-      "code": "    public User save(User user) {\n        if (user.getId() == null) {\n            user.setId(nextId++);\n        }\n        users.add(user);\n        logSave(user);\n        return user;\n    }",
       "displayName": "UserRepository # save",
       "startLine": 12,
       "filePath": "src/main/java/com/example/demo/repository/UserRepository.java",
       "id": "window-5"
     },
     {
-      "fieldRefs": [
+      "code": "    public User createUser(String name, String email) {\n        User user = new User(null, name, email);\n        validator.validate(user);\n        User saved = userRepository.save(user);\n        notifyCreation(saved);\n        return saved;\n    }",
+      "refs": [
+        {
+          "col": 11,
+          "symbol": "com.example.demo.domain.User",
+          "len": 4,
+          "line": 17
+        },
         {
           "col": 8,
+          "symbol": "com.example.demo.domain.User",
+          "len": 4,
+          "line": 18
+        },
+        {
+          "col": 24,
+          "symbol": "com.example.demo.domain.User",
+          "len": 4,
+          "line": 18
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.demo.service.UserService#validator",
           "len": 9,
-          "field": "com.example.demo.service.UserService#validator",
           "line": 19
         },
         {
+          "col": 8,
+          "symbol": "com.example.demo.domain.User",
+          "len": 4,
+          "line": 20
+        },
+        {
           "col": 21,
+          "symbol": "com.example.demo.service.UserService#userRepository",
           "len": 14,
-          "field": "com.example.demo.service.UserService#userRepository",
           "line": 20
         }
       ],
-      "code": "    public User createUser(String name, String email) {\n        User user = new User(null, name, email);\n        validator.validate(user);\n        User saved = userRepository.save(user);\n        notifyCreation(saved);\n        return saved;\n    }",
       "displayName": "UserService # createUser",
       "startLine": 17,
       "filePath": "src/main/java/com/example/demo/service/UserService.java",
@@ -143,6 +193,12 @@
     },
     {
       "code": "    private void notifyCreation(User user) {\n        System.out.println(\"User created: \" + user.getEmail());\n    }",
+      "refs": [{
+        "col": 32,
+        "symbol": "com.example.demo.domain.User",
+        "len": 4,
+        "line": 37
+      }],
       "displayName": "UserService # notifyCreation",
       "startLine": 37,
       "filePath": "src/main/java/com/example/demo/service/UserService.java",
@@ -150,6 +206,12 @@
     },
     {
       "code": "    public void validate(User user) {\n        validateName(user.getName());\n        validateEmail(user.getEmail());\n    }",
+      "refs": [{
+        "col": 25,
+        "symbol": "com.example.demo.domain.User",
+        "len": 4,
+        "line": 7
+      }],
       "displayName": "UserValidator # validate",
       "startLine": 7,
       "filePath": "src/main/java/com/example/demo/service/UserValidator.java",
@@ -170,112 +232,6 @@
       "id": "window-7"
     }
   ],
-  "fields": {
-    "com.example.demo.domain.User#name": {
-      "endLine": 5,
-      "code": "    private String name;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "User # name",
-      "filePath": "src/main/java/com/example/demo/domain/User.java",
-      "startLine": 5,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.User"
-    },
-    "com.example.demo.service.UserService#userRepository": {
-      "endLine": 9,
-      "code": "    private final UserRepository userRepository;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "UserService # userRepository",
-      "filePath": "src/main/java/com/example/demo/service/UserService.java",
-      "startLine": 9,
-      "final": true,
-      "type": "UserRepository",
-      "value": null,
-      "declaringClass": "com.example.demo.service.UserService"
-    },
-    "com.example.demo.domain.User#email": {
-      "endLine": 6,
-      "code": "    private String email;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "User # email",
-      "filePath": "src/main/java/com/example/demo/domain/User.java",
-      "startLine": 6,
-      "final": false,
-      "type": "String",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.User"
-    },
-    "com.example.demo.repository.UserRepository#users": {
-      "endLine": 9,
-      "code": "    private final List<User> users = new ArrayList<>();",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "UserRepository # users",
-      "filePath": "src/main/java/com/example/demo/repository/UserRepository.java",
-      "startLine": 9,
-      "final": true,
-      "type": "List<User>",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.UserRepository"
-    },
-    "com.example.demo.repository.UserRepository#nextId": {
-      "endLine": 10,
-      "code": "    private Long nextId = 1L;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "UserRepository # nextId",
-      "filePath": "src/main/java/com/example/demo/repository/UserRepository.java",
-      "startLine": 10,
-      "final": false,
-      "type": "Long",
-      "value": null,
-      "declaringClass": "com.example.demo.repository.UserRepository"
-    },
-    "com.example.demo.service.UserService#validator": {
-      "endLine": 10,
-      "code": "    private final UserValidator validator;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "UserService # validator",
-      "filePath": "src/main/java/com/example/demo/service/UserService.java",
-      "startLine": 10,
-      "final": true,
-      "type": "UserValidator",
-      "value": null,
-      "declaringClass": "com.example.demo.service.UserService"
-    },
-    "com.example.demo.controller.UserController#userService": {
-      "endLine": 8,
-      "code": "    private final UserService userService;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "UserController # userService",
-      "filePath": "src/main/java/com/example/demo/controller/UserController.java",
-      "startLine": 8,
-      "final": true,
-      "type": "UserService",
-      "value": null,
-      "declaringClass": "com.example.demo.controller.UserController"
-    },
-    "com.example.demo.domain.User#id": {
-      "endLine": 4,
-      "code": "    private Long id;",
-      "static": false,
-      "enumConstant": false,
-      "displayName": "User # id",
-      "filePath": "src/main/java/com/example/demo/domain/User.java",
-      "startLine": 4,
-      "final": false,
-      "type": "Long",
-      "value": null,
-      "declaringClass": "com.example.demo.domain.User"
-    }
-  },
   "connections": [
     {
       "callLine": 15,
@@ -362,5 +318,110 @@
       "to": "window-10"
     }
   ],
+  "symbols": {
+    "com.example.demo.domain.User#name": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "User # name",
+      "line": 5,
+      "filePath": "src/main/java/com/example/demo/domain/User.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.User"
+    },
+    "com.example.demo.service.UserService#userRepository": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "UserService # userRepository",
+      "line": 9,
+      "filePath": "src/main/java/com/example/demo/service/UserService.java",
+      "final": true,
+      "type": "UserRepository",
+      "value": null,
+      "declaringClass": "com.example.demo.service.UserService"
+    },
+    "com.example.demo.domain.User#email": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "User # email",
+      "line": 6,
+      "filePath": "src/main/java/com/example/demo/domain/User.java",
+      "final": false,
+      "type": "String",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.User"
+    },
+    "com.example.demo.domain.User": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "User",
+      "line": 3,
+      "filePath": "src/main/java/com/example/demo/domain/User.java"
+    },
+    "com.example.demo.repository.UserRepository#users": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "UserRepository # users",
+      "line": 9,
+      "filePath": "src/main/java/com/example/demo/repository/UserRepository.java",
+      "final": true,
+      "type": "List<User>",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.UserRepository"
+    },
+    "com.example.demo.repository.UserRepository#nextId": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "UserRepository # nextId",
+      "line": 10,
+      "filePath": "src/main/java/com/example/demo/repository/UserRepository.java",
+      "final": false,
+      "type": "Long",
+      "value": null,
+      "declaringClass": "com.example.demo.repository.UserRepository"
+    },
+    "com.example.demo.service.UserService#validator": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "UserService # validator",
+      "line": 10,
+      "filePath": "src/main/java/com/example/demo/service/UserService.java",
+      "final": true,
+      "type": "UserValidator",
+      "value": null,
+      "declaringClass": "com.example.demo.service.UserService"
+    },
+    "com.example.demo.controller.UserController#userService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "UserController # userService",
+      "line": 8,
+      "filePath": "src/main/java/com/example/demo/controller/UserController.java",
+      "final": true,
+      "type": "UserService",
+      "value": null,
+      "declaringClass": "com.example.demo.controller.UserController"
+    },
+    "com.example.demo.domain.User#id": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "User # id",
+      "line": 4,
+      "filePath": "src/main/java/com/example/demo/domain/User.java",
+      "final": false,
+      "type": "Long",
+      "value": null,
+      "declaringClass": "com.example.demo.domain.User"
+    }
+  },
   "autoLayout": true
 }

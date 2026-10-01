@@ -16,8 +16,8 @@ public class GraphModels {
         public final List<String> annotations;
         public final String stereotype;
         public String code; // メソッドのソースコード
-        /** 本体内のフィールド参照（CallIndexModels.FieldRef の符号化文字列） */
-        public List<String> fieldRefs = List.of();
+        /** 範囲内の型・フィールド参照（CallIndexModels.SymbolRef の符号化文字列） */
+        public List<String> refs = List.of();
 
         public Node(String id, String display, String classFqn, String name, List<String> paramsFqn,
                 String file, int lineStart, int lineEnd, List<String> annotations, String stereotype) {

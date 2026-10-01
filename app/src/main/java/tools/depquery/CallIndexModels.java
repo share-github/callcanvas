@@ -78,11 +78,11 @@ class CallIndexModels {
         @JsonProperty("stereotype")
         String stereotype;
         /**
-         * 本体内のフィールド参照。1 件 = {@code "行:列:長さ:フィールドキー"}（{@link FieldRefs}）。
-         * 宣言がプロジェクトのソースにあるフィールドだけ（宣言の有無は出力時に {@link CallIndex#getField} で確かめる）
+         * 本体内のシンボル（型・フィールド）参照。1 件 = {@code "行:列:長さ:シンボルキー"}（{@link SymbolRef}）。
+         * 宣言の有無は出力時に {@link CallIndex#getSymbol} で確かめる（無いものは出さない）
          */
-        @JsonProperty("fieldRefs")
-        List<String> fieldRefs = new ArrayList<>();
+        @JsonProperty("refs")
+        List<String> refs = new ArrayList<>();
 
         MethodEntry() {}
 
@@ -138,7 +138,7 @@ class CallIndexModels {
                 obj.put("annotations", new JSONArray(annotations));
             }
             if (stereotype != null) obj.put("stereotype", stereotype);
-            if (fieldRefs != null && !fieldRefs.isEmpty()) obj.put("fieldRefs", new JSONArray(fieldRefs));
+            if (refs != null && !refs.isEmpty()) obj.put("refs", new JSONArray(refs));
             var callersArr = new JSONArray();
             for (var caller : callers) {
                 callersArr.put(caller.toJson());
@@ -177,10 +177,10 @@ class CallIndexModels {
                 }
             }
             if (obj.has("stereotype")) entry.stereotype = obj.getString("stereotype");
-            if (obj.has("fieldRefs")) {
-                JSONArray refsArr = obj.getJSONArray("fieldRefs");
+            if (obj.has("refs")) {
+                JSONArray refsArr = obj.getJSONArray("refs");
                 for (int i = 0; i < refsArr.length(); i++) {
-                    entry.fieldRefs.add(refsArr.getString(i));
+                    entry.refs.add(refsArr.getString(i));
                 }
             }
             JSONArray callersArr = obj.getJSONArray("callers");
@@ -196,19 +196,20 @@ class CallIndexModels {
     }
 
     /**
-     * フィールド参照 1 件の符号化（インデックスを小さく保つため文字列 1 つにまとめる）。
+     * シンボル参照 1 件の符号化（インデックスを小さく保つため文字列 1 つにまとめる）。
      * line は 1 始まりの絶対行、col はその行内の 0 始まりの char offset（タブは 1 文字）、len は識別子の長さ。
+     * symbol はシンボルキー（型は FQN、フィールドは {@code 宣言クラスFQN#名前}）。
      */
-    record FieldRef(int line, int col, int len, String field) {
+    record SymbolRef(int line, int col, int len, String symbol) {
         String encode() {
-            return line + ":" + col + ":" + len + ":" + field;
+            return line + ":" + col + ":" + len + ":" + symbol;
         }
 
-        static FieldRef decode(String s) {
+        static SymbolRef decode(String s) {
             String[] p = s.split(":", 4);
             if (p.length < 4) return null;
             try {
-                return new FieldRef(Integer.parseInt(p[0]), Integer.parseInt(p[1]), Integer.parseInt(p[2]), p[3]);
+                return new SymbolRef(Integer.parseInt(p[0]), Integer.parseInt(p[1]), Integer.parseInt(p[2]), p[3]);
             } catch (NumberFormatException e) {
                 return null;
             }
@@ -216,19 +217,30 @@ class CallIndexModels {
     }
 
     /**
-     * プロジェクトのソースにあるフィールド（enum 定数・record のコンポーネントを含む）の宣言。
-     * キーは {@code 宣言クラスFQN#名前}。CallCanvas JSON の fields の元（code・displayName は出力時に作る）。
+     * プロジェクトのソースにある型・フィールド（enum 定数・record のコンポーネントを含む）の宣言。
+     * キーは型なら FQN（ネストは Outer.Inner）、フィールドなら {@code 宣言クラスFQN#名前}。
+     * CallCanvas JSON の symbols の元（displayName・filePath は出力時に作る）。
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    static class FieldEntry {
+    static class SymbolEntry {
+        static final String TYPE = "type";
+        static final String FIELD = "field";
+
+        /** "type" / "field" */
+        @JsonProperty("kind")
+        String kind;
         @JsonProperty("file")
         String file;
-        /** 宣言の開始行（Javadoc・注釈を含む） */
-        @JsonProperty("startLine")
-        int startLine;
-        @JsonProperty("endLine")
-        int endLine;
-        /** 宣言型（ソース上の表記） */
+        /** 宣言の名前がある行（ジャンプ先） */
+        @JsonProperty("line")
+        int line;
+        /** type のみ: class / interface / enum / record / annotation */
+        @JsonProperty("typeKind")
+        String typeKind;
+        /** 型の表示名（パッケージを除いた名前。ネストは Outer.Inner）。type のみ */
+        @JsonProperty("name")
+        String name;
+        /** field のみ: 宣言型（ソース上の表記） */
         @JsonProperty("type")
         String type;
         @JsonProperty("declaringClass")
@@ -239,41 +251,66 @@ class CallIndexModels {
         boolean isFinal;
         @JsonProperty("enumConstant")
         boolean enumConstant;
-        /** コンパイル時定数なら初期化子のソース表記、それ以外は null */
+        /** field のみ: コンパイル時定数なら初期化子のソース表記、それ以外は null */
         @JsonProperty("value")
         String value;
 
-        FieldEntry() {}
+        SymbolEntry() {}
 
-        FieldEntry(String file, int startLine, int endLine, String type, String declaringClass,
-                   boolean isStatic, boolean isFinal, boolean enumConstant, String value) {
-            this.file = file;
-            this.startLine = startLine;
-            this.endLine = endLine;
-            this.type = type;
-            this.declaringClass = declaringClass;
-            this.isStatic = isStatic;
-            this.isFinal = isFinal;
-            this.enumConstant = enumConstant;
-            this.value = value;
+        static SymbolEntry type(String file, int line, String name, String typeKind) {
+            var e = new SymbolEntry();
+            e.kind = TYPE;
+            e.file = file;
+            e.line = line;
+            e.name = name;
+            e.typeKind = typeKind;
+            return e;
+        }
+
+        static SymbolEntry field(String file, int line, String type, String declaringClass,
+                                 boolean isStatic, boolean isFinal, boolean enumConstant, String value) {
+            var e = new SymbolEntry();
+            e.kind = FIELD;
+            e.file = file;
+            e.line = line;
+            e.type = type;
+            e.declaringClass = declaringClass;
+            e.isStatic = isStatic;
+            e.isFinal = isFinal;
+            e.enumConstant = enumConstant;
+            e.value = value;
+            return e;
+        }
+
+        boolean isType() {
+            return TYPE.equals(kind);
         }
 
         JSONObject toJson() {
             var obj = new JSONObject();
+            obj.put("kind", kind);
             obj.put("file", file);
-            obj.put("startLine", startLine);
-            obj.put("endLine", endLine);
+            obj.put("line", line);
+            if (isType()) {
+                obj.put("name", name);
+                obj.put("typeKind", typeKind);
+                return obj;
+            }
             obj.put("type", type);
             obj.put("declaringClass", declaringClass);
-            obj.put("static", isStatic);
-            obj.put("final", isFinal);
-            obj.put("enumConstant", enumConstant);
+            if (isStatic) obj.put("static", true);
+            if (isFinal) obj.put("final", true);
+            if (enumConstant) obj.put("enumConstant", true);
             if (value != null) obj.put("value", value);
             return obj;
         }
 
-        static FieldEntry fromJson(JSONObject obj) {
-            return new FieldEntry(obj.getString("file"), obj.getInt("startLine"), obj.getInt("endLine"),
+        static SymbolEntry fromJson(JSONObject obj) {
+            if (TYPE.equals(obj.optString("kind"))) {
+                return type(obj.getString("file"), obj.getInt("line"), obj.optString("name", null),
+                        obj.optString("typeKind", null));
+            }
+            return field(obj.getString("file"), obj.getInt("line"),
                     obj.optString("type", null), obj.optString("declaringClass", null),
                     obj.optBoolean("static"), obj.optBoolean("final"), obj.optBoolean("enumConstant"),
                     obj.has("value") && !obj.isNull("value") ? obj.getString("value") : null);
@@ -305,10 +342,12 @@ class CallIndexModels {
     static class CallIndex {
         /**
          * 構築した解析器の世代。1.0 = JavaParser 版、1.1 = JDT 版（ファイル形式は同じ）、
-         * 1.2 = フィールド参照（methods[].fieldRefs と fields）を追加。
+         * 1.2 = フィールド参照（methods[].fieldRefs と fields）を追加、
+         * 1.3 = 型参照を加えて汎用化（methods[].refs と symbols。fieldRefs / fields は廃止）。
          * 世代が違うインデックスは差分更新せずフル再構築する（新旧の解析結果を混在させないため）。
+         * 解析では世代違いを使わずソースを解析する。上げたら拡張の CALL_INDEX_VERSION（extension.ts）も合わせる。
          */
-        static final String CURRENT_VERSION = "1.2";
+        static final String CURRENT_VERSION = "1.3";
 
         @JsonProperty("version")
         String version;
@@ -320,9 +359,9 @@ class CallIndexModels {
         Map<String, MethodEntry> methods;
         @JsonProperty("symbolIndex")
         Map<String, ConstantEntry> symbolIndex = new HashMap<>();
-        /** フィールドの宣言（キー: 宣言クラスFQN#名前） */
-        @JsonProperty("fields")
-        Map<String, FieldEntry> fields = new HashMap<>();
+        /** 型・フィールドの宣言（キー: 型の FQN / 宣言クラスFQN#名前） */
+        @JsonProperty("symbols")
+        Map<String, SymbolEntry> symbols = new HashMap<>();
 
         CallIndex() {
             this.version = CURRENT_VERSION;
@@ -339,9 +378,9 @@ class CallIndexModels {
             return methods.get(fqn);
         }
 
-        /** フィールドの宣言（Lazy 実装ではサイドカーから読むためオーバーライド可能）。無ければ null */
-        FieldEntry getField(String key) {
-            return fields.get(key);
+        /** 型・フィールドの宣言（Lazy 実装ではサイドカーから読むためオーバーライド可能）。無ければ null */
+        SymbolEntry getSymbol(String key) {
+            return symbols.get(key);
         }
 
         /** メソッド総数（Lazy 実装では offset 件数を返すためオーバーライド可能）。 */
@@ -381,10 +420,10 @@ class CallIndexModels {
                 symbolIndex.forEach((k, v) -> symObj.put(k, v.toJson()));
                 obj.put("symbolIndex", symObj);
             }
-            if (!fields.isEmpty()) {
-                var fieldsObj = new JSONObject();
-                fields.forEach((k, v) -> fieldsObj.put(k, v.toJson()));
-                obj.put("fields", fieldsObj);
+            if (!symbols.isEmpty()) {
+                var symbolsObj = new JSONObject();
+                symbols.forEach((k, v) -> symbolsObj.put(k, v.toJson()));
+                obj.put("symbols", symbolsObj);
             }
             return obj;
         }
@@ -409,10 +448,10 @@ class CallIndexModels {
                         e.getString("value"), e.getString("qualifier"), e.getString("type")));
                 }
             }
-            if (obj.has("fields")) {
-                JSONObject fieldsObj = obj.getJSONObject("fields");
-                for (String key : fieldsObj.keySet()) {
-                    index.fields.put(key, FieldEntry.fromJson(fieldsObj.getJSONObject(key)));
+            if (obj.has("symbols")) {
+                JSONObject symbolsObj = obj.getJSONObject("symbols");
+                for (String key : symbolsObj.keySet()) {
+                    index.symbols.put(key, SymbolEntry.fromJson(symbolsObj.getJSONObject(key)));
                 }
             }
             return index;

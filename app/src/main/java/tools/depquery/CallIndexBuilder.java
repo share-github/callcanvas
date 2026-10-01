@@ -89,8 +89,8 @@ class CallIndexBuilder {
     private void addResults(CallIndex index, List<FileResult> results) {
         for (FileResult r : results) {
             for (Caller c : r.callers()) index.addMethod(c.entry);
-            index.symbolIndex.putAll(r.symbols());
-            index.fields.putAll(r.fields());
+            index.symbolIndex.putAll(r.constants());
+            index.symbols.putAll(r.symbols());
         }
         ChaContext cha = new ChaContext(hierarchyCache, new DeclaredMethodResolver(index.methods.values()));
         for (FileResult r : results) {
@@ -242,10 +242,10 @@ class CallIndexBuilder {
             }
         }
 
-        // 未変更ファイルのフィールド宣言をコピー（変更・追加ファイルの分は再解析で入れ直す）
-        for (var entry : oldIndex.fields.entrySet()) {
+        // 未変更ファイルの型・フィールド宣言をコピー（変更・追加ファイルの分は再解析で入れ直す）
+        for (var entry : oldIndex.symbols.entrySet()) {
             if (!changedFilePaths.contains(entry.getValue().file)) {
-                newIndex.fields.put(entry.getKey(), entry.getValue());
+                newIndex.symbols.put(entry.getKey(), entry.getValue());
             }
         }
 
