@@ -1,0 +1,286 @@
+[
+  {
+    "label": "契約どおりのキャンバスは違反なし",
+    "input": {
+      "canvas": {
+        "groups": [
+          {
+            "id": "blk-java",
+            "kind": "java",
+            "label": "Java"
+          },
+          {
+            "id": "isl-1",
+            "kind": "island",
+            "parent": "blk-java",
+            "label": "i"
+          },
+          {
+            "id": "isl-2",
+            "kind": "island",
+            "parent": "blk-java",
+            "label": "i2"
+          },
+          {
+            "id": "blk-xml",
+            "kind": "xml",
+            "label": "XML"
+          }
+        ],
+        "windows": [
+          {
+            "id": "a",
+            "group": "isl-1"
+          },
+          {
+            "id": "b",
+            "group": "isl-1"
+          },
+          {
+            "id": "c",
+            "group": "isl-2"
+          },
+          {
+            "id": "x",
+            "group": "blk-xml"
+          }
+        ],
+        "connections": [
+          {
+            "from": "a",
+            "to": "b"
+          }
+        ],
+        "metadata": {
+          "changeSet": {
+            "files": [
+              {
+                "path": "A.java",
+                "block": "java",
+                "windows": [
+                  "a",
+                  "b"
+                ]
+              },
+              {
+                "path": "C.java",
+                "block": "java",
+                "windows": [
+                  "c"
+                ]
+              },
+              {
+                "path": "x.xml",
+                "block": "xml",
+                "windows": [
+                  "x"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "inputPaths": [
+        "A.java",
+        "C.java",
+        "x.xml"
+      ]
+    },
+    "expected": []
+  },
+  {
+    "label": "漏れ・空 windows・実在しない window・未知の group・島をまたぐ接続・ブロック順の違反を検出",
+    "input": {
+      "canvas": {
+        "groups": [
+          {
+            "id": "blk-xml",
+            "kind": "xml",
+            "label": "XML"
+          },
+          {
+            "id": "blk-java",
+            "kind": "java",
+            "label": "Java"
+          },
+          {
+            "id": "isl-1",
+            "kind": "island",
+            "parent": "blk-java",
+            "label": "i"
+          },
+          {
+            "id": "isl-2",
+            "kind": "island",
+            "parent": "blk-java",
+            "label": "i2"
+          }
+        ],
+        "windows": [
+          {
+            "id": "a",
+            "group": "isl-1"
+          },
+          {
+            "id": "b",
+            "group": "isl-1"
+          },
+          {
+            "id": "c",
+            "group": "isl-2"
+          },
+          {
+            "id": "x",
+            "group": "blk-xml"
+          },
+          {
+            "id": "q",
+            "group": "isl-9"
+          }
+        ],
+        "connections": [
+          {
+            "from": "a",
+            "to": "b"
+          },
+          {
+            "from": "a",
+            "to": "c"
+          }
+        ],
+        "metadata": {
+          "changeSet": {
+            "files": [
+              {
+                "path": "A.java",
+                "block": "java",
+                "windows": [
+                  "a",
+                  "b"
+                ]
+              },
+              {
+                "path": "C.java",
+                "block": "java",
+                "windows": []
+              },
+              {
+                "path": "x.xml",
+                "block": "xml",
+                "windows": [
+                  "zz"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "inputPaths": [
+        "A.java",
+        "C.java",
+        "x.xml",
+        "missing.sql"
+      ]
+    },
+    "expected": [
+      "files に missing.sql が 0 回",
+      "files の数 3 ≠ 変更ファイル数 4",
+      "files[C.java].windows が空",
+      "files[x.xml].windows の zz が存在しない",
+      "window q の group isl-9 が groups に無い",
+      "connection a→c が同じ島の中に無い",
+      "ブロック順 xml,java"
+    ]
+  },
+  {
+    "label": "changeSet が無い",
+    "input": {
+      "canvas": {
+        "windows": []
+      },
+      "inputPaths": []
+    },
+    "expected": [
+      "metadata.changeSet.files がありません"
+    ]
+  },
+  {
+    "label": "clientside の島（parent が clientside ブロック）は違反なし・parent が xml ブロックの島は違反",
+    "input": {
+      "canvas": {
+        "groups": [
+          {
+            "id": "blk-clientside",
+            "kind": "clientside",
+            "label": "Clientside"
+          },
+          {
+            "id": "cs-isl-1",
+            "kind": "island",
+            "parent": "blk-clientside",
+            "label": "i"
+          },
+          {
+            "id": "blk-xml",
+            "kind": "xml",
+            "label": "XML"
+          },
+          {
+            "id": "x-isl",
+            "kind": "island",
+            "parent": "blk-xml",
+            "label": "bad"
+          }
+        ],
+        "windows": [
+          {
+            "id": "a",
+            "group": "cs-isl-1"
+          },
+          {
+            "id": "b",
+            "group": "cs-isl-1"
+          },
+          {
+            "id": "x",
+            "group": "x-isl"
+          }
+        ],
+        "connections": [
+          {
+            "from": "a",
+            "to": "b"
+          }
+        ],
+        "metadata": {
+          "changeSet": {
+            "files": [
+              {
+                "path": "a.js",
+                "block": "clientside",
+                "windows": [
+                  "a",
+                  "b"
+                ]
+              },
+              {
+                "path": "x.xml",
+                "block": "xml",
+                "windows": [
+                  "x"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "inputPaths": [
+        "a.js",
+        "x.xml"
+      ]
+    },
+    "expected": [
+      "島 x-isl の parent が java / clientside ブロックでない"
+    ]
+  }
+]

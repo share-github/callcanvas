@@ -38,6 +38,8 @@ class AnalyzerConfig {
     boolean buildIndex = false;
     String resolveFromIndexPath = null;
     String rootClassFqn = null;
+    /** 変更集合キャンバスの入力（変更ファイルと hunk の JSON）。指定時は {@link ChangeSetAnalyzer} で解析する */
+    Path changedMethodsPath = null;
     List<Pattern> includePatterns = new ArrayList<>();
     List<Pattern> excludePatterns = new ArrayList<>();
 
@@ -69,6 +71,7 @@ class AnalyzerConfig {
                 case "--direction" -> cfg.direction = args[++i].toLowerCase();
                 case "--build-index" -> cfg.buildIndex = true;
                 case "--resolve-from-index" -> cfg.resolveFromIndexPath = args[++i];
+                case "--changed-methods" -> cfg.changedMethodsPath = Path.of(args[++i]);
                 case "--help", "-h" -> {
                     System.out.println(
                             """
@@ -91,6 +94,7 @@ class AnalyzerConfig {
                                       --rebuild-cache     Force rebuild hierarchy cache (for CHA optimization)
                                       --build-index       Build call index for faster analysis (incremental update if exists)
                                       --resolve-from-index <file:line>  Resolve method FQN from call index by file path and line number
+                                      --changed-methods <input.json>  Change Set Canvas: changed methods and islands from hunks (requires index)
                                       --debug             Enable debug output
                                       --help, -h          Show this help
 

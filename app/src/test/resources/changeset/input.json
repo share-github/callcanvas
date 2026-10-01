@@ -1,0 +1,304 @@
+{
+  "files": [
+    {
+      "path": "src/main/java/com/example/changeset/order/OrderController.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 10,
+          "oldCount": 1,
+          "newStart": 10,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        String order = orderService.place(req);"
+            },
+            {
+              "type": "add",
+              "content": "        String order = orderFacade.place(req);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/order/OrderService.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 4,
+          "oldCount": 1,
+          "newStart": 4,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "    private static final int MAX_ITEMS = 5;"
+            },
+            {
+              "type": "add",
+              "content": "    private static final int MAX_ITEMS = 10;"
+            }
+          ]
+        },
+        {
+          "oldStart": 9,
+          "oldCount": 1,
+          "newStart": 9,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "     * 注文を検証する。"
+            },
+            {
+              "type": "add",
+              "content": "     * 注文を検証して保存する。"
+            }
+          ]
+        },
+        {
+          "oldStart": 11,
+          "oldCount": 0,
+          "newStart": 12,
+          "newCount": 3,
+          "lines": [
+            {
+              "type": "add",
+              "content": "        if (order.isEmpty()) {"
+            },
+            {
+              "type": "add",
+              "content": "            throw new IllegalArgumentException(\"empty order\");"
+            },
+            {
+              "type": "add",
+              "content": "        }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/order/OrderRepository.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 5,
+          "oldCount": 1,
+          "newStart": 5,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        System.out.println(order);"
+            },
+            {
+              "type": "add",
+              "content": "        System.out.println(\"save \" + order);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/checkout/InventoryService.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 5,
+          "oldCount": 1,
+          "newStart": 5,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        System.out.println(\"reserve\");"
+            },
+            {
+              "type": "add",
+              "content": "        System.out.println(\"reserve \" + cart.length());"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/checkout/PaymentService.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 5,
+          "oldCount": 1,
+          "newStart": 5,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        return \"receipt\";"
+            },
+            {
+              "type": "add",
+              "content": "        return \"receipt:\" + cart.hashCode();"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/report/ReportService.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 5,
+          "oldCount": 1,
+          "newStart": 5,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        return year + \"-\" + month;"
+            },
+            {
+              "type": "add",
+              "content": "        return String.format(\"%04d-%02d\", year, month);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/admin/AuditService.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 5,
+          "oldCount": 1,
+          "newStart": 5,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        System.out.println(message);"
+            },
+            {
+              "type": "add",
+              "content": "        System.out.println(\"[audit] \" + message);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/admin/MetricsService.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 5,
+          "oldCount": 1,
+          "newStart": 5,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        return 0;"
+            },
+            {
+              "type": "add",
+              "content": "        return 42;"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/notify/JobRunner.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 7,
+          "oldCount": 1,
+          "newStart": 7,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        dispatcher.dispatch(event.trim());"
+            },
+            {
+              "type": "add",
+              "content": "        dispatcher.dispatch(event);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/notify/NotifyService.java",
+      "status": "modified",
+      "hunks": [
+        {
+          "oldStart": 5,
+          "oldCount": 1,
+          "newStart": 5,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        System.out.println(event);"
+            },
+            {
+              "type": "add",
+              "content": "        System.out.println(\"email \" + event);"
+            }
+          ]
+        },
+        {
+          "oldStart": 9,
+          "oldCount": 1,
+          "newStart": 9,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "        System.out.println(event);"
+            },
+            {
+              "type": "add",
+              "content": "        System.out.println(\"sms \" + event);"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/report/ReportLegacy.java",
+      "status": "modified",
+      "worktreeMatches": false,
+      "hunks": [
+        {
+          "oldStart": 3,
+          "oldCount": 1,
+          "newStart": 3,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "    // old"
+            },
+            {
+              "type": "add",
+              "content": "    // new"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/example/changeset/order/LegacyRule.java",
+      "status": "deleted",
+      "hunks": []
+    }
+  ]
+}

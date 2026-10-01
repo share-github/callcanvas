@@ -107,14 +107,17 @@ end
 --- Show (and if possible open) the viewer URL.
 --- `attached` means a browser tab is already connected: it reloads itself, so
 --- there is nothing to open or copy.
-local function open_url(url, attached)
+--- `headline` (optional) says what was opened, e.g. a change set's summary; it then
+--- leads the message instead of the canvas title.
+local function open_url(url, attached, headline)
   -- The link always points at the canvas that was just analysed, so pasting it in
   -- a NEW tab gives a second canvas side by side instead of moving the tab that
   -- follows the newest one.
   local shown = state.short_url or url
   if attached then
     local copied = M.config.copy_url and clipboard_copy(shown)
-    local lines = { 'updated — your open tab reloaded itself' }
+    local lines = { headline and (headline .. ' — 開いているタブを更新しました')
+      or 'updated — your open tab reloaded itself' }
     if state.canvas_count and state.canvas_count > 1 then
       table.insert(lines, ('%d canvases open · new tab: %s%s'):format(
         state.canvas_count, shown, copied and ' (copied)' or ''))
@@ -126,6 +129,19 @@ local function open_url(url, attached)
   -- Prefer the short link: the long `?t=<48 hex>` URL is unusable in a terminal
   -- notification.
   local copied = M.config.copy_url and clipboard_copy(shown)
+
+  if headline then
+    -- Says what was opened and where it went in one line; the URL follows for a
+    -- browser on another machine.
+    local lines = { headline .. (copied and ' — URL をコピーしました' or ''), shown }
+    if M.config.auto_open and can_open_browser() then
+      lines[1] = headline .. ' — ブラウザで開きます'
+    end
+    notify(table.concat(lines, '\n'))
+    if not M.config.auto_open or not can_open_browser() then
+      return
+    end
+  end
 
   if not M.config.auto_open then
     notify(shown)
@@ -150,34 +166,44 @@ local function open_url(url, attached)
 
   if M.config.open_cmd then
     vim.system(vim.list_extend(vim.deepcopy(M.config.open_cmd), { shown }), { detach = true })
-    notify('opened in the browser')
+    if not headline then
+      notify('opened in the browser')
+    end
     return
   end
   if vim.env.BROWSER and vim.env.BROWSER ~= '' then
     vim.system({ vim.env.BROWSER, shown }, { detach = true })
-    notify('opened in the browser')
+    if not headline then
+      notify('opened in the browser')
+    end
     return
   end
 
   local handle, err = vim.ui.open(shown)
   if handle then
-    notify('opened in the browser')
+    if not headline then
+      notify('opened in the browser')
+    end
   else
     notify((err or 'could not open a browser') .. '\n' .. shown, vim.log.levels.WARN)
   end
 end
 
---- Build the argument list for `callcanvas open`.
-local function open_args(file, line)
-  local args = {
-    M.config.node, cli_path(), 'open',
+local run_open
+
+--- Build the argument list for `callcanvas open` (or `changeset`, which starts and
+--- reuses the same host). `extra` comes right after the subcommand.
+local function open_args(file, line, subcommand, extra)
+  local args = { M.config.node, cli_path(), subcommand or 'open' }
+  vim.list_extend(args, extra or {})
+  vim.list_extend(args, {
     '--file', file,
     '--line', tostring(line),
     '--nvim', vim.v.servername,
     -- The host exits together with this Neovim (quit, crash or kill).
     '--nvim-pid', tostring(vim.fn.getpid()),
     '--json',
-  }
+  })
   if M.config.host then
     table.insert(args, '--host')
     table.insert(args, M.config.host)
@@ -215,11 +241,21 @@ function M.open(opts)
   end
 
   notify('analyzing ' .. vim.fn.fnamemodify(file, ':t') .. ':' .. line .. ' ...')
+  run_open(open_args(file, line))
+end
 
-  vim.system(open_args(file, line), { text = true }, function(result)
+--- Run `callcanvas open`/`changeset` and show (copy) the canvas URL it answers with.
+--- `opts.headline(payload)` names what was opened; `opts.failed(err)` rewords a failure
+--- (both optional — the change set uses them).
+run_open = function(args, opts)
+  opts = opts or {}
+  vim.system(args, { text = true }, function(result)
     vim.schedule(function()
       if result.code ~= 0 then
         local err = (result.stderr or ''):gsub('%s+$', '')
+        if opts.failed and opts.failed(err) then
+          return
+        end
         notify('failed: ' .. (err ~= '' and err or ('exit ' .. result.code)), vim.log.levels.ERROR)
         return
       end
@@ -238,9 +274,163 @@ function M.open(opts)
       state.title = ok and payload and payload.title or nil
       state.canvas_count = (ok and payload and payload.canvasCount) or 1
       local attached = ok and payload and (payload.clients or 0) > 0
-      open_url(url, attached)
+      local headline = ok and type(payload) == 'table' and opts.headline and opts.headline(payload) or nil
+      open_url(url, attached, headline)
     end)
   end)
+end
+
+-- --- change set -------------------------------------------------------------------
+-- What a change set canvas shows is the same two things as the viewer's diff display
+-- ("📝 コミット変更" / "📄 ワークベンチ"): one commit, or the workbench (git diff HEAD).
+
+-- How many recent commits the list offers.
+local RECENT_COMMIT_COUNT = 20
+
+-- The argument that means the workbench (`:CallCanvasChangeSet workbench`).
+local WORKBENCH_ARG = 'workbench'
+
+--- Lines of a git command's stdout, or nil when it failed.
+local function git_lines(dir, args)
+  local ok, result = pcall(function()
+    return vim.system(vim.list_extend({ 'git', '-C', dir }, args), { text = true }):wait()
+  end)
+  if not ok or not result or result.code ~= 0 then
+    return nil
+  end
+  return vim.split((result.stdout or ''):gsub('%s+$', ''), '\n', { trimempty = true })
+end
+
+--- The file the change set is anchored at: the current buffer, or the cwd without one.
+local function change_set_anchor(file)
+  file = file or vim.api.nvim_buf_get_name(0)
+  if file == '' or vim.fn.filereadable(file) == 0 then
+    return vim.fn.getcwd()
+  end
+  return file
+end
+
+--- The git repository of the anchor (its toplevel), or nil.
+local function change_set_repo(anchor)
+  local dir = vim.fn.isdirectory(anchor) == 1 and anchor or vim.fn.fnamemodify(anchor, ':h')
+  local lines = git_lines(dir, { 'rev-parse', '--show-toplevel' })
+  return lines and lines[1] or nil
+end
+
+--- The recent commits: { hash, subject, date } (date is relative, "2 days ago").
+local function recent_commits(repo)
+  local commits = {}
+  for _, line in ipairs(git_lines(repo, {
+    'log', '-' .. RECENT_COMMIT_COUNT, '--no-color', '--format=%h%x09%cr%x09%s',
+  }) or {}) do
+    local hash, date, subject = line:match('^([^\t]*)\t([^\t]*)\t(.*)$')
+    if hash then
+      table.insert(commits, { hash = hash, subject = subject, date = date })
+    end
+  end
+  return commits
+end
+
+--- The choices for :CallCanvasChangeSet without an argument, in order: the workbench
+--- (with its file count, so an empty one shows as 0), then the commits, newest first.
+--- Each is { text = <shown>, target = <hash | 'workbench'> }.
+function M.change_set_choices(repo)
+  -- Same files as the viewer's workbench: git diff HEAD (tracked files only).
+  local workbench = git_lines(repo, { 'diff', 'HEAD', '--name-only' }) or {}
+  local choices = {
+    { text = ('ワークベンチ（未コミットの変更: %d ファイル）'):format(#workbench), target = WORKBENCH_ARG },
+  }
+  for index, commit in ipairs(recent_commits(repo)) do
+    local text = ('%s  %s  (%s)'):format(commit.hash, commit.subject, commit.date)
+    if index == 1 then
+      text = '直前のコミット  ' .. text
+    end
+    table.insert(choices, { text = text, target = commit.hash })
+  end
+  return choices
+end
+
+--- "変更集合 <hash>（<subject>）: N ファイル / M 島" from the host's answer.
+local function change_set_headline(target, payload)
+  local cs = type(payload.changeSet) == 'table' and payload.changeSet or {}
+  local function value(v) return v ~= vim.NIL and v or nil end
+  local name
+  if cs.kind == 'workbench' then
+    name = 'ワークベンチ'
+  else
+    local subject = value(cs.subject)
+    name = (value(cs.commit) or target) .. (subject and ('（' .. subject .. '）') or '')
+  end
+  return ('変更集合 %s: %d ファイル / %d 島'):format(name, cs.fileCount or 0, cs.islandCount or 0)
+end
+
+--- Why a change set came out empty, and what to do instead. The viewer says it like
+--- its diff display does ("ワークベンチの変更: 0 ファイル").
+local function change_set_failed(target, err)
+  if not err:match(': 0 ファイル') then
+    return false
+  end
+  if target == WORKBENCH_ARG then
+    notify('ワークベンチに未コミットの変更はありません（0 ファイル）。'
+      .. 'コミットの変更は :CallCanvasChangeSet の一覧でコミットを選んでください', vim.log.levels.WARN)
+  else
+    notify(('コミット %s に変更はありません（0 ファイル）。別のコミットを :CallCanvasChangeSet で選んでください'):format(target),
+      vim.log.levels.WARN)
+  end
+  return true
+end
+
+--- Build the canvas for a target that is already decided (a hash or 'workbench').
+local function run_change_set(target, anchor)
+  notify('変更集合を作成中: ' .. (target == WORKBENCH_ARG and 'ワークベンチ' or target) .. ' ...')
+  run_open(open_args(anchor, 1, 'changeset', { target }), {
+    headline = function(payload) return change_set_headline(target, payload) end,
+    failed = function(err) return change_set_failed(target, err) end,
+  })
+end
+
+--- One canvas for the changes of a commit (`hash`) or of the workbench (`workbench`,
+--- the uncommitted changes — git diff HEAD).
+---
+--- Without an argument the target is chosen here first (vim.ui.select — a picker
+--- under LazyVim): the workbench, then the recent commits. The host then gets the
+--- target, so it never asks itself. The canvas opens like :CallCanvas's (URL copied,
+--- /c/<id>), next to the others. The anchor is the current buffer, or the cwd.
+function M.change_set(target, opts)
+  opts = opts or {}
+  local anchor = change_set_anchor(opts.file)
+  target = vim.trim(target or '')
+  if target ~= '' then
+    run_change_set(target:lower() == WORKBENCH_ARG and WORKBENCH_ARG or target, anchor)
+    return
+  end
+  local repo = change_set_repo(anchor)
+  if not repo then
+    notify('git リポジトリではありません: ' .. anchor, vim.log.levels.ERROR)
+    return
+  end
+  vim.ui.select(M.change_set_choices(repo), {
+    prompt = '変更集合キャンバス: どの変更を見ますか',
+    format_item = function(choice) return choice.text end,
+  }, function(choice)
+    if choice then
+      run_change_set(choice.target, anchor)
+    end
+  end)
+end
+
+--- Completion for :CallCanvasChangeSet: workbench, HEAD and the recent short hashes.
+function M.complete_change_set(arglead)
+  local candidates = { WORKBENCH_ARG, 'HEAD' }
+  local repo = change_set_repo(change_set_anchor())
+  if repo then
+    for _, commit in ipairs(recent_commits(repo)) do
+      table.insert(candidates, commit.hash)
+    end
+  end
+  return vim.tbl_filter(function(candidate)
+    return vim.startswith(candidate, arglead or '')
+  end, candidates)
 end
 
 --- Open the viewer URL of the running session again.
@@ -740,6 +930,14 @@ function M.setup(opts)
   vim.api.nvim_create_user_command('CallCanvasBuildIndex', function()
     M.build_index()
   end, { desc = 'CallCanvas: build the Java call index for this project' })
+
+  vim.api.nvim_create_user_command('CallCanvasChangeSet', function(cmd)
+    M.change_set(cmd.args)
+  end, {
+    nargs = '?',
+    complete = function(arglead) return M.complete_change_set(arglead) end,
+    desc = 'CallCanvas: one canvas for the changes of a commit or the workbench (no argument: pick from a list)',
+  })
 
   vim.api.nvim_create_user_command('CallCanvasStatus', function()
     M.status()

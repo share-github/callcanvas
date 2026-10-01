@@ -9,6 +9,7 @@
  *
  * Each test case directory contains:
  *   config.json    - { files, targetFile, targetLine, depth }
+ *                    or { mode: "resolveLines", files, targetFile, lines } (expected.json: { lines: [{ line, signature }] })
  *   *.js           - JS files to analyze
  *   expected.json  - normalized expected output { rootFunction, functions, calls }
  */
@@ -28,6 +29,7 @@ if (!fs.existsSync(analyzerPath)) {
 }
 
 const { createProgram, analyzeCallHierarchy } = require(analyzerPath);
+const { resolveSignaturesAtLines } = require(resolverPath);
 
 // Load template include resolver if available
 let collectScriptsFromTemplateTree = null;
@@ -84,6 +86,44 @@ for (const testName of testCases) {
     }
 
     const { files, templateFile, targetFile, targetLine, depth = 3, mode, entryFile } = config;
+
+    // --- resolveLines mode: the resolveMethodSignature(s) APIs on a fresh program ---
+    if (config.mode === 'resolveLines') {
+        let result;
+        const resolveContext = { type: 'single', files: (files || []).map(f => path.resolve(testDir, f)), rootDir: testDir };
+        try {
+            const program = createProgram(resolveContext);
+            const signatures = resolveSignaturesAtLines(program, path.resolve(testDir, config.targetFile), config.lines, resolveContext.rootDir);
+            result = { lines: (signatures || []).map((signature, i) => ({ line: config.lines[i], signature })) };
+        } catch (e) {
+            console.error(`[ERROR] ${testName}: resolveSignaturesAtLines failed: ${e.message}`);
+            failed++;
+            continue;
+        }
+        if (UPDATE) {
+            fs.writeFileSync(expectedPath, JSON.stringify(result, null, 2) + '\n', 'utf-8');
+            console.log(`[UPDATE] ${testName}`);
+            passed++;
+            continue;
+        }
+        if (!fs.existsSync(expectedPath)) {
+            console.error(`[FAIL]   ${testName}: expected.json not found. Run with --update to create it.`);
+            failed++;
+            continue;
+        }
+        const expected = JSON.parse(fs.readFileSync(expectedPath, 'utf-8'));
+        if (JSON.stringify(expected) === JSON.stringify(result)) {
+            console.log(`[PASS]   ${testName}`);
+            passed++;
+        } else {
+            console.error(`[FAIL]   ${testName}:`);
+            console.error(`         expected ${JSON.stringify(expected.lines)}`);
+            console.error(`         got      ${JSON.stringify(result.lines)}`);
+            failed++;
+        }
+        continue;
+    }
+    // --- end resolveLines mode ---
 
     // --- includeMap mode ---
     if (mode === 'includeMap') {

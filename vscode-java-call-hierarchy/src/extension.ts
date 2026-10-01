@@ -336,6 +336,20 @@ function indexExists(projectRoot: string): boolean {
     return true;
 }
 
+/** Run java and collect its output (resolves with the exit code; -1 when java could not be started). */
+function runJava(javaPath: string, args: string[], cwd: string): Promise<{ code: number; stdout: string; stderr: string }> {
+    return new Promise((resolve) => {
+        const { spawn } = require('child_process');
+        const child = spawn(javaPath, args, { cwd });
+        let stdout = '';
+        let stderr = '';
+        child.stdout.on('data', (d: Buffer) => { stdout += d.toString(); });
+        child.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+        child.on('error', (e: Error) => resolve({ code: -1, stdout, stderr: stderr + e.message }));
+        child.on('close', (code: number) => resolve({ code: code ?? -1, stdout, stderr }));
+    });
+}
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('Java Call Hierarchy Analyzer is now active');
     
@@ -478,55 +492,40 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    // Helper function to build index in background
-    async function buildIndexInBackground(projectRoot: string, extensionPath: string) {
-        const { spawn } = require('child_process');
-        const startTime = Date.now();
-        
-        outputChannel.appendLine(`[Auto-Index] Building index for: ${projectRoot}`);
-        outputChannel.appendLine(`[Auto-Index] Started at: ${new Date().toISOString()}`);
-        
+    /**
+     * Inputs shared by the background index build and the change set analysis: the project root the index
+     * lives in (multi-module root if any) and the source/class dirs of all its modules (relative to that root,
+     * so the analyzer must run with cwd = finalProjectRoot).
+     */
+    function resolveIndexLayout(projectRoot: string): { finalProjectRoot: string; multiModuleRoot: string | null; modules: string[]; srcDirs: string[]; classDirs: string[] } {
         const wsBoundary = getWorkspaceBoundary(projectRoot);
         const multiModuleRoot = findMultiModuleRoot(projectRoot, wsBoundary, true);
         const finalProjectRoot = multiModuleRoot || projectRoot;
-        
+
         // Find all submodules
         let modules = findSubModules(finalProjectRoot);
-        
+
         // 単一モジュールプロジェクトのフォールバック: モジュールが見つからない場合はルートを使用
         if (modules.length === 0) {
             outputChannel.appendLine('[Auto-Index] No submodules found, treating as single module project');
             modules = [finalProjectRoot];
         }
-        
-        // Find JAR file
-        const jarPath = path.join(extensionPath, 'resources', 'java-call-hierarchy-analyzer.jar');
-        
-        if (!fs.existsSync(jarPath)) {
-            outputChannel.appendLine(`[Auto-Index] JAR not found: ${jarPath}`);
-            return;
-        }
-        
-        // Get configuration
-        const config = vscode.workspace.getConfiguration('javaCallHierarchy');
-        const javaPath = config.get<string>('javaPath') || 'java';
-        const langLevel = config.get<string>('languageLevel') || 'JAVA_21';
-        
+
         // Build source and class directories for all modules
         const srcDirs: string[] = [];
         const classDirs: string[] = [];
-        
+
         for (const modulePath of modules) {
             // 標準的な src/main/java
             const srcPath = path.join(modulePath, 'src', 'main', 'java');
             if (fs.existsSync(srcPath)) {
                 srcDirs.push(path.relative(finalProjectRoot, srcPath));
             }
-            
+
             // Gradle/Maven のクラスディレクトリ
             const gradleClasses = path.join(modulePath, 'build', 'classes', 'java', 'main');
             const mavenClasses = path.join(modulePath, 'target', 'classes');
-            
+
             if (fs.existsSync(gradleClasses)) {
                 classDirs.push(path.relative(finalProjectRoot, gradleClasses));
             }
@@ -534,11 +533,55 @@ export function activate(context: vscode.ExtensionContext) {
                 classDirs.push(path.relative(finalProjectRoot, mavenClasses));
             }
         }
+        return { finalProjectRoot, multiModuleRoot, modules, srcDirs, classDirs };
+    }
+
+    /** Builds in flight per project root, so a change set analysis waits for (instead of racing) an auto-build. */
+    const indexBuildsInFlight = new Map<string, Promise<boolean>>();
+
+    /**
+     * Build or incrementally update the index in the background. Resolves to whether it succeeded.
+     * `silent` suppresses the notifications (callers that await it report the outcome themselves).
+     */
+    function buildIndexInBackground(projectRoot: string, extensionPath: string, silent = false): Promise<boolean> {
+        const key = resolveIndexLayout(projectRoot).finalProjectRoot;
+        const running = indexBuildsInFlight.get(key);
+        if (running) {
+            outputChannel.appendLine(`[Auto-Index] Build already running for: ${key}`);
+            return running;
+        }
+        const build = runIndexBuild(projectRoot, extensionPath, silent)
+            .finally(() => indexBuildsInFlight.delete(key));
+        indexBuildsInFlight.set(key, build);
+        return build;
+    }
+
+    async function runIndexBuild(projectRoot: string, extensionPath: string, silent: boolean): Promise<boolean> {
+        const { spawn } = require('child_process');
+        const startTime = Date.now();
+        
+        outputChannel.appendLine(`[Auto-Index] Building index for: ${projectRoot}`);
+        outputChannel.appendLine(`[Auto-Index] Started at: ${new Date().toISOString()}`);
+        
+        const { finalProjectRoot, multiModuleRoot, modules, srcDirs, classDirs } = resolveIndexLayout(projectRoot);
+        
+        // Find JAR file
+        const jarPath = path.join(extensionPath, 'resources', 'java-call-hierarchy-analyzer.jar');
+        
+        if (!fs.existsSync(jarPath)) {
+            outputChannel.appendLine(`[Auto-Index] JAR not found: ${jarPath}`);
+            return false;
+        }
+        
+        // Get configuration
+        const config = vscode.workspace.getConfiguration('javaCallHierarchy');
+        const javaPath = config.get<string>('javaPath') || 'java';
+        const langLevel = config.get<string>('languageLevel') || 'JAVA_21';
         
         if (srcDirs.length === 0) {
             outputChannel.appendLine('[Auto-Index] No source directories found (src/main/java not found in any module)');
             outputChannel.appendLine('[Auto-Index] Searched modules: ' + modules.join(', '));
-            return;
+            return false;
         }
         
         const srcDirsStr = srcDirs.join(',');
@@ -576,61 +619,72 @@ export function activate(context: vscode.ExtensionContext) {
 
         outputChannel.appendLine('[Auto-Index] Command: ' + javaPath + ' ' + args.join(' '));
 
-        // Use spawn for streaming output (no buffer limit)
-        const child = spawn(javaPath, args, { cwd: finalProjectRoot });
+        return new Promise<boolean>((resolve) => {
+            // Use spawn for streaming output (no buffer limit)
+            const child = spawn(javaPath, args, { cwd: finalProjectRoot });
 
-        let stderrBuf = '';
+            let stderrBuf = '';
 
-        child.stdout.on('data', (data: Buffer) => {
-            const lines = data.toString().split('\n');
-            lines.forEach((line: string) => {
-                if (line.trim()) {
-                    outputChannel.appendLine('[Auto-Index] ' + line);
-                }
-            });
-        });
-
-        child.stderr.on('data', (data: Buffer) => {
-            const chunk = data.toString();
-            stderrBuf += chunk;
-            const lines = chunk.split('\n');
-            lines.forEach((line: string) => {
-                if (line.trim()) {
-                    outputChannel.appendLine('[Auto-Index] ' + line);
-                }
-            });
-        });
-
-        child.on('error', (error: Error) => {
-            const elapsed = Date.now() - startTime;
-            outputChannel.appendLine('[Auto-Index] Error: ' + error.message);
-            outputChannel.appendLine('[Auto-Index] Failed after ' + elapsed + 'ms');
-            vscode.window.showWarningMessage('Background index build failed. See output for details.');
-        });
-
-        child.on('close', (code: number) => {
-            const elapsed = Date.now() - startTime;
-
-            if (perfEnabled) {
-                const perfCh = vscode.window.createOutputChannel('CallCanvas Performance');
-                perfCh.appendLine('=== buildCallIndex (auto) ===');
-                for (const line of stderrBuf.split('\n')) {
-                    const trimmed = line.trim();
-                    if (trimmed.startsWith('[TIMING]')) {
-                        perfCh.appendLine('[PERF-JAVA] ' + trimmed.substring('[TIMING]'.length).trim());
+            child.stdout.on('data', (data: Buffer) => {
+                const lines = data.toString().split('\n');
+                lines.forEach((line: string) => {
+                    if (line.trim()) {
+                        outputChannel.appendLine('[Auto-Index] ' + line);
                     }
-                }
-                perfCh.appendLine(`[PERF] ${new Date().toISOString()} | buildCallIndex | TOTAL=${elapsed}ms | detail=exitCode:${code ?? -1}`);
-            }
+                });
+            });
 
-            if (code !== 0) {
-                outputChannel.appendLine('[Auto-Index] Process exited with code ' + code);
+            child.stderr.on('data', (data: Buffer) => {
+                const chunk = data.toString();
+                stderrBuf += chunk;
+                const lines = chunk.split('\n');
+                lines.forEach((line: string) => {
+                    if (line.trim()) {
+                        outputChannel.appendLine('[Auto-Index] ' + line);
+                    }
+                });
+            });
+
+            child.on('error', (error: Error) => {
+                const elapsed = Date.now() - startTime;
+                outputChannel.appendLine('[Auto-Index] Error: ' + error.message);
                 outputChannel.appendLine('[Auto-Index] Failed after ' + elapsed + 'ms');
-                vscode.window.showWarningMessage('Background index build failed. See output for details.');
-            } else {
-                outputChannel.appendLine('[Auto-Index] Index built successfully in ' + elapsed + 'ms');
-                vscode.window.showInformationMessage('Call index built successfully! Next analysis will be faster.');
-            }
+                if (!silent) {
+                    vscode.window.showWarningMessage('Background index build failed. See output for details.');
+                }
+                resolve(false);
+            });
+
+            child.on('close', (code: number) => {
+                const elapsed = Date.now() - startTime;
+
+                if (perfEnabled) {
+                    const perfCh = vscode.window.createOutputChannel('CallCanvas Performance');
+                    perfCh.appendLine('=== buildCallIndex (auto) ===');
+                    for (const line of stderrBuf.split('\n')) {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith('[TIMING]')) {
+                            perfCh.appendLine('[PERF-JAVA] ' + trimmed.substring('[TIMING]'.length).trim());
+                        }
+                    }
+                    perfCh.appendLine(`[PERF] ${new Date().toISOString()} | buildCallIndex | TOTAL=${elapsed}ms | detail=exitCode:${code ?? -1}`);
+                }
+
+                if (code !== 0) {
+                    outputChannel.appendLine('[Auto-Index] Process exited with code ' + code);
+                    outputChannel.appendLine('[Auto-Index] Failed after ' + elapsed + 'ms');
+                    if (!silent) {
+                        vscode.window.showWarningMessage('Background index build failed. See output for details.');
+                    }
+                    resolve(false);
+                } else {
+                    outputChannel.appendLine('[Auto-Index] Index built successfully in ' + elapsed + 'ms');
+                    if (!silent) {
+                        vscode.window.showInformationMessage('Call index built successfully! Next analysis will be faster.');
+                    }
+                    resolve(true);
+                }
+            });
         });
     }
 
@@ -1271,6 +1325,135 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
+    // API Command: Java block of the Change Set Canvas (no UI; called by CallCanvas Viewer via executeCommand).
+    // Brings the call index up to date (builds it if missing, incremental update otherwise), then runs the
+    // analyzer with --changed-methods. Input/output: app/README.md「変更集合キャンバス」and the viewer README contract.
+    const analyzeChangeSetCommand = vscode.commands.registerCommand(
+        'javaCallHierarchy.analyzeChangeSet',
+        async (params: {
+            /** Root the relative files[].path are based on (usually the git repository root) */
+            workspaceRoot?: string;
+            /** Any file/directory inside the Java project (used to find the project when workspaceRoot has no build file) */
+            anchorFile?: string;
+            /** Same shape as the analyzer input files[] (path relative to workspaceRoot, or absolute) */
+            files: Array<{ path: string; oldPath?: string; status: string; worktreeMatches?: boolean; binary?: boolean; hunks?: any[] }>;
+        }): Promise<{ success: boolean; data?: any; error?: string; unindexedFiles?: string[] }> => {
+            try {
+                if (!params || !Array.isArray(params.files)) {
+                    return { success: false, error: 'files is required' };
+                }
+                const base = params.workspaceRoot || (params.anchorFile && path.dirname(params.anchorFile)) || '';
+                const absOf = (p: string) => path.isAbsolute(p) ? path.normalize(p) : path.resolve(base, p);
+                if (!params.workspaceRoot && params.files.some(f => !path.isAbsolute(f.path))) {
+                    return { success: false, error: 'workspaceRoot is required for relative file paths' };
+                }
+
+                // Java project: from the anchor, else the workspace root if it is a project, else the first changed file
+                const candidates = [
+                    params.anchorFile,
+                    params.workspaceRoot && hasJavaBuildFile(params.workspaceRoot) ? path.join(params.workspaceRoot, 'pom.xml') : undefined,
+                    ...params.files.filter(f => f.status !== 'deleted').map(f => absOf(f.path))
+                ].filter((p): p is string => !!p);
+                let projectRoot: string | null = null;
+                for (const c of candidates) {
+                    projectRoot = findProjectRootFromFile(c);
+                    if (projectRoot) break;
+                }
+                if (!projectRoot) {
+                    return { success: false, error: 'Could not find a Java project (pom.xml / build.gradle) for the change set' };
+                }
+                const { finalProjectRoot, srcDirs } = resolveIndexLayout(projectRoot);
+                if (srcDirs.length === 0) {
+                    return { success: false, error: `No source directories (src/main/java) in ${finalProjectRoot}` };
+                }
+                outputChannel.appendLine(`[API] analyzeChangeSet: ${params.files.length} file(s) in ${finalProjectRoot}`);
+
+                // Files outside the indexed source roots (src/test/java etc.) have no methods in the index:
+                // the analyzer would reject them as stale, so they are returned separately for the caller.
+                const srcAbs = srcDirs.map(d => path.join(finalProjectRoot, d) + path.sep);
+                const inputs: any[] = [];
+                const originalPaths: string[] = [];
+                const unindexedFiles: string[] = [];
+                for (const f of params.files) {
+                    const abs = absOf(f.path);
+                    if (!srcAbs.some(d => abs.startsWith(d))) {
+                        unindexedFiles.push(f.path);
+                        continue;
+                    }
+                    inputs.push({ ...f, path: abs });
+                    originalPaths.push(f.path);
+                }
+
+                const jarPath = path.join(context.extensionPath, 'resources', 'java-call-hierarchy-analyzer.jar');
+                if (!fs.existsSync(jarPath)) {
+                    return { success: false, error: `Analyzer JAR not found at ${jarPath}` };
+                }
+                const config = vscode.workspace.getConfiguration('javaCallHierarchy');
+                const javaPath = config.get<string>('javaPath') || 'java';
+                const outDir = path.join(finalProjectRoot, 'build', 'call-hierarchy-output', 'changeset');
+                fs.mkdirSync(outDir, { recursive: true });
+                const inputPath = path.join(outDir, 'changeset-input.json');
+                fs.writeFileSync(inputPath, JSON.stringify({ files: inputs }, null, 2), 'utf8');
+
+                const args = [
+                    '-jar', jarPath,
+                    '--changed-methods', inputPath,
+                    '--src', srcDirs.join(','),
+                    '--workspace', finalProjectRoot,
+                    '--out', outDir
+                ];
+
+                const run = await vscode.window.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title: 'Change set (Java)',
+                        cancellable: false
+                    },
+                    async (progress) => {
+                        // Keep the index fresh: hunks are mapped to method line ranges of the index
+                        progress.report({ message: indexExists(finalProjectRoot)
+                            ? 'Updating call index...'
+                            : 'Building call index (this may take several minutes)...' });
+                        if (!await buildIndexInBackground(finalProjectRoot, context.extensionPath, true)) {
+                            return { code: -1, stdout: '', stderr: 'Failed to build the call index. See the "Java Call Hierarchy" output for details.' };
+                        }
+                        progress.report({ message: 'Analyzing changed methods...' });
+                        outputChannel.appendLine('[API] Command: ' + javaPath + ' ' + args.join(' '));
+                        return runJava(javaPath, args, finalProjectRoot);
+                    }
+                );
+
+                if (run.code !== 0) {
+                    const errors = run.stderr.split('\n').filter(l => l.startsWith('[ERROR]'))
+                        .map(l => l.substring('[ERROR]'.length).trim());
+                    const error = errors.length > 0 ? errors.join('\n') : (run.stderr.trim() || `Analyzer exited with code ${run.code}`);
+                    outputChannel.appendLine(`[API] analyzeChangeSet failed: ${error}`);
+                    return { success: false, error, unindexedFiles };
+                }
+                const marker = '[CHANGESET_FILE]';
+                const line = (run.stderr + '\n' + run.stdout).split('\n').find(l => l.includes(marker));
+                const jsonPath = line ? line.substring(line.indexOf(marker) + marker.length).trim() : path.join(outDir, 'changeset-java.json');
+                const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+
+                // The analyzer echoes the (absolute) paths it was given; give the caller back its own paths
+                const files = data?.metadata?.changeSet?.files;
+                if (Array.isArray(files)) {
+                    files.forEach((f: any, i: number) => {
+                        if (i < originalPaths.length) f.path = originalPaths[i];
+                    });
+                }
+                outputChannel.appendLine(`[API] analyzeChangeSet success: ${data.windows?.length || 0} windows, `
+                    + `${(data.groups || []).filter((g: any) => g.kind === 'island').length} islands`
+                    + (unindexedFiles.length > 0 ? `, ${unindexedFiles.length} file(s) outside source roots` : ''));
+                return { success: true, data, unindexedFiles };
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                outputChannel.appendLine(`[API] analyzeChangeSet error: ${message}`);
+                return { success: false, error: message };
+            }
+        }
+    );
+
     // Command: Build Call Index
     const buildIndexCommand = vscode.commands.registerCommand(
         'javaCallHierarchy.buildIndex',
@@ -1529,6 +1712,7 @@ export function activate(context: vscode.ExtensionContext) {
         openCallCanvasViewerCommand,
         resolveMethodSignatureCommand,
         analyzeMethodCommand,
+        analyzeChangeSetCommand,
         buildIndexCommand
     );
 }

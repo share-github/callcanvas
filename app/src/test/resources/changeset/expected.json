@@ -1,0 +1,940 @@
+{
+  "metadata": {"changeSet": {"files": [
+    {
+      "path": "src/main/java/com/example/changeset/order/OrderController.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": ["m-b045734e51"],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/order/OrderService.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": [
+        "m-1033bac772",
+        "f-cf9ae9c936"
+      ],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/order/OrderRepository.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": ["m-02ea398b8c"],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/checkout/InventoryService.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": ["m-544a1e7d2b"],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/checkout/PaymentService.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": ["m-29ebb38981"],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/report/ReportService.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": ["m-4b28589431"],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/admin/AuditService.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": ["m-d374039ab5"],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/admin/MetricsService.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": ["m-2ed8622a7f"],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/notify/JobRunner.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": ["m-a020bb21de"],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/notify/NotifyService.java",
+      "inGraph": true,
+      "block": "java",
+      "windows": [
+        "m-ad36ed0be8",
+        "m-6eaf4d0530"
+      ],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/report/ReportLegacy.java",
+      "reason": "worktreeMismatch",
+      "inGraph": false,
+      "block": "java",
+      "windows": [],
+      "status": "modified"
+    },
+    {
+      "path": "src/main/java/com/example/changeset/order/LegacyRule.java",
+      "reason": "deleted",
+      "inGraph": false,
+      "block": "java",
+      "windows": [],
+      "status": "deleted"
+    }
+  ]}},
+  "groups": [
+    {
+      "kind": "java",
+      "id": "blk-java",
+      "label": "Java"
+    },
+    {
+      "parent": "blk-java",
+      "kind": "island",
+      "id": "isl-1",
+      "label": "島 1: OrderController.create \u2026"
+    },
+    {
+      "parent": "blk-java",
+      "kind": "island",
+      "id": "isl-2",
+      "label": "島 2: InventoryService.reserve \u2026"
+    },
+    {
+      "parent": "blk-java",
+      "kind": "island",
+      "id": "isl-3",
+      "label": "島 3: ReportService.monthly"
+    },
+    {
+      "parent": "blk-java",
+      "kind": "island",
+      "id": "isl-4",
+      "label": "島 4: AuditService.log \u2026"
+    },
+    {
+      "parent": "blk-java",
+      "kind": "island",
+      "id": "isl-5",
+      "label": "島 5: JobRunner.runJob \u2026"
+    }
+  ],
+  "windows": [
+    {
+      "code": "    @PostMapping(\"/orders\")\n    public String create(String req) {\n        String order = orderFacade.place(req);\n        return \"created:\" + order;\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 10,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        String order = orderService.place(req);"
+          },
+          {
+            "type": "add",
+            "content": "        String order = orderFacade.place(req);"
+          }
+        ],
+        "newStart": 10
+      }]},
+      "refs": [
+        {
+          "col": 5,
+          "symbol": "com.example.changeset.web.PostMapping",
+          "len": 11,
+          "line": 8
+        },
+        {
+          "col": 23,
+          "symbol": "com.example.changeset.order.OrderController#orderFacade",
+          "len": 11,
+          "line": 10
+        }
+      ],
+      "displayName": "OrderController.create",
+      "filePath": "src/main/java/com/example/changeset/order/OrderController.java",
+      "startLine": 8,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-b045734e51",
+      "windowType": "method",
+      "group": "isl-1"
+    },
+    {
+      "code": "    /**\n     * 注文を検証して保存する。\n     */\n    public void validate(String order) {\n        if (order.isEmpty()) {\n            throw new IllegalArgumentException(\"empty order\");\n        }\n        orderRepository.save(order);\n    }",
+      "diffState": {"hunks": [
+        {
+          "oldStart": 9,
+          "oldCount": 1,
+          "newCount": 1,
+          "lines": [
+            {
+              "type": "remove",
+              "content": "     * 注文を検証する。"
+            },
+            {
+              "type": "add",
+              "content": "     * 注文を検証して保存する。"
+            }
+          ],
+          "newStart": 9
+        },
+        {
+          "oldStart": 11,
+          "oldCount": 0,
+          "newCount": 3,
+          "lines": [
+            {
+              "type": "add",
+              "content": "        if (order.isEmpty()) {"
+            },
+            {
+              "type": "add",
+              "content": "            throw new IllegalArgumentException(\"empty order\");"
+            },
+            {
+              "type": "add",
+              "content": "        }"
+            }
+          ],
+          "newStart": 12
+        }
+      ]},
+      "refs": [{
+        "col": 8,
+        "symbol": "com.example.changeset.order.OrderService#orderRepository",
+        "len": 15,
+        "line": 15
+      }],
+      "displayName": "OrderService.validate",
+      "filePath": "src/main/java/com/example/changeset/order/OrderService.java",
+      "startLine": 8,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-1033bac772",
+      "windowType": "method",
+      "group": "isl-1"
+    },
+    {
+      "code": "    public void save(String order) {\n        System.out.println(\"save \" + order);\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 5,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        System.out.println(order);"
+          },
+          {
+            "type": "add",
+            "content": "        System.out.println(\"save \" + order);"
+          }
+        ],
+        "newStart": 5
+      }]},
+      "displayName": "OrderRepository.save",
+      "filePath": "src/main/java/com/example/changeset/order/OrderRepository.java",
+      "startLine": 4,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-02ea398b8c",
+      "windowType": "method",
+      "group": "isl-1"
+    },
+    {
+      "code": "    public String place(String req) {\n        return workflow.run(req.trim());\n    }",
+      "refs": [{
+        "col": 15,
+        "symbol": "com.example.changeset.order.OrderFacade#workflow",
+        "len": 8,
+        "line": 7
+      }],
+      "displayName": "OrderFacade.place",
+      "filePath": "src/main/java/com/example/changeset/order/OrderFacade.java",
+      "startLine": 6,
+      "id": "v-c55561f0a4",
+      "windowType": "via",
+      "group": "isl-1"
+    },
+    {
+      "code": "    public String run(String order) {\n        orderService.validate(order);\n        return order;\n    }",
+      "refs": [{
+        "col": 8,
+        "symbol": "com.example.changeset.order.OrderWorkflow#orderService",
+        "len": 12,
+        "line": 7
+      }],
+      "displayName": "OrderWorkflow.run",
+      "filePath": "src/main/java/com/example/changeset/order/OrderWorkflow.java",
+      "startLine": 6,
+      "id": "v-4c2dcf9adb",
+      "windowType": "via",
+      "group": "isl-1"
+    },
+    {
+      "code": "    public void reserve(String cart) {\n        System.out.println(\"reserve \" + cart.length());\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 5,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        System.out.println(\"reserve\");"
+          },
+          {
+            "type": "add",
+            "content": "        System.out.println(\"reserve \" + cart.length());"
+          }
+        ],
+        "newStart": 5
+      }]},
+      "displayName": "InventoryService.reserve",
+      "filePath": "src/main/java/com/example/changeset/checkout/InventoryService.java",
+      "startLine": 4,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-544a1e7d2b",
+      "windowType": "method",
+      "group": "isl-2"
+    },
+    {
+      "code": "    public String charge(String cart) {\n        return \"receipt:\" + cart.hashCode();\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 5,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        return \"receipt\";"
+          },
+          {
+            "type": "add",
+            "content": "        return \"receipt:\" + cart.hashCode();"
+          }
+        ],
+        "newStart": 5
+      }]},
+      "displayName": "PaymentService.charge",
+      "filePath": "src/main/java/com/example/changeset/checkout/PaymentService.java",
+      "startLine": 4,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-29ebb38981",
+      "windowType": "method",
+      "group": "isl-2"
+    },
+    {
+      "code": "    public String checkout(String cart) {\n        inventoryService.reserve(cart);\n        return paymentFacade.pay(cart);\n    }",
+      "refs": [
+        {
+          "col": 8,
+          "symbol": "com.example.changeset.checkout.CheckoutService#inventoryService",
+          "len": 16,
+          "line": 8
+        },
+        {
+          "col": 15,
+          "symbol": "com.example.changeset.checkout.CheckoutService#paymentFacade",
+          "len": 13,
+          "line": 9
+        }
+      ],
+      "displayName": "CheckoutService.checkout",
+      "filePath": "src/main/java/com/example/changeset/checkout/CheckoutService.java",
+      "startLine": 7,
+      "id": "j-5704d9b017",
+      "windowType": "junction",
+      "group": "isl-2"
+    },
+    {
+      "code": "    public String pay(String cart) {\n        return paymentService.charge(cart);\n    }",
+      "refs": [{
+        "col": 15,
+        "symbol": "com.example.changeset.checkout.PaymentFacade#paymentService",
+        "len": 14,
+        "line": 7
+      }],
+      "displayName": "PaymentFacade.pay",
+      "filePath": "src/main/java/com/example/changeset/checkout/PaymentFacade.java",
+      "startLine": 6,
+      "id": "v-23352503fc",
+      "windowType": "via",
+      "group": "isl-2"
+    },
+    {
+      "code": "    public String monthly(int year, int month) {\n        return String.format(\"%04d-%02d\", year, month);\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 5,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        return year + \"-\" + month;"
+          },
+          {
+            "type": "add",
+            "content": "        return String.format(\"%04d-%02d\", year, month);"
+          }
+        ],
+        "newStart": 5
+      }]},
+      "displayName": "ReportService.monthly",
+      "filePath": "src/main/java/com/example/changeset/report/ReportService.java",
+      "startLine": 4,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-4b28589431",
+      "windowType": "method",
+      "group": "isl-3"
+    },
+    {
+      "code": "    public void log(String message) {\n        System.out.println(\"[audit] \" + message);\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 5,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        System.out.println(message);"
+          },
+          {
+            "type": "add",
+            "content": "        System.out.println(\"[audit] \" + message);"
+          }
+        ],
+        "newStart": 5
+      }]},
+      "displayName": "AuditService.log",
+      "filePath": "src/main/java/com/example/changeset/admin/AuditService.java",
+      "startLine": 4,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-d374039ab5",
+      "windowType": "method",
+      "group": "isl-4"
+    },
+    {
+      "code": "    public int count() {\n        return 42;\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 5,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        return 0;"
+          },
+          {
+            "type": "add",
+            "content": "        return 42;"
+          }
+        ],
+        "newStart": 5
+      }]},
+      "displayName": "MetricsService.count",
+      "filePath": "src/main/java/com/example/changeset/admin/MetricsService.java",
+      "startLine": 4,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-2ed8622a7f",
+      "windowType": "method",
+      "group": "isl-4"
+    },
+    {
+      "code": "    public static void main(String[] args) {\n        AdminController c = new AdminController();\n        c.audit();\n        c.stats();\n    }",
+      "refs": [
+        {
+          "col": 8,
+          "symbol": "com.example.changeset.admin.AdminController",
+          "len": 15,
+          "line": 6
+        },
+        {
+          "col": 32,
+          "symbol": "com.example.changeset.admin.AdminController",
+          "len": 15,
+          "line": 6
+        }
+      ],
+      "displayName": "AdminLauncher.main",
+      "filePath": "src/main/java/com/example/changeset/admin/AdminLauncher.java",
+      "startLine": 5,
+      "id": "j-d37668096b",
+      "windowType": "junction",
+      "group": "isl-4"
+    },
+    {
+      "code": "    @GetMapping(\"/admin/audit\")\n    public void audit() {\n        auditService.log(\"audit\");\n    }",
+      "refs": [
+        {
+          "col": 5,
+          "symbol": "com.example.changeset.web.GetMapping",
+          "len": 10,
+          "line": 9
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.changeset.admin.AdminController#auditService",
+          "len": 12,
+          "line": 11
+        }
+      ],
+      "displayName": "AdminController.audit",
+      "filePath": "src/main/java/com/example/changeset/admin/AdminController.java",
+      "startLine": 9,
+      "id": "v-9682890ed2",
+      "windowType": "via",
+      "group": "isl-4"
+    },
+    {
+      "code": "    @GetMapping(\"/admin/stats\")\n    public int stats() {\n        return metricsService.count();\n    }",
+      "refs": [
+        {
+          "col": 5,
+          "symbol": "com.example.changeset.web.GetMapping",
+          "len": 10,
+          "line": 14
+        },
+        {
+          "col": 15,
+          "symbol": "com.example.changeset.admin.AdminController#metricsService",
+          "len": 14,
+          "line": 16
+        }
+      ],
+      "displayName": "AdminController.stats",
+      "filePath": "src/main/java/com/example/changeset/admin/AdminController.java",
+      "startLine": 14,
+      "id": "v-78c032a16a",
+      "windowType": "via",
+      "group": "isl-4"
+    },
+    {
+      "code": "    public void runJob(String event) {\n        dispatcher.dispatch(event);\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 7,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        dispatcher.dispatch(event.trim());"
+          },
+          {
+            "type": "add",
+            "content": "        dispatcher.dispatch(event);"
+          }
+        ],
+        "newStart": 7
+      }]},
+      "refs": [{
+        "col": 8,
+        "symbol": "com.example.changeset.notify.JobRunner#dispatcher",
+        "len": 10,
+        "line": 7
+      }],
+      "displayName": "JobRunner.runJob",
+      "filePath": "src/main/java/com/example/changeset/notify/JobRunner.java",
+      "startLine": 6,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-a020bb21de",
+      "windowType": "method",
+      "group": "isl-5"
+    },
+    {
+      "code": "    public void email(String event) {\n        System.out.println(\"email \" + event);\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 5,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        System.out.println(event);"
+          },
+          {
+            "type": "add",
+            "content": "        System.out.println(\"email \" + event);"
+          }
+        ],
+        "newStart": 5
+      }]},
+      "displayName": "NotifyService.email",
+      "filePath": "src/main/java/com/example/changeset/notify/NotifyService.java",
+      "startLine": 4,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-ad36ed0be8",
+      "windowType": "method",
+      "group": "isl-5"
+    },
+    {
+      "code": "    public void sms(String event) {\n        System.out.println(\"sms \" + event);\n    }",
+      "diffState": {"hunks": [{
+        "oldStart": 9,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "        System.out.println(event);"
+          },
+          {
+            "type": "add",
+            "content": "        System.out.println(\"sms \" + event);"
+          }
+        ],
+        "newStart": 9
+      }]},
+      "displayName": "NotifyService.sms",
+      "filePath": "src/main/java/com/example/changeset/notify/NotifyService.java",
+      "startLine": 8,
+      "change": {
+        "source": "worktree",
+        "status": "modified"
+      },
+      "id": "m-6eaf4d0530",
+      "windowType": "method",
+      "group": "isl-5"
+    },
+    {
+      "code": "    public void dispatch(String event) {\n        notifyService.email(event);\n        notifyService.sms(event);\n        notifyService.push(event);\n    }",
+      "refs": [
+        {
+          "col": 8,
+          "symbol": "com.example.changeset.notify.Dispatcher#notifyService",
+          "len": 13,
+          "line": 8
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.changeset.notify.Dispatcher#notifyService",
+          "len": 13,
+          "line": 9
+        },
+        {
+          "col": 8,
+          "symbol": "com.example.changeset.notify.Dispatcher#notifyService",
+          "len": 13,
+          "line": 10
+        }
+      ],
+      "displayName": "Dispatcher.dispatch",
+      "filePath": "src/main/java/com/example/changeset/notify/Dispatcher.java",
+      "startLine": 7,
+      "id": "v-ab04ea2d7c",
+      "windowType": "via",
+      "group": "isl-5"
+    },
+    {
+      "code": "package com.example.changeset.order;\n\npublic class OrderService {\n    private static final int MAX_ITEMS = 10;\n\n    private final OrderRepository orderRepository = new OrderRepository();\n\n    /**\n     * 注文を検証して保存する。\n     */\n    public void validate(String order) {\n        if (order.isEmpty()) {\n            throw new IllegalArgumentException(\"empty order\");\n        }\n        orderRepository.save(order);\n    }\n}",
+      "diffState": {"hunks": [{
+        "oldStart": 4,
+        "oldCount": 1,
+        "newCount": 1,
+        "lines": [
+          {
+            "type": "remove",
+            "content": "    private static final int MAX_ITEMS = 5;"
+          },
+          {
+            "type": "add",
+            "content": "    private static final int MAX_ITEMS = 10;"
+          }
+        ],
+        "newStart": 4
+      }]},
+      "displayName": "OrderService.java",
+      "filePath": "src/main/java/com/example/changeset/order/OrderService.java",
+      "startLine": 1,
+      "change": {
+        "flags": ["outsideMethod"],
+        "source": "worktree",
+        "label": "メソッド外の変更",
+        "status": "modified"
+      },
+      "id": "f-cf9ae9c936",
+      "windowType": "file",
+      "group": "blk-java"
+    }
+  ],
+  "connections": [
+    {
+      "callLine": 10,
+      "from": "m-b045734e51",
+      "callEndLine": 10,
+      "to": "v-c55561f0a4"
+    },
+    {
+      "callLine": 7,
+      "from": "v-c55561f0a4",
+      "callEndLine": 7,
+      "to": "v-4c2dcf9adb"
+    },
+    {
+      "callLine": 7,
+      "from": "v-4c2dcf9adb",
+      "callEndLine": 7,
+      "to": "m-1033bac772"
+    },
+    {
+      "callLine": 15,
+      "from": "m-1033bac772",
+      "callEndLine": 15,
+      "to": "m-02ea398b8c"
+    },
+    {
+      "callLine": 7,
+      "from": "m-a020bb21de",
+      "callEndLine": 7,
+      "to": "v-ab04ea2d7c"
+    },
+    {
+      "callLine": 8,
+      "from": "v-ab04ea2d7c",
+      "callEndLine": 8,
+      "to": "m-ad36ed0be8"
+    },
+    {
+      "callLine": 9,
+      "from": "v-ab04ea2d7c",
+      "callEndLine": 9,
+      "to": "m-6eaf4d0530"
+    },
+    {
+      "callLine": 8,
+      "from": "j-5704d9b017",
+      "callEndLine": 8,
+      "to": "m-544a1e7d2b"
+    },
+    {
+      "callLine": 9,
+      "from": "j-5704d9b017",
+      "callEndLine": 9,
+      "to": "v-23352503fc"
+    },
+    {
+      "callLine": 7,
+      "from": "v-23352503fc",
+      "callEndLine": 7,
+      "to": "m-29ebb38981"
+    },
+    {
+      "callLine": 7,
+      "from": "j-d37668096b",
+      "callEndLine": 7,
+      "to": "v-9682890ed2"
+    },
+    {
+      "callLine": 11,
+      "from": "v-9682890ed2",
+      "callEndLine": 11,
+      "to": "m-d374039ab5"
+    },
+    {
+      "callLine": 8,
+      "from": "j-d37668096b",
+      "callEndLine": 8,
+      "to": "v-78c032a16a"
+    },
+    {
+      "callLine": 16,
+      "from": "v-78c032a16a",
+      "callEndLine": 16,
+      "to": "m-2ed8622a7f"
+    }
+  ],
+  "symbols": {
+    "com.example.changeset.web.GetMapping": {
+      "typeKind": "annotation",
+      "kind": "type",
+      "displayName": "GetMapping",
+      "line": 3,
+      "filePath": "src/main/java/com/example/changeset/web/GetMapping.java"
+    },
+    "com.example.changeset.checkout.CheckoutService#paymentFacade": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "CheckoutService # paymentFacade",
+      "line": 5,
+      "filePath": "src/main/java/com/example/changeset/checkout/CheckoutService.java",
+      "final": true,
+      "type": "PaymentFacade",
+      "value": null,
+      "declaringClass": "com.example.changeset.checkout.CheckoutService"
+    },
+    "com.example.changeset.notify.Dispatcher#notifyService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "Dispatcher # notifyService",
+      "line": 5,
+      "filePath": "src/main/java/com/example/changeset/notify/Dispatcher.java",
+      "final": true,
+      "type": "NotifyService",
+      "value": null,
+      "declaringClass": "com.example.changeset.notify.Dispatcher"
+    },
+    "com.example.changeset.admin.AdminController#auditService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "AdminController # auditService",
+      "line": 6,
+      "filePath": "src/main/java/com/example/changeset/admin/AdminController.java",
+      "final": true,
+      "type": "AuditService",
+      "value": null,
+      "declaringClass": "com.example.changeset.admin.AdminController"
+    },
+    "com.example.changeset.notify.JobRunner#dispatcher": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "JobRunner # dispatcher",
+      "line": 4,
+      "filePath": "src/main/java/com/example/changeset/notify/JobRunner.java",
+      "final": true,
+      "type": "Dispatcher",
+      "value": null,
+      "declaringClass": "com.example.changeset.notify.JobRunner"
+    },
+    "com.example.changeset.order.OrderWorkflow#orderService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "OrderWorkflow # orderService",
+      "line": 4,
+      "filePath": "src/main/java/com/example/changeset/order/OrderWorkflow.java",
+      "final": true,
+      "type": "OrderService",
+      "value": null,
+      "declaringClass": "com.example.changeset.order.OrderWorkflow"
+    },
+    "com.example.changeset.admin.AdminController#metricsService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "AdminController # metricsService",
+      "line": 7,
+      "filePath": "src/main/java/com/example/changeset/admin/AdminController.java",
+      "final": true,
+      "type": "MetricsService",
+      "value": null,
+      "declaringClass": "com.example.changeset.admin.AdminController"
+    },
+    "com.example.changeset.order.OrderController#orderFacade": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "OrderController # orderFacade",
+      "line": 6,
+      "filePath": "src/main/java/com/example/changeset/order/OrderController.java",
+      "final": true,
+      "type": "OrderFacade",
+      "value": null,
+      "declaringClass": "com.example.changeset.order.OrderController"
+    },
+    "com.example.changeset.checkout.CheckoutService#inventoryService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "CheckoutService # inventoryService",
+      "line": 4,
+      "filePath": "src/main/java/com/example/changeset/checkout/CheckoutService.java",
+      "final": true,
+      "type": "InventoryService",
+      "value": null,
+      "declaringClass": "com.example.changeset.checkout.CheckoutService"
+    },
+    "com.example.changeset.admin.AdminController": {
+      "typeKind": "class",
+      "kind": "type",
+      "displayName": "AdminController",
+      "line": 5,
+      "filePath": "src/main/java/com/example/changeset/admin/AdminController.java"
+    },
+    "com.example.changeset.order.OrderService#orderRepository": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "OrderService # orderRepository",
+      "line": 6,
+      "filePath": "src/main/java/com/example/changeset/order/OrderService.java",
+      "final": true,
+      "type": "OrderRepository",
+      "value": null,
+      "declaringClass": "com.example.changeset.order.OrderService"
+    },
+    "com.example.changeset.order.OrderFacade#workflow": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "OrderFacade # workflow",
+      "line": 4,
+      "filePath": "src/main/java/com/example/changeset/order/OrderFacade.java",
+      "final": true,
+      "type": "OrderWorkflow",
+      "value": null,
+      "declaringClass": "com.example.changeset.order.OrderFacade"
+    },
+    "com.example.changeset.checkout.PaymentFacade#paymentService": {
+      "static": false,
+      "enumConstant": false,
+      "kind": "field",
+      "displayName": "PaymentFacade # paymentService",
+      "line": 4,
+      "filePath": "src/main/java/com/example/changeset/checkout/PaymentFacade.java",
+      "final": true,
+      "type": "PaymentService",
+      "value": null,
+      "declaringClass": "com.example.changeset.checkout.PaymentFacade"
+    },
+    "com.example.changeset.web.PostMapping": {
+      "typeKind": "annotation",
+      "kind": "type",
+      "displayName": "PostMapping",
+      "line": 3,
+      "filePath": "src/main/java/com/example/changeset/web/PostMapping.java"
+    }
+  }
+}

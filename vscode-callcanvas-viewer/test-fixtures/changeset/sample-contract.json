@@ -1,0 +1,554 @@
+{
+  "autoLayout": true,
+  "groups": [
+    {
+      "id": "blk-java",
+      "kind": "java",
+      "label": "Java"
+    },
+    {
+      "id": "isl-1",
+      "kind": "island",
+      "parent": "blk-java",
+      "label": "島 1: OrderController.create …"
+    },
+    {
+      "id": "isl-2",
+      "kind": "island",
+      "parent": "blk-java",
+      "label": "島 2: CheckoutService.checkout …"
+    },
+    {
+      "id": "blk-client",
+      "kind": "clientside",
+      "label": "Clientside (HTML/JS/TS)"
+    },
+    {
+      "id": "blk-xml",
+      "kind": "xml",
+      "label": "XML"
+    },
+    {
+      "id": "blk-sql",
+      "kind": "sql",
+      "label": "SQL"
+    },
+    {
+      "id": "blk-other",
+      "kind": "other",
+      "label": "その他"
+    }
+  ],
+  "windows": [
+    {
+      "id": "w-order-create",
+      "group": "isl-1",
+      "windowType": "method",
+      "displayName": "OrderController.create",
+      "filePath": "src/main/java/com/example/order/OrderController.java",
+      "startLine": 24,
+      "code": "    @PostMapping(\"/orders\")\n    public OrderResponse create(@RequestBody OrderRequest req) {\n        Order order = orderFacade.place(req);\n        return OrderResponse.from(order);\n    }",
+      "change": {
+        "status": "modified",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 26,
+            "oldCount": 1,
+            "newStart": 26,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "        Order order = orderService.place(req);"
+              },
+              {
+                "type": "add",
+                "content": "        Order order = orderFacade.place(req);"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-order-validate",
+      "group": "isl-1",
+      "windowType": "method",
+      "displayName": "OrderService.validate",
+      "filePath": "src/main/java/com/example/order/OrderService.java",
+      "startLine": 40,
+      "code": "    public void validate(Order order) {\n        if (order.getItems().isEmpty()) {\n            throw new InvalidOrderException(\"empty order\");\n        }\n        orderRepository.save(order);\n    }",
+      "change": {
+        "status": "modified",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 40,
+            "oldCount": 0,
+            "newStart": 41,
+            "newCount": 3,
+            "lines": [
+              {
+                "type": "add",
+                "content": "        if (order.getItems().isEmpty()) {"
+              },
+              {
+                "type": "add",
+                "content": "            throw new InvalidOrderException(\"empty order\");"
+              },
+              {
+                "type": "add",
+                "content": "        }"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-order-save",
+      "group": "isl-1",
+      "windowType": "method",
+      "displayName": "OrderRepository.save",
+      "filePath": "src/main/java/com/example/order/OrderRepository.java",
+      "startLine": 18,
+      "code": "    public void save(Order order) {\n        jdbc.update(SQL_INSERT, order.getId(), order.getStatus().name());\n    }",
+      "change": {
+        "status": "modified",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 19,
+            "oldCount": 1,
+            "newStart": 19,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "        jdbc.update(SQL_INSERT, order.getId());"
+              },
+              {
+                "type": "add",
+                "content": "        jdbc.update(SQL_INSERT, order.getId(), order.getStatus().name());"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-checkout",
+      "group": "isl-2",
+      "windowType": "junction",
+      "displayName": "CheckoutService.checkout",
+      "filePath": "src/main/java/com/example/checkout/CheckoutService.java",
+      "startLine": 30,
+      "code": "    public Receipt checkout(Cart cart) {\n        inventoryService.reserve(cart);\n        return paymentFacade.pay(cart);\n    }"
+    },
+    {
+      "id": "w-inv-reserve",
+      "group": "isl-2",
+      "windowType": "method",
+      "displayName": "InventoryService.reserve",
+      "filePath": "src/main/java/com/example/inventory/InventoryService.java",
+      "startLine": 15,
+      "code": "    public void reserve(Cart cart) {\n        cart.getItems().forEach(i -> stock.decrement(i.getSku(), i.getQty()));\n    }",
+      "change": {
+        "status": "modified",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 16,
+            "oldCount": 1,
+            "newStart": 16,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "        cart.getItems().forEach(i -> stock.decrement(i.getSku()));"
+              },
+              {
+                "type": "add",
+                "content": "        cart.getItems().forEach(i -> stock.decrement(i.getSku(), i.getQty()));"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-pay-charge",
+      "group": "isl-2",
+      "windowType": "method",
+      "displayName": "PaymentService.charge",
+      "filePath": "src/main/java/com/example/payment/PaymentService.java",
+      "startLine": 52,
+      "code": "    public Receipt charge(Cart cart) {\n        return gateway.authorize(cart.total(), cart.getCurrency());\n    }",
+      "change": {
+        "status": "modified",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 53,
+            "oldCount": 1,
+            "newStart": 53,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "        return gateway.authorize(cart.total());"
+              },
+              {
+                "type": "add",
+                "content": "        return gateway.authorize(cart.total(), cart.getCurrency());"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-pay-facade",
+      "group": "isl-2",
+      "windowType": "via",
+      "displayName": "PaymentFacade.pay",
+      "filePath": "src/main/java/com/example/payment/PaymentFacade.java",
+      "startLine": 12,
+      "code": "    public Receipt pay(Cart cart) {\n        return paymentService.charge(cart);\n    }"
+    },
+    {
+      "id": "w-report-file",
+      "group": "blk-java",
+      "windowType": "file",
+      "displayName": "ReportService.java",
+      "filePath": "src/main/java/com/example/report/ReportService.java",
+      "startLine": 1,
+      "code": "package com.example.report;\n\npublic class ReportService {\n    public String monthly(int year, int month) {\n        return String.format(\"%04d-%02d\", year, month);\n    }\n}",
+      "change": {
+        "status": "modified",
+        "source": "head",
+        "flags": [
+          "worktreeMismatch"
+        ],
+        "label": "作業ツリーと不一致のためグラフ外"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 5,
+            "oldCount": 1,
+            "newStart": 5,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "        return year + \"-\" + month;"
+              },
+              {
+                "type": "add",
+                "content": "        return String.format(\"%04d-%02d\", year, month);"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-legacy-deleted",
+      "group": "blk-java",
+      "windowType": "file",
+      "displayName": "LegacyDiscountRule.java",
+      "filePath": "src/main/java/com/example/order/LegacyDiscountRule.java",
+      "startLine": 1,
+      "code": "package com.example.order;\n\npublic class LegacyDiscountRule {\n    public int apply(int amount) {\n        return amount > 10000 ? amount - 500 : amount;\n    }\n}",
+      "change": {
+        "status": "deleted",
+        "source": "base",
+        "flags": [
+          "deleted"
+        ],
+        "label": "削除（base 時点の内容）"
+      }
+    },
+    {
+      "id": "w-order-form-js",
+      "group": "blk-client",
+      "windowType": "file",
+      "displayName": "order-form.js",
+      "filePath": "src/main/resources/static/js/order-form.js",
+      "startLine": 1,
+      "code": "export function submitOrder(form) {\n  const body = new FormData(form);\n  return fetch('/orders', { method: 'POST', body });\n}",
+      "change": {
+        "status": "modified",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 3,
+            "oldCount": 1,
+            "newStart": 3,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "  return fetch('/order', { method: 'POST', body });"
+              },
+              {
+                "type": "add",
+                "content": "  return fetch('/orders', { method: 'POST', body });"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-order-mapper-xml",
+      "group": "blk-xml",
+      "windowType": "file",
+      "displayName": "OrderMapper.xml",
+      "filePath": "src/main/resources/mapper/OrderMapper.xml",
+      "startLine": 1,
+      "code": "<mapper namespace=\"com.example.order.OrderMapper\">\n  <select id=\"findByStatus\" resultType=\"Order\">\n    SELECT * FROM orders WHERE status = #{status}\n  </select>\n</mapper>",
+      "change": {
+        "status": "modified",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 1,
+            "oldCount": 0,
+            "newStart": 2,
+            "newCount": 3,
+            "lines": [
+              {
+                "type": "add",
+                "content": "  <select id=\"findByStatus\" resultType=\"Order\">"
+              },
+              {
+                "type": "add",
+                "content": "    SELECT * FROM orders WHERE status = #{status}"
+              },
+              {
+                "type": "add",
+                "content": "  </select>"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-migration-sql",
+      "group": "blk-sql",
+      "windowType": "file",
+      "displayName": "V12__add_order_status.sql",
+      "filePath": "src/main/resources/db/migration/V12__add_order_status.sql",
+      "startLine": 1,
+      "code": "ALTER TABLE orders ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'NEW';\nCREATE INDEX idx_orders_status ON orders (status);",
+      "change": {
+        "status": "added",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 0,
+            "oldCount": 0,
+            "newStart": 1,
+            "newCount": 2,
+            "lines": [
+              {
+                "type": "add",
+                "content": "ALTER TABLE orders ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'NEW';"
+              },
+              {
+                "type": "add",
+                "content": "CREATE INDEX idx_orders_status ON orders (status);"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-order-css",
+      "group": "blk-other",
+      "windowType": "file",
+      "displayName": "order.css",
+      "filePath": "src/main/resources/static/css/order.css",
+      "startLine": 1,
+      "code": ".order-status {\n  font-weight: bold;\n  color: var(--status-color);\n}",
+      "change": {
+        "status": "modified",
+        "source": "worktree"
+      },
+      "diffState": {
+        "hunks": [
+          {
+            "oldStart": 2,
+            "oldCount": 0,
+            "newStart": 3,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "add",
+                "content": "  color: var(--status-color);"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "w-order-create",
+      "to": "w-order-validate",
+      "callLine": 26
+    },
+    {
+      "from": "w-order-validate",
+      "to": "w-order-save",
+      "callLine": 44
+    },
+    {
+      "from": "w-checkout",
+      "to": "w-inv-reserve",
+      "callLine": 31
+    },
+    {
+      "from": "w-checkout",
+      "to": "w-pay-facade",
+      "callLine": 32
+    },
+    {
+      "from": "w-pay-facade",
+      "to": "w-pay-charge",
+      "callLine": 13
+    }
+  ],
+  "metadata": {
+    "changeSet": {
+      "kind": "commit",
+      "commit": "e4f5a6b7c8d90a1b2c3d4e5f60718293a4b5c6d7",
+      "base": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+      "files": [
+        {
+          "path": "src/main/java/com/example/order/OrderController.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windows": [
+            "w-order-create"
+          ]
+        },
+        {
+          "path": "src/main/java/com/example/order/OrderService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windows": [
+            "w-order-validate"
+          ]
+        },
+        {
+          "path": "src/main/java/com/example/order/OrderRepository.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windows": [
+            "w-order-save"
+          ]
+        },
+        {
+          "path": "src/main/java/com/example/inventory/InventoryService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windows": [
+            "w-inv-reserve"
+          ]
+        },
+        {
+          "path": "src/main/java/com/example/payment/PaymentService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windows": [
+            "w-pay-charge"
+          ]
+        },
+        {
+          "path": "src/main/java/com/example/report/ReportService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "reason": "worktreeMismatch",
+          "windows": [
+            "w-report-file"
+          ]
+        },
+        {
+          "path": "src/main/java/com/example/order/LegacyDiscountRule.java",
+          "status": "deleted",
+          "block": "java",
+          "inGraph": false,
+          "reason": "deleted",
+          "windows": [
+            "w-legacy-deleted"
+          ]
+        },
+        {
+          "path": "src/main/resources/static/js/order-form.js",
+          "status": "modified",
+          "block": "clientside",
+          "inGraph": false,
+          "windows": [
+            "w-order-form-js"
+          ]
+        },
+        {
+          "path": "src/main/resources/mapper/OrderMapper.xml",
+          "status": "modified",
+          "block": "xml",
+          "inGraph": false,
+          "windows": [
+            "w-order-mapper-xml"
+          ]
+        },
+        {
+          "path": "src/main/resources/db/migration/V12__add_order_status.sql",
+          "status": "added",
+          "block": "sql",
+          "inGraph": false,
+          "windows": [
+            "w-migration-sql"
+          ]
+        },
+        {
+          "path": "src/main/resources/static/css/order.css",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windows": [
+            "w-order-css"
+          ]
+        }
+      ]
+    }
+  }
+}

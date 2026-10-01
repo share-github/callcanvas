@@ -59,3 +59,6 @@ release/.*.vsix.*
 .classpath
 .project
 .settings/
+
+# 変更集合キャンバスのデモ（setup.sh の生成物）
+sample-project/sample-changeset-demo/repo/

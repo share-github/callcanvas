@@ -3,6 +3,27 @@ import * as path from 'path';
 import { FunctionInfo } from './types';
 
 /**
+ * Resolve the function signature at each line of a file of the program
+ * (the resolveMethodSignature / resolveMethodSignatures APIs).
+ * The program is bound first, as analyzeCallHierarchy does: resolveFunctionAtLine reads
+ * node.parent (callbacks, function expressions), which only binding sets.
+ * Returns null when the file is not in the program.
+ */
+export function resolveSignaturesAtLines(
+    program: ts.Program,
+    absolutePath: string,
+    lines: number[],
+    rootDir: string
+): (string | null)[] | null {
+    program.getTypeChecker();
+    const sourceFile = program.getSourceFile(absolutePath);
+    if (!sourceFile) {
+        return null;
+    }
+    return lines.map(line => resolveFunctionAtLine(sourceFile, line, rootDir)?.signature ?? null);
+}
+
+/**
  * Find the function at the given line in a source file.
  * Returns FunctionInfo for the innermost function containing the line.
  */

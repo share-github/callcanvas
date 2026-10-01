@@ -5,9 +5,9 @@ import * as ts from 'typescript';
 import { ProjectContext, CallCanvasJSON, CallCanvasMetadata } from './types';
 import { detectProject } from './projectDetector';
 import { findAllHtmlsForJsFile, collectScriptsFromTemplateTree } from './htmlProjectResolver';
-import { findProjectRoot, collectIncludeEdges } from './templateIncludeResolver';
+import { findProjectRoot, collectIncludeEdges, IncludeEdge } from './templateIncludeResolver';
 import { formatIncludeMapAsCallCanvasJSON } from './includeMapFormatter';
-import { resolveFunctionAtLine } from './functionResolver';
+import { resolveFunctionAtLine, resolveSignaturesAtLines } from './functionResolver';
 import { createProgram, analyzeCallHierarchy, analyzeCallHierarchyBySignature } from './analyzer';
 import { formatAsCallCanvasJSON } from './callcanvasFormatter';
 
@@ -71,19 +71,72 @@ export function activate(context: vscode.ExtensionContext): void {
                 const projectContext = getOrDetectProject(absolutePath);
                 const program = getOrCreateProgram(projectContext);
 
-                const sourceFile = program.getSourceFile(absolutePath);
-                if (!sourceFile) {
+                const signatures = resolveSignaturesAtLines(program, absolutePath, [lineNumber], projectContext.rootDir);
+                if (!signatures) {
                     log(`[API] Source file not in program: ${absolutePath}`);
                     return null;
                 }
 
-                const funcInfo = resolveFunctionAtLine(sourceFile, lineNumber, projectContext.rootDir);
-                log(`[API] resolveMethodSignature: ${filePath}:${lineNumber} -> ${funcInfo?.signature || 'null'}`);
-                return funcInfo?.signature ?? null;
+                log(`[API] resolveMethodSignature: ${filePath}:${lineNumber} -> ${signatures[0] || 'null'}`);
+                return signatures[0];
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
                 log(`[API] resolveMethodSignature error: ${message}`);
                 return null;
+            }
+        }
+    );
+
+    // API Command: resolveMethodSignature for several lines of one file (one program instead of one per line).
+    // Used by the Viewer's change set canvas to map diff hunks to functions.
+    const resolveMethodSignaturesCommand = vscode.commands.registerCommand(
+        'jsCallHierarchy.resolveMethodSignatures',
+        async (filePath: string, lineNumbers: number[]): Promise<(string | null)[] | null> => {
+            try {
+                log(`[API] resolveMethodSignatures: ${filePath} (${lineNumbers.length} lines)`);
+
+                const absolutePath = resolveFilePath(filePath);
+                if (!absolutePath || !fs.existsSync(absolutePath)) {
+                    log(`[API] File not found: ${filePath}`);
+                    return null;
+                }
+
+                const projectContext = getOrDetectProject(absolutePath);
+                const program = getOrCreateProgram(projectContext);
+
+                const signatures = resolveSignaturesAtLines(program, absolutePath, lineNumbers, projectContext.rootDir);
+                if (!signatures) {
+                    log(`[API] Source file not in program: ${absolutePath}`);
+                }
+                return signatures;
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                log(`[API] resolveMethodSignatures error: ${message}`);
+                return null;
+            }
+        }
+    );
+
+    // API Command: include edges of a template (the same nodes/edges as Export HTML Include Map)
+    const collectIncludeEdgesCommand = vscode.commands.registerCommand(
+        'jsCallHierarchy.collectIncludeEdges',
+        async (filePath: string): Promise<{ success: boolean; nodes?: string[]; edges?: IncludeEdge[]; error?: string }> => {
+            try {
+                const absolutePath = resolveFilePath(filePath);
+                if (!absolutePath) {
+                    return { success: false, error: `File not found: ${filePath}` };
+                }
+                if (!TEMPLATE_EXTENSIONS_SET.has(path.extname(absolutePath).toLowerCase())) {
+                    return { success: false, error: `Not a template file: ${filePath}` };
+                }
+                const projectRoot = findProjectRoot(path.dirname(absolutePath)) ?? path.dirname(absolutePath);
+                const { nodes, edges } = collectIncludeEdges(absolutePath, projectRoot);
+                log(`[API] collectIncludeEdges: ${filePath} -> nodes ${nodes.length}, edges ${edges.length}`);
+                return { success: true, nodes, edges };
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                log(`[API] collectIncludeEdges error: ${message}`);
+                return { success: false, error: message };
             }
         }
     );
@@ -177,6 +230,8 @@ export function activate(context: vscode.ExtensionContext): void {
         openViewerCommand,
         exportIncludeMapCommand,
         resolveMethodSignatureCommand,
+        resolveMethodSignaturesCommand,
+        collectIncludeEdgesCommand,
         analyzeMethodCommand,
         outputChannel
     );

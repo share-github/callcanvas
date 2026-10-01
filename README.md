@@ -109,6 +109,17 @@ code --uninstall-extension share-github.callcanvas-viewer \
 
 Java ではクラス宣言行にカーソルを置くとクラス単位で解析する（初回はインデックス構築の完了を待つ）。
 
+### 変更集合キャンバス（コミット / ワークベンチの変更を 1 枚に）
+
+コマンドパレット → **`CallCanvas: Open Change Set`** で「📝 コミット」か「📄 ワークベンチ（未コミットの変更）」を選ぶと、
+その変更を 1 枚のキャンバスに描く。
+
+- 変更ファイルは拡張子で java / clientside（HTML 系テンプレートと JS・TS）/ xml / sql / other の枠に分かれる。枠どうしは結ばない
+- Java は変更メソッドを呼び出し関係でまとめ、間にある未変更のメソッドは「経由」、共通の呼び出し元は「合流点」として描く
+  （Java の呼び出しインデックスを使う）
+- clientside は JS / TS 拡張の解析で変更関数をまとめ、テンプレートは include でつなぐ
+- それ以外の変更（メソッド外の変更・削除・XML・SQL など）はファイル単位のウィンドウで出す
+
 ## Neovim から使う（VS Code 不要）
 
 `callcanvas-nvim/` は、VS Code の代わりに **Neovim + ブラウザ**で同じ Viewer を使うためのホスト。
@@ -145,7 +156,7 @@ done
   dir = '/path/to/callcanvas/callcanvas-nvim',
   main = 'callcanvas',           -- lua モジュール名（ディレクトリ名と異なる）
   cmd = { 'CallCanvas', 'CallCanvasBrowse', 'CallCanvasUrl',
-          'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop' },
+          'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop', 'CallCanvasChangeSet' },
   keys = { { '<leader>vv', '<cmd>CallCanvas<cr>', desc = 'CallCanvas' } },
   opts = {
     -- Neovim がコンテナ / リモートで、ブラウザが手元にある場合:
@@ -164,6 +175,7 @@ done
 | コマンド / キー | 動作 |
 |---|---|
 | `:CallCanvas`（`<leader>vv`） | カーソル位置のメソッド / 関数を解析し、URL をクリップボードへ入れる |
+| `:CallCanvasChangeSet [<hash>\|workbench]`（`<leader>vc`） | 変更集合キャンバス。引数なしならワークベンチ / 直近のコミットの一覧から選ぶ |
 | `:CallCanvasList`（`<leader>vl`） | 開いているキャンバスの一覧 |
 | `:CallCanvasUrl`（`<leader>vu`） | URL の再表示・再コピー |
 | `:CallCanvasStatus` / `:CallCanvasStop` | ホストの状態表示 / 終了 |

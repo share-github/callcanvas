@@ -1391,3 +1391,150 @@ body.symbol-mod-held .symbol-ref:hover {
 .code-line-row.bracket-guide-end .code-line::before {
     top: 0; bottom: 50%;
 }
+
+/* ===== Change Set Canvas (groups / windowType / change) ===== */
+/* Frames are drawn behind the windows (first children of .container, pointer-events: none).
+   Kind colours are semi-transparent so the frames read on a dark or a light canvas; the label is an
+   opaque chip with its own text colour, so it stays legible on either. */
+.group-frame {
+    --group-hue: 210, 120, 220;
+    --group-chip-bg: #2b3a55;
+    --group-chip-fg: #e6eefc;
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    border: 2px solid rgba(var(--group-hue), 0.55);
+    background: rgba(var(--group-hue), 0.06);
+    border-radius: 12px;
+}
+
+.group-frame.group-island {
+    border-style: dashed;
+    border-width: 1.5px;
+    border-radius: 10px;
+    background: rgba(var(--group-hue), 0.08);
+}
+
+.group-frame-label {
+    position: absolute;
+    top: 4px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--group-chip-bg);
+    color: var(--group-chip-fg);
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.group-island > .group-frame-label {
+    font-weight: normal;
+}
+
+.group-frame-count {
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.25);
+    font-size: 11px;
+    font-weight: normal;
+}
+
+.group-kind-java       { --group-hue: 230, 140, 60;  --group-chip-bg: #5a3a1c; --group-chip-fg: #ffe2c4; }
+.group-kind-clientside { --group-hue: 80, 170, 230;  --group-chip-bg: #1d4560; --group-chip-fg: #d6eeff; }
+.group-kind-xml        { --group-hue: 170, 120, 220; --group-chip-bg: #43305e; --group-chip-fg: #eadcff; }
+.group-kind-sql        { --group-hue: 90, 190, 120;  --group-chip-bg: #1f4a2c; --group-chip-fg: #d4f5de; }
+.group-kind-other      { --group-hue: 150, 150, 150; --group-chip-bg: #3c3c3c; --group-chip-fg: #e8e8e8; }
+.group-kind-island     { --group-hue: 230, 190, 80;  --group-chip-bg: #4d4120; --group-chip-fg: #fff1c8; }
+
+body.vscode-light .group-frame,
+body.vscode-high-contrast-light .group-frame {
+    border-color: rgba(var(--group-hue), 0.8);
+    background: rgba(var(--group-hue), 0.1);
+}
+body.vscode-light .group-kind-java,
+body.vscode-high-contrast-light .group-kind-java       { --group-chip-bg: #ffe2c4; --group-chip-fg: #5a3a1c; }
+body.vscode-light .group-kind-clientside,
+body.vscode-high-contrast-light .group-kind-clientside { --group-chip-bg: #d6eeff; --group-chip-fg: #1d4560; }
+body.vscode-light .group-kind-xml,
+body.vscode-high-contrast-light .group-kind-xml        { --group-chip-bg: #eadcff; --group-chip-fg: #43305e; }
+body.vscode-light .group-kind-sql,
+body.vscode-high-contrast-light .group-kind-sql        { --group-chip-bg: #d4f5de; --group-chip-fg: #1f4a2c; }
+body.vscode-light .group-kind-other,
+body.vscode-high-contrast-light .group-kind-other      { --group-chip-bg: #e8e8e8; --group-chip-fg: #3c3c3c; }
+body.vscode-light .group-kind-island,
+body.vscode-high-contrast-light .group-kind-island     { --group-chip-bg: #fff1c8; --group-chip-fg: #4d4120; }
+body.vscode-light .group-frame-count,
+body.vscode-high-contrast-light .group-frame-count {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+/* Title-bar badges: windowType / change.status / change.label */
+.wt-badge,
+.change-badge,
+.change-label {
+    flex-shrink: 0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 16px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.change-label {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wt-badge.wt-file      { background: #33363b; color: #c8ccd2; border-color: #50555c; }
+.wt-badge.wt-junction  { background: #3b3420; color: #f0d78c; border-color: #6b5a2a; }
+.wt-badge.wt-via       { background: #2a2f36; color: #b4bcc8; border-color: #48505c; }
+
+.change-badge-added    { background: #1e3d24; color: #9fe0a8; }
+.change-badge-modified { background: #1d3550; color: #a8cdf0; }
+.change-badge-deleted  { background: #4a1f1f; color: #f5a8a8; }
+.change-badge-renamed  { background: #3a2b4d; color: #d8c0f5; }
+
+.change-label              { background: #2f3238; color: #d0d4da; }
+.change-label.change-label-warn    { background: #4d3b12; color: #ffd27a; border-color: #8a6a1e; }
+.change-label.change-label-deleted { background: #4a1f1f; color: #ffb4b4; border-color: #8a3030; }
+
+/* Junction / via (unchanged join point / relay): muted title so the changed methods stand out */
+.code-window.window-type-junction .title-bar,
+.code-window.window-type-via .title-bar {
+    background: #26262a;
+}
+.code-window.window-type-junction .file-path,
+.code-window.window-type-via .file-path {
+    color: #9a9a9a;
+    font-style: italic;
+}
+
+/* Worktree mismatch: amber edge; deleted file / method: red edge and struck-through title */
+.code-window.change-flag-worktreeMismatch {
+    box-shadow: 0 0 0 2px rgba(230, 170, 40, 0.75), 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.code-window.change-deleted,
+.code-window.change-flag-deleted,
+.code-window.change-flag-deletedMethod {
+    box-shadow: 0 0 0 2px rgba(220, 70, 70, 0.75), 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.code-window.change-deleted .file-path,
+.code-window.change-flag-deleted .file-path,
+.code-window.change-flag-deletedMethod .file-path {
+    text-decoration: line-through;
+    text-decoration-color: rgba(245, 120, 120, 0.8);
+}
+.code-window.change-deleted .code-area,
+.code-window.change-flag-deleted .code-area,
+.code-window.change-flag-deletedMethod .code-area {
+    background: rgba(220, 70, 70, 0.07);
+}

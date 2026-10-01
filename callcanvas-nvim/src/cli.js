@@ -7,6 +7,7 @@
  *   callcanvas serve [--file <path> --line N] [--host H] [--port P]
  *   callcanvas command <commandId> [--arg <json>]...
  *   callcanvas build-index [--file <path>]
+ *   callcanvas changeset [<hash>|workbench] [--file <path>]
  *   callcanvas status | stop
  *
  * `open` is the command Neovim calls: it reuses a running session for the same
@@ -74,6 +75,10 @@ Usage:
   callcanvas serve [--file <path>] [--line N] [options]
   callcanvas command <commandId> [--arg <json>] [--file <path> --line N]
   callcanvas build-index [--file <path>] [--root <dir>]
+  callcanvas changeset [<hash>|workbench] [--file <path>] [--nvim <servername>] [--json] [options]
+                       <hash>: that commit's changes (against its first parent);
+                       workbench: the uncommitted changes (git diff HEAD);
+                       omitted = ask (in Neovim when --nvim is given)
   callcanvas status [--root <dir>] [--json]
   callcanvas stop   [--root <dir>]
 
@@ -227,10 +232,14 @@ async function cmdOpen(options) {
         throw new Error((result.body && result.body.error) || 'open failed');
     }
 
+    printOpened(session, result.body, projectRoot, options);
+}
+
+/** What `open` and `changeset` print: the host's answer (`--json`) or the canvas's short URL. */
+function printOpened(session, body, projectRoot, options) {
     if (options.browser) {
         openInBrowser(session.url);
     }
-    const body = result.body;
     if (options.json) {
         // Pass the host's answer through as-is (shortUrl, permalink, canvas info …)
         // so the editor side can present whichever URL is most usable.
@@ -343,6 +352,55 @@ async function cmdCommand(options, commandId = options._[1]) {
     await host.shutdown(failure ? 1 : 0);
 }
 
+/**
+ * `callcanvas.openChangeSet` — the viewer command behind `changeset`. It takes a
+ * commit hash or `workbench` as its argument; without one it asks (commit or
+ * workbench, then the hash), which the host forwards to Neovim.
+ */
+const CHANGE_SET_COMMAND = 'callcanvas.openChangeSet';
+
+/**
+ * `callcanvas changeset [<hash>|workbench]` — one canvas for the changes of a commit
+ * (or of the workbench, i.e. the uncommitted changes).
+ * Unlike `command`, the canvas must stay viewable afterwards, so this goes through
+ * a long-lived host (started like `open` when none is running), never a throwaway one.
+ * The anchor may be a directory (cwd when Neovim has no buffer): the repository is
+ * then found from the project root.
+ */
+async function cmdChangeSet(options) {
+    const target = options._[1];
+    const anchor = options.file ? path.resolve(options.file) : process.cwd();
+    if (!fs.existsSync(anchor)) {
+        throw new Error(`file not found: ${anchor}`);
+    }
+    const projectRoot = options.root ? path.resolve(options.root) : detectProjectRoot(anchor);
+
+    let session = readSession(projectRoot);
+    if (!(await isAlive(session))) {
+        session = await spawnServer(projectRoot, options);
+    }
+    const result = await request(session, '/api/open', {
+        file: anchor,
+        line: options.line || 1,
+        nvim: options.nvim || process.env.NVIM || null,
+        nvimPid: options.nvimPid || null,
+        command: CHANGE_SET_COMMAND,
+        args: target ? [target] : []
+    }, commandTimeoutMs(options));
+    if (!result.ok) {
+        throw new Error(`host request failed: ${result.error}`);
+    }
+    const body = result.body;
+    if (!body || body.ok !== true) {
+        throw new Error((body && body.error) || 'change set failed');
+    }
+    if (!body.canvasId) {
+        // No changes ("…: 0 ファイル") or a cancelled prompt: nothing to open.
+        throw new Error(body.message || 'no change set canvas was produced (cancelled?)');
+    }
+    printOpened(session, body, projectRoot, options);
+}
+
 /** `callcanvas build-index` — build the Java call index for this project. */
 async function cmdBuildIndex(options) {
     return cmdCommand(options, BUILD_INDEX_COMMAND);
@@ -417,6 +475,7 @@ async function main() {
         case 'serve': await cmdServe(options); return;
         case 'command': await cmdCommand(options); return;
         case 'build-index': await cmdBuildIndex(options); return;
+        case 'changeset': await cmdChangeSet(options); return;
         case 'status': await cmdStatus(options); return;
         case 'stop': await cmdStop(options); return;
         default:

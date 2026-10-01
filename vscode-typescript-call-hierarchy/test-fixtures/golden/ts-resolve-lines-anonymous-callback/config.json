@@ -1,0 +1,6 @@
+{
+  "mode": "resolveLines",
+  "files": ["app.ts"],
+  "targetFile": "app.ts",
+  "lines": [1, 2, 3, 4, 5, 8, 19]
+}

@@ -1,0 +1,458 @@
+[
+  {
+    "label": "frames",
+    "input": {
+      "scenario": "frames"
+    },
+    "expected": {
+      "frameCount": 7,
+      "frames": [
+        {
+          "id": "blk-java",
+          "kind": "java",
+          "depth": 0,
+          "parent": null,
+          "label": "Java",
+          "windowCount": 9
+        },
+        {
+          "id": "isl-1",
+          "kind": "island",
+          "depth": 1,
+          "parent": "blk-java",
+          "label": "島 1: OrderController.create …",
+          "windowCount": 3
+        },
+        {
+          "id": "isl-2",
+          "kind": "island",
+          "depth": 1,
+          "parent": "blk-java",
+          "label": "島 2: CheckoutService.checkout …",
+          "windowCount": 4
+        },
+        {
+          "id": "blk-client",
+          "kind": "clientside",
+          "depth": 0,
+          "parent": null,
+          "label": "Clientside (HTML/JS/TS)",
+          "windowCount": 1
+        },
+        {
+          "id": "blk-xml",
+          "kind": "xml",
+          "depth": 0,
+          "parent": null,
+          "label": "XML",
+          "windowCount": 1
+        },
+        {
+          "id": "blk-sql",
+          "kind": "sql",
+          "depth": 0,
+          "parent": null,
+          "label": "SQL",
+          "windowCount": 1
+        },
+        {
+          "id": "blk-other",
+          "kind": "other",
+          "depth": 0,
+          "parent": null,
+          "label": "その他",
+          "windowCount": 1
+        }
+      ]
+    }
+  },
+  {
+    "label": "layout",
+    "input": {
+      "scenario": "layout"
+    },
+    "expected": {
+      "geometry": {
+        "windowsOutsideOwnFrame": [],
+        "islandsOutsideBlock": [],
+        "windowOverlapsAcrossGroups": [],
+        "blockFrameOverlaps": [],
+        "islandFrameOverlaps": [],
+        "foreignWindowsInIslands": [],
+        "blockOrderTopToBottom": [
+          "blk-java",
+          "blk-client",
+          "blk-xml",
+          "blk-sql",
+          "blk-other"
+        ]
+      },
+      "positions": {
+        "w-order-create": {
+          "left": 72,
+          "top": 124,
+          "collapsed": false
+        },
+        "w-order-validate": {
+          "left": 772,
+          "top": 124,
+          "collapsed": false
+        },
+        "w-order-save": {
+          "left": 1472,
+          "top": 124,
+          "collapsed": false
+        },
+        "w-checkout": {
+          "left": 72,
+          "top": 381,
+          "collapsed": false
+        },
+        "w-inv-reserve": {
+          "left": 772,
+          "top": 381,
+          "collapsed": false
+        },
+        "w-pay-charge": {
+          "left": 1472,
+          "top": 538,
+          "collapsed": false
+        },
+        "w-pay-facade": {
+          "left": 772,
+          "top": 538,
+          "collapsed": false
+        },
+        "w-report-file": {
+          "left": 56,
+          "top": 719,
+          "collapsed": false
+        },
+        "w-legacy-deleted": {
+          "left": 56,
+          "top": 956,
+          "collapsed": false
+        },
+        "w-order-form-js": {
+          "left": 56,
+          "top": 1273,
+          "collapsed": false
+        },
+        "w-order-mapper-xml": {
+          "left": 56,
+          "top": 1530,
+          "collapsed": false
+        },
+        "w-migration-sql": {
+          "left": 56,
+          "top": 1807,
+          "collapsed": false
+        },
+        "w-order-css": {
+          "left": 56,
+          "top": 2024,
+          "collapsed": false
+        }
+      }
+    }
+  },
+  {
+    "label": "relayout",
+    "input": {
+      "scenario": "relayout"
+    },
+    "expected": {
+      "geometry": {
+        "windowsOutsideOwnFrame": [],
+        "islandsOutsideBlock": [],
+        "windowOverlapsAcrossGroups": [],
+        "blockFrameOverlaps": [],
+        "islandFrameOverlaps": [],
+        "foreignWindowsInIslands": [],
+        "blockOrderTopToBottom": [
+          "blk-java",
+          "blk-client",
+          "blk-xml",
+          "blk-sql"
+        ]
+      },
+      "frameIds": [
+        "blk-java",
+        "isl-1",
+        "isl-2",
+        "blk-client",
+        "blk-xml",
+        "blk-sql"
+      ]
+    }
+  },
+  {
+    "label": "no-groups",
+    "input": {
+      "scenario": "no-groups"
+    },
+    "expected": {
+      "hasGroups": false,
+      "frames": 0,
+      "lefts": [
+        40,
+        740,
+        1440
+      ],
+      "minTop": 80
+    }
+  },
+  {
+    "label": "decor",
+    "input": {
+      "scenario": "decor"
+    },
+    "expected": {
+      "w-order-create": {
+        "classes": [
+          "change-modified"
+        ],
+        "badges": [
+          "change-badge change-badge-modified | 変更"
+        ]
+      },
+      "w-order-validate": {
+        "classes": [
+          "change-modified"
+        ],
+        "badges": [
+          "change-badge change-badge-modified | 変更"
+        ]
+      },
+      "w-order-save": {
+        "classes": [
+          "change-modified"
+        ],
+        "badges": [
+          "change-badge change-badge-modified | 変更"
+        ]
+      },
+      "w-checkout": {
+        "classes": [
+          "window-type-junction"
+        ],
+        "badges": [
+          "wt-badge wt-junction | 合流点"
+        ]
+      },
+      "w-inv-reserve": {
+        "classes": [
+          "change-modified"
+        ],
+        "badges": [
+          "change-badge change-badge-modified | 変更"
+        ]
+      },
+      "w-pay-charge": {
+        "classes": [
+          "change-modified"
+        ],
+        "badges": [
+          "change-badge change-badge-modified | 変更"
+        ]
+      },
+      "w-pay-facade": {
+        "classes": [
+          "window-type-via"
+        ],
+        "badges": [
+          "wt-badge wt-via | 経由"
+        ]
+      },
+      "w-report-file": {
+        "classes": [
+          "window-type-file",
+          "change-modified",
+          "change-flag-worktreeMismatch"
+        ],
+        "badges": [
+          "wt-badge wt-file | FILE",
+          "change-badge change-badge-modified | 変更",
+          "change-label change-label-warn | 作業ツリーと不一致のためグラフ外"
+        ]
+      },
+      "w-legacy-deleted": {
+        "classes": [
+          "window-type-file",
+          "change-deleted",
+          "change-flag-deleted"
+        ],
+        "badges": [
+          "wt-badge wt-file | FILE",
+          "change-badge change-badge-deleted | 削除",
+          "change-label change-label-deleted | 削除（base 時点の内容）"
+        ]
+      },
+      "w-order-form-js": {
+        "classes": [
+          "window-type-file",
+          "change-modified"
+        ],
+        "badges": [
+          "wt-badge wt-file | FILE",
+          "change-badge change-badge-modified | 変更"
+        ]
+      },
+      "w-order-mapper-xml": {
+        "classes": [
+          "window-type-file",
+          "change-modified"
+        ],
+        "badges": [
+          "wt-badge wt-file | FILE",
+          "change-badge change-badge-modified | 変更"
+        ]
+      },
+      "w-migration-sql": {
+        "classes": [
+          "window-type-file",
+          "change-added"
+        ],
+        "badges": [
+          "wt-badge wt-file | FILE",
+          "change-badge change-badge-added | 追加"
+        ]
+      },
+      "w-order-css": {
+        "classes": [
+          "window-type-file",
+          "change-modified"
+        ],
+        "badges": [
+          "wt-badge wt-file | FILE",
+          "change-badge change-badge-modified | 変更"
+        ]
+      },
+      "_junctionCollapsedByDefault": false,
+      "_junctionExplicitlyExpanded": false
+    }
+  },
+  {
+    "label": "via",
+    "input": {
+      "scenario": "via"
+    },
+    "expected": {
+      "classes": [
+        "window-type-via"
+      ],
+      "badges": [
+        "wt-badge wt-via | 経由 | 未変更の中継メソッド（変更メソッドどうしの呼び出し経路の途中）"
+      ],
+      "collapsedByDefault": false,
+      "explicitlyExpanded": false,
+      "connections": [
+        {
+          "from": "w-checkout",
+          "to": "w-pay-facade",
+          "callLine": 32
+        },
+        {
+          "from": "w-pay-facade",
+          "to": "w-pay-charge",
+          "callLine": 13
+        }
+      ],
+      "insideIslandFrame": true,
+      "geometry": {
+        "windowsOutsideOwnFrame": [],
+        "islandsOutsideBlock": [],
+        "windowOverlapsAcrossGroups": [],
+        "blockFrameOverlaps": [],
+        "islandFrameOverlaps": [],
+        "foreignWindowsInIslands": [],
+        "blockOrderTopToBottom": [
+          "blk-java",
+          "blk-client",
+          "blk-xml",
+          "blk-sql",
+          "blk-other"
+        ]
+      }
+    }
+  },
+  {
+    "label": "save-roundtrip",
+    "input": {
+      "scenario": "save-roundtrip"
+    },
+    "expected": {
+      "firstSaveKeepsAll": true,
+      "secondSaveKeepsAll": true,
+      "savedTopLevelKeys": [
+        "autoLayout",
+        "connections",
+        "groups",
+        "metadata",
+        "windows"
+      ],
+      "junctionCollapsedSaved": false,
+      "geometryAfterReload": {
+        "windowsOutsideOwnFrame": [],
+        "islandsOutsideBlock": [],
+        "windowOverlapsAcrossGroups": [],
+        "blockFrameOverlaps": [],
+        "islandFrameOverlaps": [],
+        "foreignWindowsInIslands": [],
+        "blockOrderTopToBottom": [
+          "blk-java",
+          "blk-client",
+          "blk-xml",
+          "blk-sql",
+          "blk-other"
+        ]
+      }
+    }
+  },
+  {
+    "label": "no-reanalysis-and-merge",
+    "input": {
+      "scenario": "no-reanalysis-and-merge"
+    },
+    "expected": {
+      "changeSet": {
+        "posted": [],
+        "toasts": [
+          "warning"
+        ]
+      },
+      "plain": {
+        "posted": [
+          "reanalyzeRoot"
+        ],
+        "toasts": 0
+      },
+      "merge": {
+        "addedGroup": "isl-1",
+        "groupsKept": true,
+        "changeSetKept": true,
+        "analysisNotAdopted": true,
+        "newConnection": true,
+        "savedGroups": 7,
+        "savedChangeFields": 11,
+        "savedChangeSet": true,
+        "island1Members": 4,
+        "geometryAfterMerge": {
+          "windowsOutsideOwnFrame": [],
+          "islandsOutsideBlock": [],
+          "windowOverlapsAcrossGroups": [],
+          "blockFrameOverlaps": [],
+          "islandFrameOverlaps": [],
+          "foreignWindowsInIslands": [],
+          "blockOrderTopToBottom": [
+            "blk-java",
+            "blk-client",
+            "blk-xml",
+            "blk-sql",
+            "blk-other"
+          ]
+        }
+      }
+    }
+  }
+]

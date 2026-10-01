@@ -15,8 +15,10 @@ import {
     withAnalysisMetadata
 } from './reanalysis';
 import { perfSection, perfTotal, isPerfLogEnabled } from './perfLogger';
-import { getCommitChanges, getWorkbenchChanges } from './gitUtils';
+import { getCommitChanges, getWorkbenchChanges, showCommitHashInput } from './gitUtils';
 import { openFileAtLine } from './fileNavigator';
+import { isChangeSetCanvas } from './changeSet';
+import { openChangeSet } from './changeSetCommand';
 import { parseJacocoCoverage } from './coverageParser';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -173,21 +175,9 @@ export function activate(context: vscode.ExtensionContext) {
                         await getWorkbenchChanges(panel);
                         break;
                     case 'showCommitInputDialog':
-                        const commitHash = await vscode.window.showInputBox({
-                            prompt: 'コミットハッシュを入力してください',
-                            placeHolder: '例: 7d0b453 または 7d0b453fa33636440206a9632692b212fb631ee0',
-                            validateInput: (value) => {
-                                if (!value || value.trim().length === 0) {
-                                    return 'コミットハッシュを入力してください';
-                                }
-                                if (value.trim().length < 7) {
-                                    return 'コミットハッシュは最低7文字必要です';
-                                }
-                                return null;
-                            }
-                        });
+                        const commitHash = await showCommitHashInput();
                         if (commitHash) {
-                            await getCommitChanges(commitHash.trim(), panel);
+                            await getCommitChanges(commitHash, panel);
                         }
                         break;
                     case 'showWidthInputDialog':
@@ -481,6 +471,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // Command: callcanvas.openChangeSet（コミットかワークベンチの変更を 1 枚の変更集合キャンバスにして開く）
+    let disposableOpenChangeSet = vscode.commands.registerCommand('callcanvas.openChangeSet', async (target?: string) => {
+        await openChangeSet((jsonPath) => openViewerWithJsonPath(jsonPath, context), target);
+    });
+
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposableWithFile);
     context.subscriptions.push(disposableCreateNew);
@@ -490,6 +485,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposableLoadCoverage);
     context.subscriptions.push(disposableClearCoverage);
     context.subscriptions.push(disposableReloadFromJson);
+    context.subscriptions.push(disposableOpenChangeSet);
 }
 
 async function loadCoverageReportForPanel(panel: vscode.WebviewPanel): Promise<void> {
@@ -762,6 +758,11 @@ async function reanalyzeRootMethod(
         currentJson = JSON.parse(content);
     } catch (error) {
         vscode.window.showErrorMessage(`JSONファイルの読み込みに失敗しました: ${error}`);
+        return;
+    }
+
+    if (isChangeSetCanvas(currentJson)) {
+        vscode.window.showWarningMessage('変更集合キャンバスはルート再解析の対象外です（「CallCanvas: Open Change Set」で作り直してください）');
         return;
     }
 

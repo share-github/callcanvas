@@ -315,6 +315,65 @@ function extractJsonPath(html) {
     }
 }
 
+/**
+ * What a change set canvas is about, read from its JSON (`metadata.changeSet`): a
+ * commit (short hash + subject) or the workbench (uncommitted changes), and how many
+ * files and islands it has. Only for display (the canvas title, the summary Neovim
+ * shows); null for other canvases.
+ */
+function changeSetSummary(jsonPath) {
+    let canvas;
+    try {
+        canvas = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    } catch {
+        return null;
+    }
+    const changeSet = canvas && canvas.metadata && canvas.metadata.changeSet;
+    if (!changeSet || typeof changeSet !== 'object') {
+        return null;
+    }
+    const summary = {
+        kind: changeSet.kind === 'workbench' ? 'workbench' : 'commit',
+        commit: null,
+        subject: null,
+        fileCount: Array.isArray(changeSet.files) ? changeSet.files.length : 0,
+        islandCount: (canvas.groups || []).filter(group => group && group.kind === 'island').length
+    };
+    if (summary.kind === 'commit' && changeSet.commit) {
+        summary.commit = String(changeSet.commit).slice(0, 7);
+        try {
+            const line = require('child_process').execFileSync(
+                'git', ['log', '-1', '--no-color', '--format=%h%x09%s', String(changeSet.commit)],
+                { cwd: path.dirname(jsonPath), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
+            ).trim();
+            const tab = line.indexOf('\t');
+            if (tab > 0) {
+                summary.commit = line.slice(0, tab);
+                summary.subject = line.slice(tab + 1) || null;
+            }
+        } catch {
+            // Not in this repository any more: the hash alone still names it.
+        }
+    }
+    return summary;
+}
+
+/** One line per QuickPick item for Neovim's list: `label — description`. */
+function quickPickLines(items) {
+    return (items || []).map(item => (
+        typeof item === 'string'
+            ? item
+            : (item.description ? `${item.label} — ${item.description}` : String(item.label))
+    ));
+}
+
+/** The canvas title of a change set: `変更集合 <short hash> <subject>` / `変更集合 ワークベンチ`. */
+function changeSetTitle(summary) {
+    return summary.kind === 'workbench'
+        ? '変更集合 ワークベンチ'
+        : ['変更集合', summary.commit, summary.subject].filter(Boolean).join(' ');
+}
+
 /** Stable, short canvas id derived from the JSON path (keeps permalinks valid). */
 function canvasIdFor(jsonPath) {
     return crypto.createHash('sha1').update(String(jsonPath)).digest('hex').slice(0, 10);
@@ -364,6 +423,10 @@ class CallCanvasHost {
         this.latestPanel = null;
         this.panelGeneration = 0;
         this.lastError = null;
+        /** The last info toast — why a command that should open a canvas did not ("no changes"). */
+        this.lastInfo = null;
+        /** canvas id -> changeSetSummary() of a change set canvas (null for others) */
+        this.changeSets = new Map();
         this.uiRequests = new Map();
         this.uiSequence = 0;
         this.activeCanvasId = null;
@@ -539,6 +602,7 @@ class CallCanvasHost {
 
         const generationBefore = this.panelGeneration;
         this.lastError = null;
+        this.lastInfo = null;
 
         try {
             // Explicit command form (`callcanvas command <id>`)
@@ -550,7 +614,16 @@ class CallCanvasHost {
                 if (this.lastError) {
                     return { ok: false, error: this.lastError, url: this.url };
                 }
-                return { ok: true, value: value === undefined ? null : value, url: this.url };
+                const result = { ok: true, value: value === undefined ? null : value, url: this.url };
+                // A command that opened a canvas (`callcanvas.openChangeSet`) answers like an
+                // analysis does, so the caller gets the canvas's own URLs (/c/<id>, /k/…).
+                if (this.panelGeneration !== generationBefore) {
+                    return Object.assign(this.openResult(generationBefore), { value: result.value });
+                }
+                if (this.lastInfo) {
+                    result.message = this.lastInfo;
+                }
+                return result;
             }
             if (file.endsWith('.json')) {
                 await this.shim.vscode.commands.executeCommand(
@@ -612,6 +685,9 @@ class CallCanvasHost {
             canvasListUrl: this.server.canvasListUrl,
             canvasId: canvasId || null,
             title: entry ? entry.title : null,
+            // For a change set: kind / commit / subject / fileCount / islandCount, so Neovim can
+            // say what it opened without reading the JSON.
+            changeSet: (canvasId && this.changeSets.get(canvasId)) || null,
             canvasCount: this.server.canvases.size,
             clients: canvasId ? this.server.clientsForCanvas(canvasId) : 0
         };
@@ -674,8 +750,13 @@ class CallCanvasHost {
                 this.panelIds.set(panel, id);
                 this.latestPanel = panel;
 
+                // A change set canvas is named after its range, not its first window
+                // (display only — the JSON is not touched).
+                const changeSet = jsonPath ? changeSetSummary(jsonPath) : null;
+                this.changeSets.set(id, changeSet);
+
                 this.server.setCanvas(id, html, {
-                    title: panel.title,
+                    title: changeSet ? changeSetTitle(changeSet) : panel.title,
                     jsonPath: jsonPath || ''
                 });
             },
@@ -687,6 +768,9 @@ class CallCanvasHost {
             },
             onTitle: (panel, title) => {
                 const id = this.panelIds.get(panel);
+                if (id && this.changeSets.get(id)) {
+                    return;                               // keeps its change set name
+                }
                 if (id) {
                     const entry = this.server.canvases.get(id);
                     if (entry) {
@@ -700,6 +784,7 @@ class CallCanvasHost {
                 this.panelIds.delete(panel);
                 if (id && this.panels.get(id) === panel) {
                     this.panels.delete(id);
+                    this.changeSets.delete(id);
                     this.server.dropCanvas(id);
                 }
                 if (this.latestPanel === panel) {
@@ -864,6 +949,8 @@ class CallCanvasHost {
                 host.log(`${level}: ${message}`);
                 if (level === 'error') {
                     host.lastError = String(message);
+                } else if (level === 'info') {
+                    host.lastInfo = String(message);
                 }
                 if (!items || items.length === 0) {
                     if (host.server.clients.size === 0 && host.nvim.available) {
@@ -966,12 +1053,9 @@ class CallCanvasHost {
         // wrong project means minutes spent indexing the wrong tree.
         if (this.nvim.available && type === 'pick') {
             // The items are {label, description} for the browser's dialog; Neovim gets
-            // one line each (the description is the project path, worth showing).
-            const labels = (payload.items || []).map(item => (
-                typeof item === 'string'
-                    ? item
-                    : (item.description ? `${item.label}  —  ${item.description}` : item.label)
-            ));
+            // one line each, so the description has to be on it (a bare label is often
+            // just a hash or a module name).
+            const labels = quickPickLines(payload.items);
             const choice = await this.nvim.select(payload.placeHolder, labels);
             if (choice === -2) {
                 this.log('pick cancelled in nvim');
@@ -1084,5 +1168,5 @@ class CallCanvasHost {
 
 module.exports = {
     CallCanvasHost, detectProjectRoot, findMultiModuleRoot, sessionFile, sessionDir, persistentToken,
-    extractJsonPath, canvasIdFor, OPEN_COMMANDS
+    extractJsonPath, canvasIdFor, OPEN_COMMANDS, quickPickLines, changeSetSummary, changeSetTitle
 };

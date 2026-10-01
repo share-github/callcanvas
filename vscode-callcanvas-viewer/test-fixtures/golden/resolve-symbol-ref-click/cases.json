@@ -1,32 +1,94 @@
 [
   {
     "label": "token under the click wins (normal case)",
-    "input": { "clickSymbol": "com.example.typerefs.Size", "pressed": { "symbol": "com.example.typerefs.Size", "x": 290, "y": 233 }, "click": { "x": 290, "y": 233 } },
+    "input": {
+      "clickSymbol": "com.example.typerefs.Size",
+      "pressed": {
+        "symbol": "com.example.typerefs.Size",
+        "x": 290,
+        "y": 233
+      },
+      "click": {
+        "x": 290,
+        "y": 233
+      }
+    },
     "expected": "com.example.typerefs.Size"
   },
   {
     "label": "token under the click wins even if another token was pressed",
-    "input": { "clickSymbol": "com.example.typerefs.Circle", "pressed": { "symbol": "com.example.typerefs.Size", "x": 290, "y": 233 }, "click": { "x": 300, "y": 233 } },
+    "input": {
+      "clickSymbol": "com.example.typerefs.Circle",
+      "pressed": {
+        "symbol": "com.example.typerefs.Size",
+        "x": 290,
+        "y": 233
+      },
+      "click": {
+        "x": 300,
+        "y": 233
+      }
+    },
     "expected": "com.example.typerefs.Circle"
   },
   {
     "label": "make 10 行目 Size: line nodes replaced between mousedown and mouseup (click lands on .code-line) → pressed token",
-    "input": { "clickSymbol": null, "pressed": { "symbol": "com.example.typerefs.Size", "x": 290, "y": 233 }, "click": { "x": 290, "y": 233 } },
+    "input": {
+      "clickSymbol": null,
+      "pressed": {
+        "symbol": "com.example.typerefs.Size",
+        "x": 290,
+        "y": 233
+      },
+      "click": {
+        "x": 290,
+        "y": 233
+      }
+    },
     "expected": "com.example.typerefs.Size"
   },
   {
     "label": "small pointer travel within the slop still opens the pressed token",
-    "input": { "clickSymbol": null, "pressed": { "symbol": "com.example.typerefs.Circle", "x": 340, "y": 233 }, "click": { "x": 352, "y": 221 } },
+    "input": {
+      "clickSymbol": null,
+      "pressed": {
+        "symbol": "com.example.typerefs.Circle",
+        "x": 340,
+        "y": 233
+      },
+      "click": {
+        "x": 352,
+        "y": 221
+      }
+    },
     "expected": "com.example.typerefs.Circle"
   },
   {
     "label": "pointer moved away (drag) → nothing",
-    "input": { "clickSymbol": null, "pressed": { "symbol": "com.example.typerefs.Circle", "x": 340, "y": 233 }, "click": { "x": 353, "y": 233 } },
+    "input": {
+      "clickSymbol": null,
+      "pressed": {
+        "symbol": "com.example.typerefs.Circle",
+        "x": 340,
+        "y": 233
+      },
+      "click": {
+        "x": 353,
+        "y": 233
+      }
+    },
     "expected": null
   },
   {
     "label": "no token pressed and none under the click → nothing",
-    "input": { "clickSymbol": null, "pressed": null, "click": { "x": 290, "y": 233 } },
+    "input": {
+      "clickSymbol": null,
+      "pressed": null,
+      "click": {
+        "x": 290,
+        "y": 233
+      }
+    },
     "expected": null
   }
 ]

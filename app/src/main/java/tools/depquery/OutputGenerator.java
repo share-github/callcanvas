@@ -308,49 +308,9 @@ class OutputGenerator {
             }
             window.put("displayName", className + " # " + node.name);
 
-            window.put("filePath", toRelativePath(node.file, srcRoots, workspace));
-
-            // ソースコードを行番号ベースで取得（Javadoc 含む）
-            String code;
-            if (node.code != null && !node.code.isEmpty()) {
-                // 既にcodeがある場合（旧形式のサポート）
-                code = node.code;
-                window.put("startLine", node.lineStart > 0 ? node.lineStart : 1);
-            } else {
-                Path absoluteFilePath = resolveAbsolutePath(node.file, srcRoots, workspace);
-                if (absoluteFilePath != null) {
-                    List<String> lines = fileLinesCache.get(absoluteFilePath);
-                    if (lines == null) {
-                        try {
-                            lines = Files.readAllLines(absoluteFilePath);
-                            fileLinesCache.put(absoluteFilePath, lines);
-                        } catch (IOException e) {
-                            // キャッシュせずフォールバック
-                        }
-                    }
-                    if (lines != null) {
-                        int docStart = findCommentStartLine(lines, node.lineStart);
-                        int end = Math.min(lines.size(), node.lineEnd);
-                        if (docStart <= end) {
-                            code = String.join("\n", lines.subList(docStart - 1, end));
-                            window.put("startLine", docStart);
-                        } else {
-                            code = extractSourceCode(absoluteFilePath, node.lineStart, node.lineEnd);
-                            window.put("startLine", node.lineStart > 0 ? node.lineStart : 1);
-                        }
-                        sourceCodeFileCount++;
-                    } else {
-                        code = extractSourceCode(absoluteFilePath, node.lineStart, node.lineEnd);
-                        window.put("startLine", node.lineStart > 0 ? node.lineStart : 1);
-                        sourceCodeFileCount++;
-                    }
-                } else {
-                    code = "// Source not available (file not found)";
-                    window.put("startLine", node.lineStart > 0 ? node.lineStart : 1);
-                }
+            if (putMethodSource(window, node, srcRoots, workspace, fileLinesCache, symbolLookup, usedSymbols)) {
+                sourceCodeFileCount++;
             }
-            window.put("code", code);
-            putRefs(window, node, code, symbolLookup, usedSymbols);
 
             // 位置は autoLayout で自動計算されるが、初期位置を設定
             // レベル間の間隔はウィンドウ幅 + 100pxのギャップ
@@ -415,11 +375,7 @@ class OutputGenerator {
         out.put("connections", connections);
 
         if (!usedSymbols.isEmpty()) {
-            var symbolsObj = new JSONObject();
-            for (var e : usedSymbols.entrySet()) {
-                symbolsObj.put(e.getKey(), symbolJson(e.getKey(), e.getValue(), srcRoots, workspace));
-            }
-            out.put("symbols", symbolsObj);
+            out.put("symbols", symbolsJson(usedSymbols, srcRoots, workspace));
         }
 
         if (symbolIndex != null && !symbolIndex.isEmpty()) {
@@ -434,6 +390,63 @@ class OutputGenerator {
         }
 
         return out;
+    }
+
+    /**
+     * メソッドのウィンドウのソース部分（filePath・startLine・code・refs）を window に書く。
+     * code は直上の Javadoc/コメントから宣言の終わりまで。refs が参照する宣言は usedSymbols に集める。
+     *
+     * @return ソースファイルから読めたか
+     */
+    static boolean putMethodSource(JSONObject window, GraphModels.Node node, List<Path> srcRoots, Path workspace,
+            Map<Path, List<String>> fileLinesCache,
+            java.util.function.Function<String, CallIndexModels.SymbolEntry> symbolLookup,
+            Map<String, CallIndexModels.SymbolEntry> usedSymbols) {
+        boolean sourced = false;
+        window.put("filePath", toRelativePath(node.file, srcRoots, workspace));
+
+        // ソースコードを行番号ベースで取得（Javadoc 含む）
+        String code;
+        if (node.code != null && !node.code.isEmpty()) {
+            // 既にcodeがある場合（旧形式のサポート）
+            code = node.code;
+            window.put("startLine", node.lineStart > 0 ? node.lineStart : 1);
+        } else {
+            Path absoluteFilePath = resolveAbsolutePath(node.file, srcRoots, workspace);
+            if (absoluteFilePath != null) {
+                List<String> lines = fileLinesCache.get(absoluteFilePath);
+                if (lines == null) {
+                    try {
+                        lines = Files.readAllLines(absoluteFilePath);
+                        fileLinesCache.put(absoluteFilePath, lines);
+                    } catch (IOException e) {
+                        // キャッシュせずフォールバック
+                    }
+                }
+                if (lines != null) {
+                    int docStart = findCommentStartLine(lines, node.lineStart);
+                    int end = Math.min(lines.size(), node.lineEnd);
+                    if (docStart <= end) {
+                        code = String.join("\n", lines.subList(docStart - 1, end));
+                        window.put("startLine", docStart);
+                    } else {
+                        code = extractSourceCode(absoluteFilePath, node.lineStart, node.lineEnd);
+                        window.put("startLine", node.lineStart > 0 ? node.lineStart : 1);
+                    }
+                    sourced = true;
+                } else {
+                    code = extractSourceCode(absoluteFilePath, node.lineStart, node.lineEnd);
+                    window.put("startLine", node.lineStart > 0 ? node.lineStart : 1);
+                    sourced = true;
+                }
+            } else {
+                code = "// Source not available (file not found)";
+                window.put("startLine", node.lineStart > 0 ? node.lineStart : 1);
+            }
+        }
+        window.put("code", code);
+        putRefs(window, node, code, symbolLookup, usedSymbols);
+        return sourced;
     }
 
     /**
@@ -465,6 +478,15 @@ class OutputGenerator {
             arr.put(new JSONObject().put("line", r.line()).put("col", r.col()).put("len", r.len()).put("symbol", r.symbol()));
         }
         window.put("refs", arr);
+    }
+
+    /** CallCanvas JSON のトップレベル symbols */
+    static JSONObject symbolsJson(Map<String, CallIndexModels.SymbolEntry> usedSymbols, List<Path> srcRoots, Path workspace) {
+        var symbolsObj = new JSONObject();
+        for (var e : usedSymbols.entrySet()) {
+            symbolsObj.put(e.getKey(), symbolJson(e.getKey(), e.getValue(), srcRoots, workspace));
+        }
+        return symbolsObj;
     }
 
     /** CallCanvas JSON の symbols の 1 件 */

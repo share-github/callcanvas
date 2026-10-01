@@ -1,0 +1,1525 @@
+[
+  {
+    "label": "直接つながる・未変更の中継（via）・単独の島・関数外の hunk: analyzeMethod（下向き）の呼び出し関係で島を作り、via は 1 段ずつ実線。関数に当たらない hunk はファイル全文（outsideMethod）。TS の symbolIndex を先勝ちで取り込む",
+    "input": {
+      "files": [
+        {
+          "filePath": "web/js/app.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "  x"
+                },
+                {
+                  "type": "add",
+                  "content": "  document.getElementById('checkout').addEventListener('click', onCheckout);"
+                }
+              ]
+            },
+            {
+              "oldStart": 5,
+              "oldCount": 0,
+              "newStart": 6,
+              "newCount": 4,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "function onCheckout() {"
+                },
+                {
+                  "type": "add",
+                  "content": "  submitOrder('book', cartCount());"
+                },
+                {
+                  "type": "add",
+                  "content": "}"
+                },
+                {
+                  "type": "add",
+                  "content": ""
+                }
+              ]
+            },
+            {
+              "oldStart": 12,
+              "oldCount": 0,
+              "newStart": 15,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "var VERSION = 2;"
+                }
+              ]
+            }
+          ],
+          "headContent": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}\n\nfunction onCheckout() {\n  submitOrder('book', cartCount());\n}\n\nfunction submitOrder(item, quantity) {\n  return fetch('/orders');\n}\n\ndocument.addEventListener('DOMContentLoaded', init);\nvar VERSION = 2;"
+        },
+        {
+          "filePath": "web/js/basket.js",
+          "oldPath": "web/js/cart.js",
+          "status": "renamed",
+          "hunks": [
+            {
+              "oldStart": 8,
+              "oldCount": 1,
+              "newStart": 8,
+              "newCount": 3,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "  return cartItems.length;"
+                },
+                {
+                  "type": "add",
+                  "content": "  var n = 0;"
+                },
+                {
+                  "type": "add",
+                  "content": "  for (var i = 0; i < cartItems.length; i++) n += cartItems[i].quantity || 1;"
+                },
+                {
+                  "type": "add",
+                  "content": "  return n;"
+                }
+              ]
+            }
+          ],
+          "headContent": "..."
+        },
+        {
+          "filePath": "web/js/util.js",
+          "status": "added",
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 3,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "function lonely() {"
+                },
+                {
+                  "type": "add",
+                  "content": "  return 1;"
+                },
+                {
+                  "type": "add",
+                  "content": "}"
+                }
+              ]
+            }
+          ],
+          "headContent": "function lonely() {\n  return 1;\n}"
+        }
+      ],
+      "clientside": {
+        "lineSignatures": {
+          "web/js/app.js": {
+            "3": "js/app.js#init:1",
+            "6": "js/app.js#onCheckout:6",
+            "7": "js/app.js#onCheckout:6",
+            "8": "js/app.js#onCheckout:6",
+            "9": null,
+            "15": null
+          },
+          "web/js/basket.js": {
+            "8": "js/basket.js#cartCount:7",
+            "9": "js/basket.js#cartCount:7",
+            "10": "js/basket.js#cartCount:7"
+          },
+          "web/js/util.js": {
+            "1": "js/util.js#lonely:1",
+            "2": "js/util.js#lonely:1",
+            "3": "js/util.js#lonely:1"
+          }
+        },
+        "analyses": {
+          "web/js/app.js\njs/app.js#init:1": {
+            "success": true,
+            "data": {
+              "autoLayout": true,
+              "windows": [
+                {
+                  "id": "window-1",
+                  "displayName": "app # init",
+                  "filePath": "web/js/app.js",
+                  "language": "javascript",
+                  "code": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}",
+                  "startLine": 1,
+                  "endLine": 4
+                },
+                {
+                  "id": "window-2",
+                  "displayName": "basket # renderCart",
+                  "filePath": "web/js/basket.js",
+                  "language": "javascript",
+                  "code": "function renderCart(el) {\n  el.textContent = 'items: ' + cartCount();\n}",
+                  "startLine": 17,
+                  "endLine": 19
+                },
+                {
+                  "id": "window-3",
+                  "displayName": "app # onCheckout",
+                  "filePath": "web/js/app.js",
+                  "language": "javascript",
+                  "code": "function onCheckout() {\n  submitOrder('book', cartCount());\n}",
+                  "startLine": 6,
+                  "endLine": 8
+                },
+                {
+                  "id": "window-4",
+                  "displayName": "basket # cartCount",
+                  "filePath": "web/js/basket.js",
+                  "language": "javascript",
+                  "code": "function cartCount() {\n  var n = 0;\n  for (var i = 0; i < cartItems.length; i++) n += cartItems[i].quantity || 1;\n  return n;\n}",
+                  "startLine": 7,
+                  "endLine": 11
+                },
+                {
+                  "id": "window-5",
+                  "displayName": "app # submitOrder",
+                  "filePath": "web/js/app.js",
+                  "language": "javascript",
+                  "code": "function submitOrder(item, quantity) {\n  return fetch('/orders');\n}",
+                  "startLine": 10,
+                  "endLine": 12
+                }
+              ],
+              "connections": [
+                {
+                  "id": "connection-1",
+                  "from": "window-1",
+                  "to": "window-2",
+                  "callLine": 2,
+                  "callEndLine": 2
+                },
+                {
+                  "id": "connection-2",
+                  "from": "window-1",
+                  "to": "window-3",
+                  "callLine": 3,
+                  "callEndLine": 3
+                },
+                {
+                  "id": "connection-3",
+                  "from": "window-2",
+                  "to": "window-4",
+                  "callLine": 18,
+                  "callEndLine": 18
+                },
+                {
+                  "id": "connection-4",
+                  "from": "window-3",
+                  "to": "window-5",
+                  "callLine": 7,
+                  "callEndLine": 7
+                },
+                {
+                  "id": "connection-5",
+                  "from": "window-3",
+                  "to": "window-4",
+                  "callLine": 7,
+                  "callEndLine": 7
+                }
+              ],
+              "metadata": {
+                "analysis": {
+                  "language": "javascript",
+                  "root": "x",
+                  "direction": "outgoing",
+                  "rootWindowId": "window-1",
+                  "depth": 5
+                }
+              }
+            }
+          },
+          "web/js/app.js\njs/app.js#onCheckout:6": {
+            "success": true,
+            "data": {
+              "autoLayout": true,
+              "windows": [
+                {
+                  "id": "window-1",
+                  "displayName": "app # onCheckout",
+                  "filePath": "web/js/app.js",
+                  "language": "javascript",
+                  "code": "function onCheckout() {\n  submitOrder('book', cartCount());\n}",
+                  "startLine": 6,
+                  "endLine": 8
+                },
+                {
+                  "id": "window-2",
+                  "displayName": "app # submitOrder",
+                  "filePath": "web/js/app.js",
+                  "language": "javascript",
+                  "code": "function submitOrder(item, quantity) {\n  return fetch('/orders');\n}",
+                  "startLine": 10,
+                  "endLine": 12
+                },
+                {
+                  "id": "window-3",
+                  "displayName": "basket # cartCount",
+                  "filePath": "web/js/basket.js",
+                  "language": "javascript",
+                  "code": "function cartCount() {\n  var n = 0;\n  for (var i = 0; i < cartItems.length; i++) n += cartItems[i].quantity || 1;\n  return n;\n}",
+                  "startLine": 7,
+                  "endLine": 11
+                }
+              ],
+              "connections": [
+                {
+                  "id": "connection-1",
+                  "from": "window-1",
+                  "to": "window-2",
+                  "callLine": 7,
+                  "callEndLine": 7
+                },
+                {
+                  "id": "connection-2",
+                  "from": "window-1",
+                  "to": "window-3",
+                  "callLine": 7,
+                  "callEndLine": 7
+                }
+              ],
+              "metadata": {
+                "analysis": {
+                  "language": "javascript",
+                  "root": "x",
+                  "direction": "outgoing",
+                  "rootWindowId": "window-1",
+                  "depth": 5
+                }
+              },
+              "symbolIndex": {
+                "MAX": {
+                  "qualifier": "app",
+                  "type": "number",
+                  "value": "5"
+                }
+              }
+            }
+          },
+          "web/js/basket.js\njs/basket.js#cartCount:7": {
+            "success": true,
+            "data": {
+              "autoLayout": true,
+              "windows": [
+                {
+                  "id": "window-1",
+                  "displayName": "basket # cartCount",
+                  "filePath": "web/js/basket.js",
+                  "language": "javascript",
+                  "code": "function cartCount() {\n  var n = 0;\n  for (var i = 0; i < cartItems.length; i++) n += cartItems[i].quantity || 1;\n  return n;\n}",
+                  "startLine": 7,
+                  "endLine": 11
+                }
+              ],
+              "connections": [],
+              "metadata": {
+                "analysis": {
+                  "language": "javascript",
+                  "root": "x",
+                  "direction": "outgoing",
+                  "rootWindowId": "window-1",
+                  "depth": 5
+                }
+              }
+            }
+          },
+          "web/js/util.js\njs/util.js#lonely:1": {
+            "success": true,
+            "data": {
+              "autoLayout": true,
+              "windows": [
+                {
+                  "id": "window-1",
+                  "displayName": "util # lonely",
+                  "filePath": "web/js/util.js",
+                  "language": "javascript",
+                  "code": "function lonely() {\n  return 1;\n}",
+                  "startLine": 1,
+                  "endLine": 3
+                }
+              ],
+              "connections": [],
+              "metadata": {
+                "analysis": {
+                  "language": "javascript",
+                  "root": "x",
+                  "direction": "outgoing",
+                  "rootWindowId": "window-1",
+                  "depth": 5
+                }
+              }
+            }
+          }
+        },
+        "includeEdges": [],
+        "templatesAnalyzed": [],
+        "errors": {}
+      }
+    },
+    "expected": {
+      "request": [
+        {
+          "path": "web/js/app.js",
+          "kind": "javascript",
+          "lines": [
+            3,
+            6,
+            7,
+            8,
+            9,
+            15
+          ]
+        },
+        {
+          "path": "web/js/basket.js",
+          "kind": "javascript",
+          "lines": [
+            8,
+            9,
+            10
+          ]
+        },
+        {
+          "path": "web/js/util.js",
+          "kind": "javascript",
+          "lines": [
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "invariantErrors": [],
+      "groups": [
+        "clientside:blk-clientside",
+        "island:cs-isl-1<blk-clientside",
+        "island:cs-isl-2<blk-clientside"
+      ],
+      "windows": [
+        {
+          "name": "app # init",
+          "group": "cs-isl-1",
+          "windowType": "method",
+          "filePath": "web/js/app.js",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "code": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}",
+          "diffHunks": [
+            "+3,1"
+          ]
+        },
+        {
+          "name": "app # onCheckout",
+          "group": "cs-isl-1",
+          "windowType": "method",
+          "filePath": "web/js/app.js",
+          "startLine": 6,
+          "status": "modified",
+          "source": "worktree",
+          "code": "function onCheckout() {\n  submitOrder('book', cartCount());\n}",
+          "diffHunks": [
+            "+6,4"
+          ]
+        },
+        {
+          "name": "basket # cartCount",
+          "group": "cs-isl-1",
+          "windowType": "method",
+          "filePath": "web/js/basket.js",
+          "startLine": 7,
+          "status": "renamed",
+          "source": "worktree",
+          "oldPath": "web/js/cart.js",
+          "code": "function cartCount() {\n  var n = 0;\n  for (var i = 0; i < cartItems.length; i++) n += cartItems[i].quantity || 1;\n  return n;\n}",
+          "diffHunks": [
+            "+8,3"
+          ]
+        },
+        {
+          "name": "basket # renderCart",
+          "group": "cs-isl-1",
+          "windowType": "via",
+          "filePath": "web/js/basket.js",
+          "startLine": 17,
+          "change": null,
+          "code": "function renderCart(el) {\n  el.textContent = 'items: ' + cartCount();\n}",
+          "diffHunks": []
+        },
+        {
+          "name": "util # lonely",
+          "group": "cs-isl-2",
+          "windowType": "method",
+          "filePath": "web/js/util.js",
+          "startLine": 1,
+          "status": "added",
+          "source": "worktree",
+          "code": "function lonely() {\n  return 1;\n}",
+          "diffHunks": [
+            "+1,3"
+          ]
+        },
+        {
+          "name": "file:web/js/app.js",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/js/app.js",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "flags": [
+            "outsideMethod"
+          ],
+          "label": "メソッド外の変更",
+          "code": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}\n\nfunction onCheckout() {\n  submitOrder('book', cartCount());\n}\n\nfunction submitOrder(item, quantity) {\n  return fetch('/orders');\n}\n\ndocument.addEventListener('DOMContentLoaded', init);\nvar VERSION = 2;",
+          "diffHunks": [
+            "+15,1"
+          ]
+        }
+      ],
+      "connections": [
+        "app # init -> app # onCheckout @3",
+        "app # init -> basket # renderCart @2",
+        "basket # renderCart -> basket # cartCount @18",
+        "app # onCheckout -> basket # cartCount @7"
+      ],
+      "files": [
+        {
+          "path": "web/js/app.js",
+          "inGraph": true,
+          "windows": [
+            "app # init",
+            "app # onCheckout",
+            "file:web/js/app.js"
+          ]
+        },
+        {
+          "path": "web/js/basket.js",
+          "inGraph": true,
+          "windows": [
+            "basket # cartCount"
+          ]
+        },
+        {
+          "path": "web/js/util.js",
+          "inGraph": true,
+          "windows": [
+            "util # lonely"
+          ]
+        }
+      ],
+      "symbolIndex": [
+        "MAX"
+      ],
+      "clientsideError": null
+    }
+  },
+  {
+    "label": "変更テンプレートどうしは include 辺（Export HTML Include Map と同じ辺）で結ぶ: 両端が変更テンプレートの辺だけ・テンプレートはファイル単位ウィンドウのまま島へ。辺の無い変更テンプレートはブロック直下",
+    "input": {
+      "files": [
+        {
+          "filePath": "web/templates/layout.html",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "<div></div>"
+                },
+                {
+                  "type": "add",
+                  "content": "<div th:replace=\"header :: h\"></div>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<html>\n<div th:replace=\"header :: h\"></div>\n<div th:replace=\"nav :: n\"></div>\n</html>"
+        },
+        {
+          "filePath": "web/templates/header.html",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "<h1>Demo</h1>"
+                },
+                {
+                  "type": "add",
+                  "content": "<h1>Shop</h1>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<h1>Shop</h1>"
+        },
+        {
+          "filePath": "web/templates/footer.html",
+          "status": "added",
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "<footer></footer>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<footer></footer>"
+        }
+      ],
+      "clientside": {
+        "lineSignatures": {},
+        "analyses": {},
+        "includeEdges": [
+          {
+            "from": "web/templates/layout.html",
+            "to": "web/templates/header.html",
+            "line": 2
+          },
+          {
+            "from": "web/templates/layout.html",
+            "to": "web/templates/nav.html",
+            "line": 3
+          }
+        ],
+        "templatesAnalyzed": [
+          "web/templates/layout.html",
+          "web/templates/header.html",
+          "web/templates/footer.html"
+        ],
+        "errors": {}
+      }
+    },
+    "expected": {
+      "request": [
+        {
+          "path": "web/templates/layout.html",
+          "kind": "template",
+          "lines": []
+        },
+        {
+          "path": "web/templates/header.html",
+          "kind": "template",
+          "lines": []
+        },
+        {
+          "path": "web/templates/footer.html",
+          "kind": "template",
+          "lines": []
+        }
+      ],
+      "invariantErrors": [],
+      "groups": [
+        "clientside:blk-clientside",
+        "island:cs-isl-1<blk-clientside"
+      ],
+      "windows": [
+        {
+          "name": "file:web/templates/layout.html",
+          "group": "cs-isl-1",
+          "windowType": "file",
+          "filePath": "web/templates/layout.html",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "code": "<html>\n<div th:replace=\"header :: h\"></div>\n<div th:replace=\"nav :: n\"></div>\n</html>",
+          "diffHunks": [
+            "+2,1"
+          ]
+        },
+        {
+          "name": "file:web/templates/header.html",
+          "group": "cs-isl-1",
+          "windowType": "file",
+          "filePath": "web/templates/header.html",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "code": "<h1>Shop</h1>",
+          "diffHunks": [
+            "+1,1"
+          ]
+        },
+        {
+          "name": "file:web/templates/footer.html",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/templates/footer.html",
+          "startLine": 1,
+          "status": "added",
+          "source": "worktree",
+          "code": "<footer></footer>",
+          "diffHunks": [
+            "+1,1"
+          ]
+        }
+      ],
+      "connections": [
+        "file:web/templates/layout.html -> file:web/templates/header.html @2"
+      ],
+      "files": [
+        {
+          "path": "web/templates/layout.html",
+          "inGraph": true,
+          "windows": [
+            "file:web/templates/layout.html"
+          ]
+        },
+        {
+          "path": "web/templates/header.html",
+          "inGraph": true,
+          "windows": [
+            "file:web/templates/header.html"
+          ]
+        },
+        {
+          "path": "web/templates/footer.html",
+          "inGraph": true,
+          "windows": [
+            "file:web/templates/footer.html"
+          ]
+        }
+      ],
+      "symbolIndex": null,
+      "clientsideError": null
+    }
+  },
+  {
+    "label": "JS/TS 拡張が無い（clientside=null）: JS/TS はファイル単位（analysisFailed）で漏れなし・テンプレートはファイル単位のまま・削除/バイナリ/作業ツリー不一致は解析に回さない",
+    "input": {
+      "files": [
+        {
+          "filePath": "web/js/app.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "b"
+                },
+                {
+                  "type": "add",
+                  "content": "a"
+                }
+              ]
+            }
+          ],
+          "headContent": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}\n\nfunction onCheckout() {\n  submitOrder('book', cartCount());\n}\n\nfunction submitOrder(item, quantity) {\n  return fetch('/orders');\n}\n\ndocument.addEventListener('DOMContentLoaded', init);\nvar VERSION = 2;"
+        },
+        {
+          "filePath": "web/ts/cart.ts",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "b"
+                },
+                {
+                  "type": "add",
+                  "content": "a"
+                }
+              ]
+            }
+          ],
+          "headContent": "export function f() {\n  return 1;\n}"
+        },
+        {
+          "filePath": "web/index.html",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "b"
+                },
+                {
+                  "type": "add",
+                  "content": "a"
+                }
+              ]
+            }
+          ],
+          "headContent": "<html></html>"
+        },
+        {
+          "filePath": "web/js/old.js",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "x"
+                }
+              ]
+            }
+          ],
+          "baseContent": "function old() {}\n"
+        },
+        {
+          "filePath": "web/js/stale.js",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "b"
+                },
+                {
+                  "type": "add",
+                  "content": "a"
+                }
+              ]
+            }
+          ],
+          "headContent": "function stale() {}"
+        },
+        {
+          "filePath": "web/img/logo.js",
+          "status": "modified",
+          "binary": true
+        }
+      ],
+      "clientside": null
+    },
+    "expected": {
+      "request": [
+        {
+          "path": "web/js/app.js",
+          "kind": "javascript",
+          "lines": [
+            3
+          ]
+        },
+        {
+          "path": "web/ts/cart.ts",
+          "kind": "typescript",
+          "lines": [
+            2
+          ]
+        },
+        {
+          "path": "web/index.html",
+          "kind": "template",
+          "lines": []
+        }
+      ],
+      "invariantErrors": [],
+      "groups": [
+        "clientside:blk-clientside"
+      ],
+      "windows": [
+        {
+          "name": "file:web/js/app.js",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/js/app.js",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}\n\nfunction onCheckout() {\n  submitOrder('book', cartCount());\n}\n\nfunction submitOrder(item, quantity) {\n  return fetch('/orders');\n}\n\ndocument.addEventListener('DOMContentLoaded', init);\nvar VERSION = 2;",
+          "diffHunks": [
+            "+3,1"
+          ]
+        },
+        {
+          "name": "file:web/ts/cart.ts",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/ts/cart.ts",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "export function f() {\n  return 1;\n}",
+          "diffHunks": [
+            "+2,1"
+          ]
+        },
+        {
+          "name": "file:web/index.html",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/index.html",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "code": "<html></html>",
+          "diffHunks": [
+            "+1,1"
+          ]
+        },
+        {
+          "name": "file:web/js/old.js",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/js/old.js",
+          "startLine": 1,
+          "status": "deleted",
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "function old() {}",
+          "diffHunks": []
+        },
+        {
+          "name": "file:web/js/stale.js",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/js/stale.js",
+          "startLine": 1,
+          "status": "modified",
+          "source": "head",
+          "label": "作業ツリーと不一致（head 時点の内容）",
+          "code": "function stale() {}",
+          "diffHunks": [
+            "+1,1"
+          ]
+        },
+        {
+          "name": "file:web/img/logo.js",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/img/logo.js",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "flags": [
+            "binary"
+          ],
+          "label": "バイナリ（内容は表示しない）",
+          "code": "",
+          "diffHunks": []
+        }
+      ],
+      "connections": [],
+      "files": [
+        {
+          "path": "web/js/app.js",
+          "inGraph": false,
+          "windows": [
+            "file:web/js/app.js"
+          ],
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/ts/cart.ts",
+          "inGraph": false,
+          "windows": [
+            "file:web/ts/cart.ts"
+          ],
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/index.html",
+          "inGraph": false,
+          "windows": [
+            "file:web/index.html"
+          ]
+        },
+        {
+          "path": "web/js/old.js",
+          "inGraph": false,
+          "windows": [
+            "file:web/js/old.js"
+          ]
+        },
+        {
+          "path": "web/js/stale.js",
+          "inGraph": false,
+          "windows": [
+            "file:web/js/stale.js"
+          ]
+        },
+        {
+          "path": "web/img/logo.js",
+          "inGraph": false,
+          "windows": [
+            "file:web/img/logo.js"
+          ]
+        }
+      ],
+      "symbolIndex": null,
+      "clientsideError": "clientside の解析に失敗したファイルはファイル単位で表示します: web/js/app.js: JavaScript Call Hierarchy 拡張がありません / web/ts/cart.ts: TypeScript Call Hierarchy 拡張がありません"
+    }
+  },
+  {
+    "label": "解析の失敗: 関数解決できない TS ファイル・analyzeMethod が失敗した種を持つ JS ファイルはそのファイルをファイル単位（analysisFailed）に戻し、ほかのファイルは島にする。削除だけの hunk は前後の行が同じ関数のときだけその関数、関数の間なら関数外",
+    "input": {
+      "files": [
+        {
+          "filePath": "web/js/app.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "  log();"
+                }
+              ]
+            },
+            {
+              "oldStart": 10,
+              "oldCount": 1,
+              "newStart": 9,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "// gone"
+                }
+              ]
+            }
+          ],
+          "headContent": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}\n\nfunction onCheckout() {\n  submitOrder('book', cartCount());\n}\n\nfunction submitOrder(item, quantity) {\n  return fetch('/orders');\n}\n\ndocument.addEventListener('DOMContentLoaded', init);\nvar VERSION = 2;"
+        },
+        {
+          "filePath": "web/js/basket.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 8,
+              "oldCount": 1,
+              "newStart": 8,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "b"
+                },
+                {
+                  "type": "add",
+                  "content": "a"
+                }
+              ]
+            }
+          ],
+          "headContent": "..."
+        },
+        {
+          "filePath": "web/ts/cart.ts",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "b"
+                },
+                {
+                  "type": "add",
+                  "content": "a"
+                }
+              ]
+            }
+          ],
+          "headContent": "export function f() {\n  return 1;\n}"
+        }
+      ],
+      "clientside": {
+        "lineSignatures": {
+          "web/js/app.js": {
+            "2": "js/app.js#init:1",
+            "3": "js/app.js#init:1",
+            "9": null,
+            "10": "js/app.js#submitOrder:10"
+          },
+          "web/js/basket.js": {
+            "8": "js/basket.js#cartCount:7"
+          }
+        },
+        "analyses": {
+          "web/js/app.js\njs/app.js#init:1": {
+            "success": true,
+            "data": {
+              "autoLayout": true,
+              "windows": [
+                {
+                  "id": "window-1",
+                  "displayName": "app # init",
+                  "filePath": "web/js/app.js",
+                  "language": "javascript",
+                  "code": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}",
+                  "startLine": 1,
+                  "endLine": 4
+                },
+                {
+                  "id": "window-2",
+                  "displayName": "basket # renderCart",
+                  "filePath": "web/js/basket.js",
+                  "language": "javascript",
+                  "code": "function renderCart(el) {\n  el.textContent = 'items: ' + cartCount();\n}",
+                  "startLine": 17,
+                  "endLine": 19
+                },
+                {
+                  "id": "window-3",
+                  "displayName": "basket # cartCount",
+                  "filePath": "web/js/basket.js",
+                  "language": "javascript",
+                  "code": "function cartCount() {\n  var n = 0;\n  for (var i = 0; i < cartItems.length; i++) n += cartItems[i].quantity || 1;\n  return n;\n}",
+                  "startLine": 7,
+                  "endLine": 11
+                }
+              ],
+              "connections": [
+                {
+                  "id": "connection-1",
+                  "from": "window-1",
+                  "to": "window-2",
+                  "callLine": 2,
+                  "callEndLine": 2
+                },
+                {
+                  "id": "connection-2",
+                  "from": "window-2",
+                  "to": "window-3",
+                  "callLine": 18,
+                  "callEndLine": 18
+                }
+              ],
+              "metadata": {
+                "analysis": {
+                  "language": "javascript",
+                  "root": "x",
+                  "direction": "outgoing",
+                  "rootWindowId": "window-1",
+                  "depth": 5
+                }
+              }
+            }
+          },
+          "web/js/basket.js\njs/basket.js#cartCount:7": {
+            "success": false,
+            "error": "No functions found"
+          }
+        },
+        "includeEdges": [],
+        "templatesAnalyzed": [],
+        "errors": {
+          "web/ts/cart.ts": "TypeScript Call Hierarchy 拡張がインストールされていないか、エラーが発生しました"
+        }
+      }
+    },
+    "expected": {
+      "request": [
+        {
+          "path": "web/js/app.js",
+          "kind": "javascript",
+          "lines": [
+            2,
+            3,
+            9,
+            10
+          ]
+        },
+        {
+          "path": "web/js/basket.js",
+          "kind": "javascript",
+          "lines": [
+            8
+          ]
+        },
+        {
+          "path": "web/ts/cart.ts",
+          "kind": "typescript",
+          "lines": [
+            2
+          ]
+        }
+      ],
+      "invariantErrors": [],
+      "groups": [
+        "clientside:blk-clientside",
+        "island:cs-isl-1<blk-clientside"
+      ],
+      "windows": [
+        {
+          "name": "app # init",
+          "group": "cs-isl-1",
+          "windowType": "method",
+          "filePath": "web/js/app.js",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "code": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}",
+          "diffHunks": [
+            "+2,0"
+          ]
+        },
+        {
+          "name": "file:web/js/app.js",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/js/app.js",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "flags": [
+            "outsideMethod"
+          ],
+          "label": "メソッド外の変更",
+          "code": "function init() {\n  renderCart(document.getElementById('cart'));\n  document.getElementById('checkout').addEventListener('click', onCheckout);\n}\n\nfunction onCheckout() {\n  submitOrder('book', cartCount());\n}\n\nfunction submitOrder(item, quantity) {\n  return fetch('/orders');\n}\n\ndocument.addEventListener('DOMContentLoaded', init);\nvar VERSION = 2;",
+          "diffHunks": [
+            "+9,0"
+          ]
+        },
+        {
+          "name": "file:web/js/basket.js",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/js/basket.js",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "...",
+          "diffHunks": [
+            "+8,1"
+          ]
+        },
+        {
+          "name": "file:web/ts/cart.ts",
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/ts/cart.ts",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "export function f() {\n  return 1;\n}",
+          "diffHunks": [
+            "+2,1"
+          ]
+        }
+      ],
+      "connections": [],
+      "files": [
+        {
+          "path": "web/js/app.js",
+          "inGraph": true,
+          "windows": [
+            "app # init",
+            "file:web/js/app.js"
+          ]
+        },
+        {
+          "path": "web/js/basket.js",
+          "inGraph": false,
+          "windows": [
+            "file:web/js/basket.js"
+          ],
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/ts/cart.ts",
+          "inGraph": false,
+          "windows": [
+            "file:web/ts/cart.ts"
+          ],
+          "reason": "analysisFailed"
+        }
+      ],
+      "symbolIndex": null,
+      "clientsideError": "clientside の解析に失敗したファイルはファイル単位で表示します: web/js/basket.js: js/basket.js#cartCount:7: No functions found / web/ts/cart.ts: TypeScript Call Hierarchy 拡張がインストールされていないか、エラーが発生しました"
+    }
+  },
+  {
+    "label": "未変更テンプレートの中継: 変更テンプレートから include 辺を辿り別の変更テンプレートに届く経路上の未変更テンプレートを via（ファイル単位・全文・change なし）にして 1 段ずつ結ぶ。共有する via は 1 つ、変更テンプレートの先は辿らない、変更テンプレートに届かない枝は出さない",
+    "input": {
+      "files": [
+        {
+          "filePath": "web/templates/layout.html",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a"
+                },
+                {
+                  "type": "add",
+                  "content": "b"
+                }
+              ]
+            }
+          ],
+          "headContent": "<div th:replace=\"page :: p\"></div>\n<div th:replace=\"side :: s\"></div>"
+        },
+        {
+          "filePath": "web/templates/header.html",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a"
+                },
+                {
+                  "type": "add",
+                  "content": "b"
+                }
+              ]
+            }
+          ],
+          "headContent": "<h1>Shop</h1>\n<div th:replace=\"deep :: d\"></div>"
+        },
+        {
+          "filePath": "web/templates/footer.html",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a"
+                },
+                {
+                  "type": "add",
+                  "content": "b"
+                }
+              ]
+            }
+          ],
+          "headContent": "<footer></footer>"
+        }
+      ],
+      "clientside": {
+        "lineSignatures": {},
+        "analyses": {},
+        "includeEdges": [
+          {
+            "from": "web/templates/layout.html",
+            "to": "web/templates/page.html",
+            "line": 1
+          },
+          {
+            "from": "web/templates/page.html",
+            "to": "web/templates/header.html",
+            "line": 3
+          },
+          {
+            "from": "web/templates/page.html",
+            "to": "web/templates/footer.html",
+            "line": 4
+          },
+          {
+            "from": "web/templates/layout.html",
+            "to": "web/templates/side.html",
+            "line": 2
+          },
+          {
+            "from": "web/templates/side.html",
+            "to": "web/templates/ad.html",
+            "line": 1
+          },
+          {
+            "from": "web/templates/header.html",
+            "to": "web/templates/deep.html",
+            "line": 2
+          }
+        ],
+        "templateContents": {
+          "web/templates/page.html": "<main>\n<p>page</p>\n<div th:replace=\"header :: h\"></div>\n<div th:replace=\"footer :: f\"></div>\n</main>\n",
+          "web/templates/side.html": "<aside></aside>\n",
+          "web/templates/ad.html": "<ad/>\n",
+          "web/templates/deep.html": "<x/>\n"
+        },
+        "templatesAnalyzed": [
+          "web/templates/layout.html",
+          "web/templates/header.html",
+          "web/templates/footer.html"
+        ],
+        "errors": {}
+      }
+    },
+    "expected": {
+      "request": [
+        {
+          "path": "web/templates/layout.html",
+          "kind": "template",
+          "lines": []
+        },
+        {
+          "path": "web/templates/header.html",
+          "kind": "template",
+          "lines": []
+        },
+        {
+          "path": "web/templates/footer.html",
+          "kind": "template",
+          "lines": []
+        }
+      ],
+      "invariantErrors": [],
+      "groups": [
+        "clientside:blk-clientside",
+        "island:cs-isl-1<blk-clientside"
+      ],
+      "windows": [
+        {
+          "name": "file:web/templates/layout.html",
+          "group": "cs-isl-1",
+          "windowType": "file",
+          "filePath": "web/templates/layout.html",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "code": "<div th:replace=\"page :: p\"></div>\n<div th:replace=\"side :: s\"></div>",
+          "diffHunks": [
+            "+1,1"
+          ]
+        },
+        {
+          "name": "file:web/templates/header.html",
+          "group": "cs-isl-1",
+          "windowType": "file",
+          "filePath": "web/templates/header.html",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "code": "<h1>Shop</h1>\n<div th:replace=\"deep :: d\"></div>",
+          "diffHunks": [
+            "+1,1"
+          ]
+        },
+        {
+          "name": "file:web/templates/footer.html",
+          "group": "cs-isl-1",
+          "windowType": "file",
+          "filePath": "web/templates/footer.html",
+          "startLine": 1,
+          "status": "modified",
+          "source": "worktree",
+          "code": "<footer></footer>",
+          "diffHunks": [
+            "+1,1"
+          ]
+        },
+        {
+          "name": "page.html",
+          "group": "cs-isl-1",
+          "windowType": "via",
+          "filePath": "web/templates/page.html",
+          "startLine": 1,
+          "change": null,
+          "code": "<main>\n<p>page</p>\n<div th:replace=\"header :: h\"></div>\n<div th:replace=\"footer :: f\"></div>\n</main>",
+          "diffHunks": []
+        }
+      ],
+      "connections": [
+        "file:web/templates/layout.html -> page.html @1",
+        "page.html -> file:web/templates/header.html @3",
+        "page.html -> file:web/templates/footer.html @4"
+      ],
+      "files": [
+        {
+          "path": "web/templates/layout.html",
+          "inGraph": true,
+          "windows": [
+            "file:web/templates/layout.html"
+          ]
+        },
+        {
+          "path": "web/templates/header.html",
+          "inGraph": true,
+          "windows": [
+            "file:web/templates/header.html"
+          ]
+        },
+        {
+          "path": "web/templates/footer.html",
+          "inGraph": true,
+          "windows": [
+            "file:web/templates/footer.html"
+          ]
+        }
+      ],
+      "symbolIndex": null,
+      "clientsideError": null
+    }
+  }
+]

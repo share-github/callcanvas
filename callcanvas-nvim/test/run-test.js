@@ -17,6 +17,7 @@ const { CallCanvasHost, detectProjectRoot, persistentToken, canvasIdFor } = requ
 const { globToRegExp } = require('../src/vscodeShim');
 const { ConfigStore, stripJsonComments } = require('../src/config');
 const vm = require('vm');
+const { createChangeSetFixture } = require('./changeset-fixture');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const TARGET_FILE = process.env.CALLCANVAS_TEST_FILE
@@ -138,11 +139,15 @@ function get(base, pathname, headers) {
 
 const CLI = path.join(__dirname, '..', 'src', 'cli.js');
 
-/** @returns {Promise<{stdout: string, code: number}>} */
-function runCli(args) {
+/** @returns {Promise<{stdout: string, stderr: string, code: number}>} */
+function runCli(args, options = {}) {
     return new Promise((resolve) => {
-        execFile(process.execPath, [CLI, ...args], { timeout: 60000 }, (error, stdout) => {
-            resolve({ stdout: String(stdout || ''), code: error && error.code ? error.code : 0 });
+        execFile(process.execPath, [CLI, ...args], {
+            timeout: options.timeout || 60000,
+            cwd: options.cwd,
+            env: options.env ? Object.assign({}, process.env, options.env) : undefined
+        }, (error, stdout, stderr) => {
+            resolve({ stdout: String(stdout || ''), stderr: String(stderr || ''), code: error && error.code ? error.code : 0 });
         });
     });
 }
@@ -186,6 +191,101 @@ async function testBuildIndexCliFailure() {
     check('the error is on stdout as JSON',
         /"ok":false/.test(result.stdout) && /"error":"[^"]+"/.test(result.stdout),
         result.stdout.trim().split('\n').pop());
+}
+
+/**
+ * `callcanvas changeset <hash>` from a directory (Neovim's cwd, no buffer): the CLI
+ * starts a long-lived host like `open` does, the viewer's `callcanvas.openChangeSet`
+ * takes the hash as its argument (no prompt), and the canvas is reachable through
+ * the usual multi-canvas routes (/c/<id>, /k/<key>/<id>, status). The canvas is named
+ * after the commit, and the answer carries what Neovim shows (files / islands).
+ */
+async function testChangeSetCli() {
+    section('callcanvas changeset <hash> | workbench (CLI, directory anchor)');
+    let fixture;
+    try {
+        fixture = createChangeSetFixture();
+    } catch (error) {
+        console.log(`  SKIP: ${error.message}`);
+        return;
+    }
+    const opts = { cwd: fixture.repo, env: fixture.env, timeout: 600000 };
+    try {
+        const result = await runCli(['changeset', fixture.commit, '--json'], opts);
+        check('changeset exits 0', result.code === 0, `code=${result.code} ${result.stderr.trim()}`);
+        let body = {};
+        try { body = JSON.parse(result.stdout.trim().split('\n').pop()); } catch { /* checked below */ }
+        check('the answer names the new canvas', typeof body.canvasId === 'string' && body.canvasId.length > 0,
+            result.stdout.trim().split('\n').pop());
+        check('permalink is /c/<canvasId>', String(body.permalink).includes(`/c/${body.canvasId}?t=`), body.permalink);
+        check('short URL points at this canvas (/k/<key>/<canvasId>)',
+            new RegExp(`/k/[^/]+/${body.canvasId}$`).test(String(body.shortUrl)), body.shortUrl);
+        check('project root is the repository (anchor = cwd)', body.projectRoot === fixture.repo, body.projectRoot);
+
+        const outDir = path.join(fixture.repo, 'build/call-hierarchy-output');
+        const saved = fs.existsSync(outDir)
+            ? fs.readdirSync(outDir).filter(n => /^callcanvas_changeset_.*\.json$/.test(n))
+            : [];
+        check('the canvas JSON is written to build/call-hierarchy-output', saved.length === 1, saved.join(','));
+        const canvas = saved.length ? JSON.parse(fs.readFileSync(path.join(outDir, saved[0]), 'utf8')) : {};
+        const meta = (canvas.metadata && canvas.metadata.changeSet) || {};
+        check('the canvas is a change set for the commit',
+            meta.kind === 'commit' && String(meta.commit).startsWith(fixture.commit), JSON.stringify({ kind: meta.kind, commit: meta.commit }));
+        check('the changed method is on the canvas',
+            (canvas.windows || []).some(w => /changeSetProbe/.test(w.displayName || '')));
+
+        const islands = (canvas.groups || []).filter(g => g.kind === 'island').length;
+        check('the canvas is named "変更集合 <hash> <subject>" (not after its first window)',
+            body.title === `変更集合 ${fixture.commit} ${fixture.subject}`, body.title);
+        check('the answer carries what Neovim shows: commit, subject, files, islands',
+            body.changeSet && body.changeSet.kind === 'commit' && body.changeSet.commit === fixture.commit
+            && body.changeSet.subject === fixture.subject
+            && body.changeSet.fileCount === (meta.files || []).length && body.changeSet.islandCount === islands
+            && islands > 0,
+            JSON.stringify(body.changeSet));
+
+        if (body.permalink) {
+            const page = await get(body.permalink.replace(/\/c\/.*/, ''), body.permalink.replace(/^https?:\/\/[^/]+/, ''));
+            check('/c/<canvasId> serves the change set canvas', page.status === 200 && page.body.includes('changeSetProbe'),
+                `status=${page.status}`);
+        }
+        const status = await runCli(['status', '--json'], opts);
+        let listed = [];
+        try { listed = JSON.parse(status.stdout).canvases || []; } catch { /* checked below */ }
+        const entry = listed.find(c => String(c.url).includes(`/c/${body.canvasId}`));
+        check('status lists the canvas under the change set name',
+            !!entry && entry.title === `変更集合 ${fixture.commit} ${fixture.subject}`, status.stdout.trim());
+
+        const clean = await runCli(['changeset', 'workbench'], opts);
+        check('an empty workbench exits non-zero', clean.code === 1, `code=${clean.code}`);
+        check('... and says so like the diff display (ワークベンチの変更: 0 ファイル)',
+            /ワークベンチの変更: 0 ファイル/.test(clean.stderr), clean.stderr.trim());
+
+        const range = await runCli(['changeset', `${fixture.commit}~1..${fixture.commit}`], opts);
+        check('a range is refused (one commit or the workbench)',
+            range.code === 1 && /範囲は指定できません/.test(range.stderr), `code=${range.code} ${range.stderr.trim()}`);
+
+        const bad = await runCli(['changeset', 'no-such-rev'], opts);
+        check('an unknown revision exits non-zero with the reason', bad.code === 1 && /no-such-rev/.test(bad.stderr),
+            `code=${bad.code} ${bad.stderr.trim()}`);
+    } finally {
+        await runCli(['stop'], opts);
+        fs.rmSync(fixture.workDir, { recursive: true, force: true });
+    }
+}
+
+/** Host-side QuickPick forwarded to Neovim: one line per item, `label — description`. */
+function testQuickPickLines() {
+    section('QuickPick forwarded to Neovim: label — description');
+    const { quickPickLines } = require('../src/host');
+    const lines = quickPickLines([
+        { label: 'app', description: '/work/app' },
+        { label: 'sample-app', description: '' },
+        'plain'
+    ]);
+    check('an item with a description reads "label — description"', lines[0] === 'app — /work/app', lines[0]);
+    check('an item without one is just the label', lines[1] === 'sample-app', lines[1]);
+    check('a string item is kept', lines[2] === 'plain', lines[2]);
 }
 
 // --- unit-ish checks that need no host ------------------------------------
@@ -698,6 +798,8 @@ async function main() {
     await testFilePanelRendering();
     await testCloseKey();
     await testBuildIndexCliFailure();
+    testQuickPickLines();
+    await testChangeSetCli();
 
     if (!fs.existsSync(TARGET_FILE)) {
         console.log(`\nSKIP host tests: ${TARGET_FILE} not found`);

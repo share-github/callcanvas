@@ -19,7 +19,7 @@ return {
     cmd = {
       'CallCanvas', 'CallCanvasBrowse', 'CallCanvasUrl',
       'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop',
-      'CallCanvasBuildIndex',
+      'CallCanvasBuildIndex', 'CallCanvasChangeSet',
     },
     keys = {
       { '<leader>vv', '<cmd>CallCanvas<cr>', desc = 'CallCanvas: analyze at cursor' },
@@ -29,6 +29,9 @@ return {
       { '<leader>vs', '<cmd>CallCanvasStatus<cr>', desc = 'CallCanvas: host status' },
       -- Java only: builds the call index up front so the first analysis is not slow.
       { '<leader>vi', '<cmd>CallCanvasBuildIndex<cr>', desc = 'CallCanvas: build call index (Java)' },
+      -- The changes of a commit (or of the workbench) as one canvas: pick from a list —
+      -- the workbench, then the recent commits ("直前のコミット" first).
+      { '<leader>vc', '<cmd>CallCanvasChangeSet<cr>', desc = 'CallCanvas: change set (pick a commit / workbench)' },
       { '<leader>vq', '<cmd>CallCanvasStop<cr>', desc = 'CallCanvas: stop host' },
     },
     opts = {

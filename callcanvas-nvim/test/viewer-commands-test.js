@@ -19,6 +19,7 @@ const http = require('http');
 const { execSync } = require('child_process');
 
 const { CallCanvasHost, detectProjectRoot } = require('../src/host');
+const { createChangeSetFixture } = require('./changeset-fixture');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const JAVA_FILE = path.join(REPO_ROOT, 'sample-app/src/main/java/com/example/demo/service/TodoService.java');
@@ -290,6 +291,95 @@ async function testNextLevel(label, file, line) {
     }
 }
 
+/**
+ * `callcanvas.openChangeSet` (what `callcanvas changeset` / :CallCanvasChangeSet run)
+ * with a canvas already open in the browser: without an argument the browser is asked
+ * the same two things as the diff display (commit / workbench), then the hash in the
+ * same input box; with a hash nothing is asked.
+ * The anchor is the repository directory, as from Neovim with no buffer.
+ */
+async function testChangeSet() {
+    section('change set: callcanvas.openChangeSet');
+    let fixture;
+    try {
+        fixture = createChangeSetFixture();
+    } catch (error) {
+        check('a change set fixture can be built', false, error.message);
+        return;
+    }
+    const savedEnv = {};
+    for (const [key, value] of Object.entries(fixture.env)) {
+        savedEnv[key] = process.env[key];
+        process.env[key] = value;
+    }
+    const file = path.join(fixture.repo, 'src/main/java/com/example/changeset/order/OrderService.java');
+    const probeLine = fs.readFileSync(file, 'utf8').split('\n').findIndex(l => l.includes('changeSetProbe')) + 1;
+    let ctx;
+    try {
+        ctx = await openCanvas(file, probeLine);
+        const { host, base, token, stream } = ctx;
+        const run = (args) => host.open({ file: fixture.repo, command: 'callcanvas.openChangeSet', args });
+        const canvasOf = (result) => {
+            const entry = result.canvasId ? host.server.canvases.get(result.canvasId) : null;
+            const jsonPath = entry && entry.jsonPath;
+            return jsonPath && fs.existsSync(jsonPath) ? JSON.parse(fs.readFileSync(jsonPath, 'utf8')) : {};
+        };
+
+        let mark = stream.mark;
+        const picking = run([]);
+        const ui = await stream.expect(mark, e => e.kind === 'ui' && e.type === 'pick', 20000);
+        const items = ui ? ui.payload.items : [];
+        const index = items.findIndex(item => /コミット/.test(item.label));
+        check('without an argument the browser is asked: commit or workbench',
+            !!ui && items.length === 2 && index >= 0 && items.some(item => /ワークベンチ/.test(item.label)),
+            ui ? items.map(i => i.label).join(',') : 'no pick');
+        let input = null;
+        if (ui) {
+            mark = stream.mark;
+            await post(base, token, '/api/ui-reply', { id: ui.id, value: Math.max(index, 0) });
+            input = await stream.expect(mark, e => e.kind === 'ui' && e.type === 'input', 20000);
+            check('... then the commit hash input of the diff display',
+                !!input && input.payload.prompt === 'コミットハッシュを入力してください',
+                input ? JSON.stringify(input.payload) : 'no input');
+            if (input) {
+                await post(base, token, '/api/ui-reply', { id: input.id, value: fixture.commit });
+            }
+        }
+        const picked = await picking;
+        check('picking a commit opens a change set canvas',
+            picked.ok && !!picked.canvasId && String(picked.permalink).includes(`/c/${picked.canvasId}`),
+            JSON.stringify(picked).slice(0, 200));
+        const canvas = canvasOf(picked);
+        check('the canvas holds the changed method',
+            !!canvas.metadata && !!canvas.metadata.changeSet
+            && (canvas.windows || []).some(w => /changeSetProbe/.test(w.displayName || '')),
+            canvas.metadata ? JSON.stringify(canvas.metadata.changeSet).slice(0, 200) : 'no canvas JSON');
+
+        mark = stream.mark;
+        const direct = await run([fixture.commit]);
+        check('with a hash nothing is asked', !stream.since(mark).some(e => e.kind === 'ui'));
+        check('the same commit is the same canvas (/c/<id> stays valid)',
+            direct.ok && direct.canvasId === picked.canvasId, `${direct.canvasId} vs ${picked.canvasId}`);
+
+        const page = await get(base, `/c/${direct.canvasId}?t=${token}`);
+        check('/c/<id> serves the change set canvas', page.includes('changeSetProbe'));
+    } finally {
+        if (ctx) {
+            ctx.stream.close();
+            await ctx.host.server.close();
+            ctx.host.clearSession();
+        }
+        for (const [key, value] of Object.entries(savedEnv)) {
+            if (value === undefined) {
+                delete process.env[key];
+            } else {
+                process.env[key] = value;
+            }
+        }
+        fs.rmSync(fixture.workDir, { recursive: true, force: true });
+    }
+}
+
 async function main() {
     if (!fs.existsSync(JAVA_FILE)) {
         console.log(`SKIP: ${JAVA_FILE} not found`);
@@ -302,6 +392,7 @@ async function main() {
     if (fs.existsSync(TS_FILE)) {
         await testNextLevel('TypeScript', TS_FILE, 4);
     }
+    await testChangeSet();
 }
 
 main().then(() => {

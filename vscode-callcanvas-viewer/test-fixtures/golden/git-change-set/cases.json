@@ -1,0 +1,538 @@
+[
+  {
+    "label": "対象の解決: コミットは C^1..C（ルートは空ツリー）、ワークベンチは HEAD..作業ツリー（head=null）。不正な rev はエラー",
+    "input": {
+      "scenario": "resolve-target"
+    },
+    "expected": {
+      "commit": {
+        "base": "c1",
+        "head": "c2"
+      },
+      "rootCommit": {
+        "base": "emptyTree",
+        "head": "c1"
+      },
+      "workbench": {
+        "base": "c3",
+        "head": null
+      },
+      "repoRootIsRepo": true,
+      "invalidDash": "Invalid revision: '--output=x'",
+      "unknown": "Unknown revision: 'no-such-rev'"
+    }
+  },
+  {
+    "label": "入力文字列 → 対象（hash / workbench。範囲・空はエラー）",
+    "input": {
+      "scenario": "parse-target"
+    },
+    "expected": {
+      "single": {
+        "kind": "commit",
+        "commit": "abc123"
+      },
+      "workbench": {
+        "kind": "workbench"
+      },
+      "workbenchUpper": {
+        "kind": "workbench"
+      },
+      "empty": {
+        "error": "コミットハッシュを指定してください"
+      },
+      "range": {
+        "error": "範囲は指定できません（コミット 1 つか workbench）: 'v1..v2'"
+      },
+      "baseDots": {
+        "error": "範囲は指定できません（コミット 1 つか workbench）: 'v1..'"
+      },
+      "symmetric": {
+        "error": "範囲は指定できません（コミット 1 つか workbench）: 'a...b'"
+      }
+    }
+  },
+  {
+    "label": "単一コミット: 追加・変更・削除・リネーム・バイナリの status と hunk",
+    "input": {
+      "scenario": "single-commit"
+    },
+    "expected": [
+      {
+        "filePath": "assets/data.bin",
+        "status": "added",
+        "binary": true,
+        "hunks": []
+      },
+      {
+        "filePath": "assets/logo.png",
+        "status": "modified",
+        "binary": true,
+        "hunks": []
+      },
+      {
+        "filePath": "pom.xml",
+        "status": "modified",
+        "binary": false,
+        "hunks": [
+          {
+            "oldStart": 2,
+            "oldCount": 1,
+            "newStart": 2,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "  <version>1</version>"
+              },
+              {
+                "type": "add",
+                "content": "  <version>2</version>"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "filePath": "src/Foo.java",
+        "status": "modified",
+        "binary": false,
+        "hunks": [
+          {
+            "oldStart": 2,
+            "oldCount": 1,
+            "newStart": 2,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "    int a = 1;"
+              },
+              {
+                "type": "add",
+                "content": "    int a = 10;"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "filePath": "src/Gone.java",
+        "status": "deleted",
+        "binary": false,
+        "hunks": [
+          {
+            "oldStart": 1,
+            "oldCount": 3,
+            "newStart": 0,
+            "newCount": 0,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "class Gone {"
+              },
+              {
+                "type": "remove",
+                "content": "    void bye() {}"
+              },
+              {
+                "type": "remove",
+                "content": "}"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "filePath": "src/New.java",
+        "status": "renamed",
+        "oldPath": "src/Old.java",
+        "binary": false,
+        "hunks": [
+          {
+            "oldStart": 5,
+            "oldCount": 1,
+            "newStart": 5,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "// old line 5"
+              },
+              {
+                "type": "add",
+                "content": "// new line 5"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "filePath": "web/new.ts",
+        "status": "added",
+        "binary": false,
+        "hunks": [
+          {
+            "oldStart": 0,
+            "oldCount": 0,
+            "newStart": 1,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "add",
+                "content": "export const x: number = 1;"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "親の無いルートコミットは全ファイル added",
+    "input": {
+      "scenario": "root-commit"
+    },
+    "expected": [
+      {
+        "filePath": "assets/logo.png",
+        "status": "added",
+        "binary": true,
+        "hunkCount": 0
+      },
+      {
+        "filePath": "db/schema.sql",
+        "status": "added",
+        "binary": false,
+        "hunkCount": 1
+      },
+      {
+        "filePath": "pom.xml",
+        "status": "added",
+        "binary": false,
+        "hunkCount": 1
+      },
+      {
+        "filePath": "src/Foo.java",
+        "status": "added",
+        "binary": false,
+        "hunkCount": 1
+      },
+      {
+        "filePath": "src/Gone.java",
+        "status": "added",
+        "binary": false,
+        "hunkCount": 1
+      },
+      {
+        "filePath": "src/Old.java",
+        "status": "added",
+        "binary": false,
+        "hunkCount": 1
+      },
+      {
+        "filePath": "style.css",
+        "status": "added",
+        "binary": false,
+        "hunkCount": 1
+      },
+      {
+        "filePath": "web/app.js",
+        "status": "added",
+        "binary": false,
+        "hunkCount": 1
+      }
+    ]
+  },
+  {
+    "label": "ワークベンチ: git diff HEAD と同じ（staged+unstaged の追跡ファイルのみ。未登録・無視ファイルは含めない）",
+    "input": {
+      "scenario": "workbench"
+    },
+    "expected": {
+      "files": [
+        {
+          "filePath": ".gitignore",
+          "status": "added",
+          "binary": false,
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "ignored.log"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "filePath": "src/Foo.java",
+          "status": "modified",
+          "binary": false,
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 2,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "    int b = 2;"
+                },
+                {
+                  "type": "add",
+                  "content": "    int b = 3;"
+                },
+                {
+                  "type": "add",
+                  "content": "    int c = 4;"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "sameAsGitDiffHead": true
+    }
+  },
+  {
+    "label": "git show -m の出力で削除ファイルの hunk が直前のファイルに混入しない・バイナリも 1 ファイル",
+    "input": {
+      "scenario": "deleted-hunk-not-mixed"
+    },
+    "expected": [
+      {
+        "filePath": "assets/data.bin",
+        "binary": true,
+        "removed": 0,
+        "added": 0
+      },
+      {
+        "filePath": "assets/logo.png",
+        "binary": true,
+        "removed": 0,
+        "added": 0
+      },
+      {
+        "filePath": "pom.xml",
+        "removed": 1,
+        "added": 1
+      },
+      {
+        "filePath": "src/Foo.java",
+        "removed": 1,
+        "added": 1
+      },
+      {
+        "filePath": "src/Gone.java",
+        "removed": 3,
+        "added": 0
+      },
+      {
+        "filePath": "src/New.java",
+        "oldPath": "src/Old.java",
+        "removed": 1,
+        "added": 1
+      },
+      {
+        "filePath": "web/new.ts",
+        "removed": 0,
+        "added": 1
+      }
+    ]
+  },
+  {
+    "label": "空白・クォート付きパス・バイナリ・モード変更・内容変更無しリネーム",
+    "input": {
+      "scenario": "parse-special-paths"
+    },
+    "expected": [
+      {
+        "filePath": "docs/my file.bin",
+        "hunks": [],
+        "binary": true
+      },
+      {
+        "filePath": "q\"uote ü.txt",
+        "hunks": [
+          {
+            "oldStart": 1,
+            "oldCount": 1,
+            "newStart": 1,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "a"
+              },
+              {
+                "type": "add",
+                "content": "b"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "filePath": "run.sh",
+        "hunks": []
+      },
+      {
+        "filePath": "z w.txt",
+        "hunks": [],
+        "oldPath": "x y.txt"
+      }
+    ]
+  },
+  {
+    "label": "git show による head / base 時点の内容取得（作業ツリー・存在しないファイル・バイナリ）",
+    "input": {
+      "scenario": "file-content"
+    },
+    "expected": {
+      "baseOfDeleted": "class Gone {\n    void bye() {}\n}\n",
+      "headOfDeleted": null,
+      "headOfFooAtC2": "class Foo {\n    int a = 10;\n    int b = 2;\n}\n",
+      "headOfFooWorktree": "class Foo {\n    int a = 10;\n    int b = 3;\n    int c = 4;\n}\n",
+      "baseOfRenamedOld": 21,
+      "missingInWorktree": null,
+      "binaryLength": 4
+    }
+  },
+  {
+    "label": "head 時点と作業ツリーの一致判定（head=null は常に一致）",
+    "input": {
+      "scenario": "worktree-match"
+    },
+    "expected": {
+      "headC3": {
+        "src/Foo.java": false,
+        "web/app.js": true,
+        "src/New.java": true,
+        "src/Gone.java": true,
+        "web/untracked.html": false,
+        "assets/logo.png": true
+      },
+      "headC2": {
+        "src/Foo.java": false,
+        "web/app.js": false,
+        "src/New.java": true,
+        "src/Gone.java": true,
+        "web/untracked.html": false,
+        "assets/logo.png": true
+      },
+      "headNull": {
+        "src/Foo.java": true,
+        "web/app.js": true,
+        "src/New.java": true,
+        "src/Gone.java": true,
+        "web/untracked.html": true,
+        "assets/logo.png": true
+      },
+      "singleMismatch": false,
+      "singleMatch": true,
+      "singleNull": true
+    }
+  },
+  {
+    "label": "拡張子によるブロック分類（漏れなく other に落ちる・入力数 = 合計）",
+    "input": {
+      "scenario": "classify-block"
+    },
+    "expected": {
+      "each": {
+        "src/main/java/a/Foo.java": "java",
+        "A.JAVA": "java",
+        "web/index.html": "clientside",
+        "web/x.htm": "clientside",
+        "web/f.xhtml": "other",
+        "WEB-INF/a.jsp": "clientside",
+        "WEB-INF/b.jspf": "clientside",
+        "WEB-INF/c.jspx": "other",
+        "WEB-INF/t.tag": "other",
+        "tpl/a.ftl": "clientside",
+        "tpl/b.ftlh": "clientside",
+        "view/page.mayaa": "clientside",
+        "tpl/c.vm": "other",
+        "templates/order.th.html": "clientside",
+        "x.thymeleaf": "other",
+        "a.js": "clientside",
+        "b.jsx": "clientside",
+        "c.mjs": "clientside",
+        "d.cjs": "clientside",
+        "e.ts": "clientside",
+        "f.tsx": "clientside",
+        "g.d.ts": "clientside",
+        "h.mts": "other",
+        "i.vue": "other",
+        "pom.xml": "xml",
+        "mapper/OrderMapper.XML": "xml",
+        "db/V1__init.sql": "sql",
+        "q.SQL": "sql",
+        "style.css": "other",
+        "a.scss": "other",
+        "README.md": "other",
+        "Makefile": "other",
+        ".gitignore": "other",
+        "logo.png": "other",
+        "app.properties": "other",
+        "b.yml": "other",
+        "data.json": "other",
+        "x.xsd": "other",
+        "noext": "other",
+        "dir.java/file": "other",
+        "": "other"
+      },
+      "counts": {
+        "java": 2,
+        "clientside": 15,
+        "xml": 2,
+        "sql": 2,
+        "other": 20
+      },
+      "inputCount": 41,
+      "total": 41,
+      "order": [
+        "java",
+        "clientside",
+        "xml",
+        "sql",
+        "other"
+      ]
+    }
+  },
+  {
+    "label": "実際の変更集合（コミット）の分類で入力数 = 分類結果の合計",
+    "input": {
+      "scenario": "classify-change-set"
+    },
+    "expected": {
+      "inputCount": 7,
+      "total": 7,
+      "byBlock": {
+        "java": [
+          "src/Foo.java",
+          "src/Gone.java",
+          "src/New.java"
+        ],
+        "clientside": [
+          "web/new.ts"
+        ],
+        "xml": [
+          "pom.xml"
+        ],
+        "sql": [],
+        "other": [
+          "assets/data.bin",
+          "assets/logo.png"
+        ]
+      }
+    }
+  }
+]

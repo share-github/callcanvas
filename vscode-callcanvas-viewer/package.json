@@ -2,7 +2,7 @@
     "name": "callcanvas-viewer",
     "displayName": "CallCanvas Code Navigation Viewer",
     "description": "Visualize call hierarchies and navigate code with CallCanvas viewer",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "publisher": "share-github",
     "license": "MIT",
     "author": "share-github",
@@ -22,7 +22,8 @@
         "onCommand:callcanvas.exportToHtml",
         "onCommand:callcanvas.loadCoverageReport",
         "onCommand:callcanvas.clearCoverage",
-        "onCommand:callcanvas.reloadFromJson"
+        "onCommand:callcanvas.reloadFromJson",
+        "onCommand:callcanvas.openChangeSet"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -66,6 +67,10 @@
             {
                 "command": "callcanvas.reloadFromJson",
                 "title": "CallCanvas: JSONから再読み込み"
+            },
+            {
+                "command": "callcanvas.openChangeSet",
+                "title": "CallCanvas: Open Change Set"
             }
         ],
         "keybindings": [

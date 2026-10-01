@@ -1,0 +1,32 @@
+{
+  "lines": [
+    {
+      "line": 1,
+      "signature": "app.js#init:1"
+    },
+    {
+      "line": 2,
+      "signature": "app.js#init:1"
+    },
+    {
+      "line": 3,
+      "signature": "app.js#addEventListener_callback:3"
+    },
+    {
+      "line": 4,
+      "signature": "app.js#addEventListener_callback:3"
+    },
+    {
+      "line": 5,
+      "signature": "app.js#addEventListener_callback:3"
+    },
+    {
+      "line": 8,
+      "signature": "app.js#submitOrder:8"
+    },
+    {
+      "line": 15,
+      "signature": null
+    }
+  ]
+}

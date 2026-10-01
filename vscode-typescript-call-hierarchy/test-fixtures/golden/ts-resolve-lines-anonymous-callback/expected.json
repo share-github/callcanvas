@@ -1,0 +1,32 @@
+{
+  "lines": [
+    {
+      "line": 1,
+      "signature": "app.ts#init:1"
+    },
+    {
+      "line": 2,
+      "signature": "app.ts#init:1"
+    },
+    {
+      "line": 3,
+      "signature": "app.ts#addEventListener_callback:3"
+    },
+    {
+      "line": 4,
+      "signature": "app.ts#addEventListener_callback:3"
+    },
+    {
+      "line": 5,
+      "signature": "app.ts#addEventListener_callback:3"
+    },
+    {
+      "line": 8,
+      "signature": "app.ts#submitOrder:8"
+    },
+    {
+      "line": 19,
+      "signature": null
+    }
+  ]
+}

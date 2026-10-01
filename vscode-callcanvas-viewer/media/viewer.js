@@ -538,6 +538,11 @@ function analyzeSelectedWindowToRoot() {
 
 // Re-analyze the root method and refresh the viewer
 function reanalyzeRoot() {
+    // Change Set Canvas has no call-hierarchy root: regenerate it from metadata.changeSet instead
+    if (isChangeSetCanvas(currentData)) {
+        showToast('変更集合キャンバスはルート再解析の対象外です（変更集合から再生成してください）', 'warning');
+        return;
+    }
     vscode.postMessage({ command: 'reanalyzeRoot' });
 }
 
@@ -677,6 +682,11 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
             height: normalizedWindow.position?.height || 320
         };
         
+        // Change Set Canvas: windows found from a grouped window join its group (island)
+        if (sourceWindow && typeof sourceWindow.group === 'string' && sourceWindow.group && !normalizedWindow.group) {
+            normalizedWindow.group = sourceWindow.group;
+        }
+
         // Mark as newly added (for F12 pending jump)
         normalizedWindow._newlyAdded = true;
 
@@ -902,6 +912,12 @@ function buildSaveData() {
             const savedDiffComments = w._savedDiffComments && Object.keys(w._savedDiffComments).length
                 ? w._savedDiffComments : undefined;
 
+            // diffState from the JSON that no overlay consumed (no hunk in the window's range / not
+            // restored yet): keep it as is, Change Set Canvas windows are generated with it
+            if (!diffState && !w._hasDiffOverlay && w.diffState && Array.isArray(w.diffState.hunks)) {
+                diffState = w.diffState;
+            }
+
             return {
                 highlightLines: sourceCode.filter(line => line.highlight).map(line => line.line),
                 code: sourceCode.map(line => line.content).join(String.fromCharCode(10)),
@@ -913,6 +929,10 @@ function buildSaveData() {
                 collapsed: w.collapsed === true,
                 visible: w.visible !== false,
                 fullHeight: w.fullHeight === true,
+                // Change Set Canvas
+                ...(typeof w.group === 'string' && w.group ? { group: w.group } : {}),
+                ...(typeof w.windowType === 'string' && w.windowType ? { windowType: w.windowType } : {}),
+                ...(w.change && typeof w.change === 'object' ? { change: w.change } : {}),
                 ...(Array.isArray(w.refs) && w.refs.length ? { refs: w.refs } : {}),
                 ...(Object.keys(lineComments).length ? { lineComments } : {}),
                 ...(diffState ? { diffState } : {}),
@@ -929,6 +949,10 @@ function buildSaveData() {
     // symbols: declarations the windows' refs point at (Ctrl/⌘+click → openFile, constant tooltips)
     if (currentData.symbols && typeof currentData.symbols === 'object' && Object.keys(currentData.symbols).length > 0) {
         payload.symbols = currentData.symbols;
+    }
+    // Change Set Canvas blocks / islands (windows[].group refers to them)
+    if (hasCanvasGroups(currentData)) {
+        payload.groups = currentData.groups;
     }
     const meta = currentData.metadata;
     if (meta && typeof meta === 'object' && !Array.isArray(meta) && Object.keys(meta).length > 0) {
@@ -962,7 +986,8 @@ function resetLayout(afterRelayout) {
     const layoutData = applyAutoLayout({
         windows: visibleWindows,
         connections: visibleConnections,
-        autoLayout: true
+        autoLayout: true,
+        ...(hasCanvasGroups(currentData) ? { groups: currentData.groups } : {})
     });
 
     // Update positions of visible windows in original data
@@ -1543,6 +1568,11 @@ function renderVisualization(data) {
 
     // Restore diff overlay from saved diffState
     restoreDiffStates();
+
+    // Change Set Canvas: the diff overlay grew the windows after the layout — restack the groups
+    if (hasCanvasGroups(currentData)) {
+        relayoutWindows();
+    }
 }
 
 function updateArrows() {
@@ -1555,6 +1585,9 @@ function updateArrows() {
 
     // Re-render arrows with current window positions (without animation)
     renderArrows(currentData, container, true);
+
+    // Change Set Canvas: group frames follow the windows (drag / collapse / relayout)
+    renderGroupFrames();
 
     // Re-apply path highlight after arrows are re-rendered
     updatePathHighlight();
@@ -1710,6 +1743,12 @@ function toggleLineHighlight(windowId, lineNumber) {
 // If not provided, adjusts all columns (for collapseAll/expandAll)
 function adjustColumnOverlaps(changedWindowId) {
     if (!currentData || currentData.windows.length === 0) return;
+
+    // Change Set Canvas: columns span several groups — restack the groups instead
+    if (hasCanvasGroups(currentData)) {
+        relayoutWindows();
+        return;
+    }
 
     const COLLAPSED_HEIGHT = 33;
     const WINDOW_SPACING = 20;
@@ -4148,10 +4187,15 @@ function restoreDiffStates() {
 
         const savedDiffComments = win.diffState.diffComments || {};
         const hunks = win.diffState.hunks;
+        const pendingDiffState = win.diffState;
         delete win.diffState; // consumed; will be re-created by buildSaveData
 
         // Build a synthetic diffs entry and apply overlay
-        applyDiffOverlayToWindow(win, hunks);
+        if (!applyDiffOverlayToWindow(win, hunks)) {
+            // No hunk in the window's range: keep it so saving does not drop it
+            win.diffState = pendingDiffState;
+            return;
+        }
 
         // Restore diff comments
         if (Object.keys(savedDiffComments).length > 0) {
@@ -4522,13 +4566,46 @@ function initializeDragSelection() {
 function relayoutWindows() {
     if (!currentData || currentData.windows.length === 0) return;
 
-    const COLLAPSED_HEIGHT = 33;
-    const WINDOW_SPACING = 20;
-    const COLUMN_TOLERANCE = 50; // Windows within this X range are considered same column
-
     // Filter only visible windows
     const visibleWindows = currentData.windows.filter(w => w.visible !== false);
     if (visibleWindows.length === 0) return;
+
+    if (hasCanvasGroups(currentData)) {
+        // Change Set Canvas: per-group column layout, groups stacked in `groups` order
+        layoutGroupedWindows(visibleWindows, currentData.connections, currentData.groups);
+        visibleWindows.forEach(w => {
+            const element = document.getElementById(w.id);
+            if (element) {
+                element.style.left = w.position.left + 'px';
+                element.style.top = w.position.top + 'px';
+            }
+        });
+    } else {
+        relayoutColumnTops(visibleWindows, currentData.connections, currentData.windows);
+        visibleWindows.forEach(w => {
+            const element = document.getElementById(w.id);
+            if (element) {
+                element.style.top = w.position.top + 'px';
+            }
+        });
+    }
+
+    // Update arrows to follow window positions
+    updateArrows();
+
+    // Update container size after relayout
+    updateContainerSize(false);
+    scheduleViewportCheck();
+}
+
+/**
+ * Column-based Y relayout (barycenter + call order). Mutates `position.top` of `visibleWindows`
+ * (DOM is not touched). `allWindows` resolves the parents' _layoutOrderWithinLevel.
+ */
+function relayoutColumnTops(visibleWindows, connections, allWindows) {
+    const COLLAPSED_HEIGHT = 33;
+    const WINDOW_SPACING = 20;
+    const COLUMN_TOLERANCE = 50; // Windows within this X range are considered same column
 
     // Build Map for O(1) lookups (avoids repeated O(n) find() calls)
     const windowMap = new Map(visibleWindows.map(w => [w.id, w]));
@@ -4544,10 +4621,10 @@ function relayoutWindows() {
     // back into the entry method) makes the root a "child" of a deep node, so the
     // barycenter / _minY logic drags the entry window far down instead of pinning
     // it at the top.
-    const backEdgeSet = detectBackEdgeSet(visibleWindows.map(w => w.id), currentData.connections);
+    const backEdgeSet = detectBackEdgeSet(visibleWindows.map(w => w.id), connections);
 
-    if (currentData.connections) {
-        currentData.connections.forEach((conn, idx) => {
+    if (connections) {
+        connections.forEach((conn, idx) => {
             // Skip self-references and cycle-closing back edges
             if (conn.from === conn.to) return;
             if (backEdgeSet.has(conn.from + '\0' + conn.to)) return;
@@ -4585,12 +4662,12 @@ function relayoutWindows() {
             if (parentChildMap) {
                 const callLine = parentChildMap.get(w.id);
                 if (callLine !== undefined) {
-                    const parentWindow = currentData.windows.find(pw => pw.id === parentId);
+                    const parentWindow = allWindows.find(pw => pw.id === parentId);
                     let parentRank = parentWindow && typeof parentWindow._layoutOrderWithinLevel === 'number'
                         ? parentWindow._layoutOrderWithinLevel
                         : -1;
                     if (parentRank < 0) {
-                        parentRank = currentData.windows.findIndex(pw => pw.id === parentId);
+                        parentRank = allWindows.findIndex(pw => pw.id === parentId);
                         if (parentRank < 0) {
                             parentRank = 999999;
                         }
@@ -4818,14 +4895,6 @@ function relayoutWindows() {
             
             window.position.top = currentY;
             
-            // Update DOM element position (only on last iteration)
-            if (iteration === ITERATIONS - 1) {
-                const element = document.getElementById(window.id);
-                if (element) {
-                    element.style.top = currentY + 'px';
-                }
-            }
-            
             // Calculate next Y position
             const actualHeight = getWindowHeight(window);
             currentY = currentY + actualHeight + WINDOW_SPACING;
@@ -4837,13 +4906,6 @@ function relayoutWindows() {
     });
     
     } // End of iterations
-
-    // Update arrows to follow window positions
-    updateArrows();
-
-    // Update container size after relayout
-    updateContainerSize(false);
-    scheduleViewportCheck();
 }
 
 function updateContainerSize(allowShift = true) {
@@ -4980,6 +5042,12 @@ function applyAutoLayout(data) {
         ...data,
         windows: data.windows.map(w => normalizeWindowData({ ...w }))
     };
+
+    // Change Set Canvas: column layout per group (island / block's direct windows), groups stacked
+    if (hasCanvasGroups(work)) {
+        layoutGroupedWindows(work.windows, work.connections, work.groups);
+        return work;
+    }
 
     // Build adjacency map from connections
     const adjacencyMap = new Map();
@@ -5223,6 +5291,274 @@ function applyAutoLayout(data) {
         ...work,
         windows: newWindows
     };
+}
+
+// ---- Change Set Canvas (groups / windowType / change) ----
+
+/** True when the canvas carries Change Set groups (blocks / islands). */
+function hasCanvasGroups(data) {
+    return !!(data && Array.isArray(data.groups) && data.groups.length > 0);
+}
+
+/** Change Set Canvas (metadata.changeSet): not a call-hierarchy root, so it is never root re-analysed. */
+function isChangeSetCanvas(data) {
+    const meta = data && data.metadata;
+    return !!(meta && typeof meta === 'object' && !Array.isArray(meta) &&
+        meta.changeSet && typeof meta.changeSet === 'object');
+}
+
+/** Geometry shared by the grouped layout and the frame drawing (frames must enclose what the layout placed). */
+function groupLayoutMetrics() {
+    return {
+        startX: 40,        // = applyAutoLayout START_X
+        startY: 80,        // = applyAutoLayout START_Y
+        pad: 16,           // frame padding (left / right / bottom)
+        labelHeight: 28,   // frame label band above the members
+        islandGap: 28,     // between units (islands / a block's direct windows) inside a block
+        blockGap: 56,      // between blocks
+        collapsedHeight: 33
+    };
+}
+
+/**
+ * Order the windows into blocks → units in `groups` order. A unit is an island (kind "island" whose
+ * `parent` is a known non-island group) or the block's direct windows (`group` = block id), placed after
+ * its islands. An island with an unknown parent is treated as a block of its own. Windows with no / an
+ * unknown `group` go to a trailing unframed block. Units / blocks without windows are dropped.
+ * @returns {Array<{group: object|null, units: Array<{group: object|null, windows: object[]}>}>}
+ */
+function buildGroupLayoutPlan(groups, windows) {
+    const list = Array.isArray(groups) ? groups.filter(g => g && typeof g.id === 'string') : [];
+    const byId = new Map(list.map(g => [g.id, g]));
+    const isIsland = g => g.kind === 'island' && typeof g.parent === 'string' &&
+        byId.has(g.parent) && byId.get(g.parent).kind !== 'island';
+    const members = new Map();
+    const ungrouped = [];
+    windows.forEach(w => {
+        if (w.group && byId.has(w.group)) {
+            if (!members.has(w.group)) members.set(w.group, []);
+            members.get(w.group).push(w);
+        } else {
+            ungrouped.push(w);
+        }
+    });
+    const blocks = [];
+    list.forEach(g => {
+        if (isIsland(g)) return;
+        const units = [];
+        list.forEach(island => {
+            if (!isIsland(island) || island.parent !== g.id) return;
+            const ws = members.get(island.id) || [];
+            if (ws.length > 0) units.push({ group: island, windows: ws });
+        });
+        const direct = members.get(g.id) || [];
+        if (direct.length > 0) units.push({ group: null, windows: direct });
+        if (units.length > 0) blocks.push({ group: g, units });
+    });
+    if (ungrouped.length > 0) blocks.push({ group: null, units: [{ group: null, windows: ungrouped }] });
+    return blocks;
+}
+
+/** Rendered height of a window for grouped layout / frames (collapsed → title bar only). */
+function groupWindowHeight(w, collapsedHeight) {
+    if (w.collapsed === true) return collapsedHeight;
+    if (w.fullHeight === true) return calcFullHeightWindowHeight(w);
+    return (w.position && w.position.height) || SETTINGS.minWindowHeight;
+}
+
+/**
+ * Lay out one unit with the existing column layout (applyAutoLayout levels → relayoutColumnTops),
+ * then move it so its top-left is (left, top). Mutates the windows' position; returns the bottom edge.
+ */
+function layoutGroupUnit(unitWindows, connections, left, top) {
+    const M = groupLayoutMetrics();
+    const ids = new Set(unitWindows.map(w => w.id));
+    const conns = (connections || []).filter(c => ids.has(c.from) && ids.has(c.to));
+    const levelled = applyAutoLayout({
+        windows: unitWindows.map(w => ({ ...w, position: { ...(w.position || {}) } })),
+        connections: conns,
+        autoLayout: true
+    });
+    // Heights stay the windows' own (resized / diff overlay); only level X and order come from applyAutoLayout
+    const clones = unitWindows.map((w, i) => ({
+        ...w,
+        position: {
+            ...(w.position || {}),
+            left: levelled.windows[i].position.left,
+            top: levelled.windows[i].position.top
+        },
+        _layoutOrderWithinLevel: levelled.windows[i]._layoutOrderWithinLevel
+    }));
+    relayoutColumnTops(clones, conns, clones);
+    const minLeft = Math.min(...clones.map(c => c.position.left));
+    const minTop = Math.min(...clones.map(c => c.position.top));
+    let bottom = top;
+    unitWindows.forEach((w, i) => {
+        const c = clones[i];
+        if (!w.position) w.position = {};
+        w.position.left = left + (c.position.left - minLeft);
+        w.position.top = top + (c.position.top - minTop);
+        if (!w.position.width) w.position.width = SETTINGS.windowWidth;
+        w._layoutOrderWithinLevel = c._layoutOrderWithinLevel;
+        bottom = Math.max(bottom, w.position.top + groupWindowHeight(w, M.collapsedHeight));
+    });
+    return bottom;
+}
+
+/**
+ * Change Set Canvas layout: each unit (island / a block's direct windows) gets the existing column
+ * layout; units are stacked inside their block and blocks are stacked in `groups` order, leaving room
+ * for the frames computeGroupFrames draws. Mutates the windows' position.
+ */
+function layoutGroupedWindows(windows, connections, groups) {
+    const M = groupLayoutMetrics();
+    const plan = buildGroupLayoutPlan(groups, windows);
+    let y = M.startY;
+    plan.forEach(block => {
+        const framed = !!block.group;
+        let cursor = framed ? y + M.labelHeight : y;
+        let bottom = cursor;
+        block.units.forEach(unit => {
+            const islandFramed = !!unit.group;
+            const left = M.startX + (framed ? M.pad : 0) + (islandFramed ? M.pad : 0);
+            // island frames carry no label, so only the padding sits above their members
+            const top = cursor + (islandFramed ? M.pad : 0);
+            const unitBottom = layoutGroupUnit(unit.windows, connections, left, top);
+            bottom = unitBottom + (islandFramed ? M.pad : 0);
+            cursor = bottom + M.islandGap;
+        });
+        y = bottom + (framed ? M.pad : 0) + M.blockGap;
+    });
+    return windows;
+}
+
+/**
+ * Frames for the visible windows' current positions: an island frame encloses its members, a block
+ * frame encloses its direct windows and island frames. Blocks come before their islands (paint order).
+ * @returns {Array<{id, kind, label, parent, depth, left, top, width, height, windowCount}>}
+ */
+function computeGroupFrames(groups, windows) {
+    const M = groupLayoutMetrics();
+    const visible = (windows || []).filter(w => w.visible !== false && w.position);
+    const plan = buildGroupLayoutPlan(groups, visible);
+    const union = (a, b) => !a ? b : {
+        left: Math.min(a.left, b.left), top: Math.min(a.top, b.top),
+        right: Math.max(a.right, b.right), bottom: Math.max(a.bottom, b.bottom)
+    };
+    const boxOf = ws => ws.reduce((acc, w) => union(acc, {
+        left: w.position.left || 0,
+        top: w.position.top || 0,
+        right: (w.position.left || 0) + (w.position.width || SETTINGS.windowWidth),
+        bottom: (w.position.top || 0) + groupWindowHeight(w, M.collapsedHeight)
+    }), null);
+    const frameOf = (g, box, depth, parent, count) => ({
+        id: g.id,
+        kind: g.kind,
+        label: g.label != null ? String(g.label) : g.id,
+        parent: parent,
+        depth: depth,
+        left: box.left - M.pad,
+        top: box.top - (depth > 0 ? M.pad : M.labelHeight),
+        width: box.right - box.left + M.pad * 2,
+        height: box.bottom - box.top + (depth > 0 ? M.pad : M.labelHeight) + M.pad,
+        windowCount: count
+    });
+    const frames = [];
+    plan.forEach(block => {
+        if (!block.group) return;
+        const islands = [];
+        let box = null;
+        let count = 0;
+        block.units.forEach(unit => {
+            const ub = boxOf(unit.windows);
+            count += unit.windows.length;
+            if (unit.group) {
+                const f = frameOf(unit.group, ub, 1, block.group.id, unit.windows.length);
+                islands.push(f);
+                box = union(box, { left: f.left, top: f.top, right: f.left + f.width, bottom: f.top + f.height });
+            } else {
+                box = union(box, ub);
+            }
+        });
+        frames.push(frameOf(block.group, box, 0, null, count), ...islands);
+    });
+    return frames;
+}
+
+/** Draw the group frames behind the windows (re-run whenever window positions change). */
+function renderGroupFrames() {
+    const container = document.querySelector('.container');
+    if (!container) return;
+    container.querySelectorAll('.group-frame').forEach(el => el.remove());
+    if (!currentData || !hasCanvasGroups(currentData)) return;
+    const KNOWN_KINDS = ['java', 'clientside', 'xml', 'sql', 'other', 'island'];
+    const fragment = document.createDocumentFragment();
+    computeGroupFrames(currentData.groups, currentData.windows).forEach(f => {
+        const kind = KNOWN_KINDS.includes(f.kind) ? f.kind : 'other';
+        const frame = document.createElement('div');
+        frame.className = 'group-frame group-kind-' + kind + (f.depth > 0 ? ' group-island' : ' group-block');
+        frame.dataset.groupId = f.id;
+        frame.style.left = f.left + 'px';
+        frame.style.top = f.top + 'px';
+        frame.style.width = f.width + 'px';
+        frame.style.height = f.height + 'px';
+        if (f.depth === 0) {   // islands are frame-only (no label)
+            const label = document.createElement('div');
+            label.className = 'group-frame-label';
+            label.textContent = f.label;
+            const count = document.createElement('span');
+            count.className = 'group-frame-count';
+            count.textContent = String(f.windowCount);
+            label.appendChild(count);
+            frame.appendChild(label);
+        }
+        fragment.appendChild(frame);
+    });
+    container.insertBefore(fragment, container.firstChild);
+}
+
+/**
+ * Title-bar decoration of a Change Set window: CSS classes for the window and badges (text + tooltip)
+ * for windowType (file / junction / via), change.status and change.label.
+ */
+function buildWindowChangeDecor(windowData) {
+    const classes = [];
+    const badges = [];
+    const wt = windowData && windowData.windowType;
+    if (wt === 'file') {
+        classes.push('window-type-file');
+        badges.push({ cls: 'wt-badge wt-file', text: 'FILE', title: 'ファイル単位のウィンドウ' });
+    } else if (wt === 'junction') {
+        classes.push('window-type-junction');
+        badges.push({ cls: 'wt-badge wt-junction', text: '合流点', title: '未変更の合流点メソッド（変更メソッドの共通の呼び出し元）' });
+    } else if (wt === 'via') {
+        classes.push('window-type-via');
+        badges.push({ cls: 'wt-badge wt-via', text: '経由', title: '未変更の中継メソッド（変更メソッドどうしの呼び出し経路の途中）' });
+    }
+    const change = windowData && windowData.change;
+    if (change && typeof change === 'object') {
+        const STATUS = { added: '追加', modified: '変更', deleted: '削除', renamed: '改名' };
+        const flags = Array.isArray(change.flags) ? change.flags.filter(f => typeof f === 'string') : [];
+        if (STATUS[change.status]) {
+            classes.push('change-' + change.status);
+            badges.push({
+                cls: 'change-badge change-badge-' + change.status,
+                text: STATUS[change.status],
+                title: change.status === 'renamed' && change.oldPath ? '旧パス: ' + change.oldPath : 'ファイルの変更種別: ' + change.status
+            });
+        }
+        flags.forEach(f => { if (/^[A-Za-z]+$/.test(f)) classes.push('change-flag-' + f); });
+        if (typeof change.label === 'string' && change.label) {
+            const warn = flags.includes('worktreeMismatch');
+            const del = flags.includes('deleted') || flags.includes('deletedMethod') || change.status === 'deleted';
+            badges.push({
+                cls: 'change-label' + (warn ? ' change-label-warn' : '') + (del ? ' change-label-deleted' : ''),
+                text: change.label,
+                title: change.label
+            });
+        }
+    }
+    return { classes, badges };
 }
 
 /**
@@ -5523,10 +5859,17 @@ function createWindow(windowData) {
     const displayTitle = windowData.displayName || windowData.filePath;
     const isCollapsed = windowData.collapsed === true; // Default to expanded
     const isFullHeight = windowData.fullHeight === true;
+    // Change Set Canvas: windowType / change.status / change.label as title-bar badges
+    const changeDecor = buildWindowChangeDecor(windowData);
+    changeDecor.classes.forEach(cls => windowDiv.classList.add(cls));
+    const changeBadgesHtml = changeDecor.badges.map(b =>
+        `<span class="${b.cls}" title="${escapeHtmlAttr(b.title)}">${escapeHtml(b.text)}</span>`
+    ).join('');
     titleBar.innerHTML = `
         <button class="collapse-button" title="折りたたみ/展開">${isCollapsed ? '▶' : '▼'}</button>
         <button class="full-height-button${isFullHeight ? ' active' : ''}" title="全行表示/通常表示">↕</button>
         <div class="file-path clickable" data-filepath="${windowData.filePath}" data-line="${windowData.startLine}">${displayTitle}</div>
+        ${changeBadgesHtml}
         <button class="close-button" title="ウィンドウを閉じる">×</button>
     `;
 

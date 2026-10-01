@@ -38,6 +38,36 @@ const testRegistry = {
         fn: ext.parseGitDiffDetailed,
         args: (input) => [input.stdout],
     },
+    // 変更集合キャンバスの git 層（src/gitUtils.ts）。一時 git リポジトリを子プロセスで作って検証する
+    'git-change-set': {
+        fn: (input) => require(path.join(helpersDir, 'git-change-set.js')).runScenario(input),
+        args: (input) => [input],
+    },
+    // 変更集合キャンバスの viewer 描画（グループ枠・グループ単位の自動配置・省略接続・保存往復・再解析しない）
+    'changeset-canvas': {
+        fn: (input) => require(path.join(helpersDir, 'changeset-canvas.js')).runScenario(input, wv),
+        args: (input) => [input],
+    },
+    // 変更集合キャンバスの合成（src/changeSet.ts）。Java の解析結果はモックで与える
+    'change-set-compose': {
+        fn: (input) => require(path.join(helpersDir, 'change-set.js')).composeAndCheck(input),
+        args: (input) => [input],
+        clone: true,
+    },
+    // clientside の島（JS/TS 拡張の resolveMethodSignatures / analyzeMethod / collectIncludeEdges の結果はモック）
+    'change-set-clientside': {
+        fn: (input) => require(path.join(helpersDir, 'change-set.js')).composeClientside(input),
+        args: (input) => [input],
+        clone: true,
+    },
+    'change-set-java-methods': {
+        fn: (input) => require(path.join(helpersDir, 'change-set.js')).javaMethods(input),
+        args: (input) => [input],
+    },
+    'change-set-validate': {
+        fn: (input) => require(path.join(helpersDir, 'change-set.js')).validate(input),
+        args: (input) => [input],
+    },
     'extract-method-name': {
         fn: ext.extractMethodName,
         args: (input) => [input.code, input.languageId],

@@ -572,6 +572,17 @@ function loadWebviewFunctions(settingsOverride) {
         'mergeSymbols',
         'adoptWindowRefs',
         'mergeSymbolIndex',
+        // Change Set Canvas (groups / windowType / change)
+        'hasCanvasGroups',
+        'isChangeSetCanvas',
+        'groupLayoutMetrics',
+        'buildGroupLayoutPlan',
+        'groupWindowHeight',
+        'relayoutColumnTops',
+        'layoutGroupUnit',
+        'layoutGroupedWindows',
+        'computeGroupFrames',
+        'buildWindowChangeDecor',
     ];
 
     const codeFragments = [];

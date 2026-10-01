@@ -387,5 +387,36 @@
       }
     },
     "expected": null
+  },
+  {
+    "label": "change set canvas (metadata.changeSet) has no reanalysis plan",
+    "input": {
+      "currentJson": {
+        "metadata": {
+          "changeSet": {
+            "kind": "commit",
+            "commit": "b",
+            "base": "a",
+            "files": []
+          }
+        },
+        "windows": [
+          {
+            "id": "m1",
+            "group": "isl-1",
+            "windowType": "method",
+            "displayName": "A.b",
+            "filePath": "src/main/java/A.java",
+            "startLine": 3,
+            "code": "void b() {}"
+          }
+        ],
+        "connections": []
+      },
+      "defaults": {
+        "depth": 5
+      }
+    },
+    "expected": null
   }
 ]

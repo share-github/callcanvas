@@ -14,6 +14,9 @@ import tools.depquery.CallIndexModels.*;
  */
 class CallGraphAnalyzer {
 
+    /** --depth -1（ルートまで）の incoming で辿る階層の安全上限 */
+    static final int MAX_INCOMING_DEPTH = 50;
+
     record Item(String fqn, int depth) {
     }
 

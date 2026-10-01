@@ -256,5 +256,148 @@
         ]
       }
     ]
+  },
+  {
+    "label": "Deleted file (+++ /dev/null) does not leak hunks into the previous file",
+    "input": {
+      "stdout": "diff --git a/Foo.java b/Foo.java\nindex abc..def 100644\n--- a/Foo.java\n+++ b/Foo.java\n@@ -1 +1 @@\n-old foo\n+new foo\ndiff --git a/Gone.java b/Gone.java\ndeleted file mode 100644\nindex abc..0000000\n--- a/Gone.java\n+++ /dev/null\n@@ -1,2 +0,0 @@\n-class Gone {\n-}\n"
+    },
+    "expected": [
+      {
+        "filePath": "Foo.java",
+        "hunks": [
+          {
+            "oldStart": 1,
+            "oldCount": 1,
+            "newStart": 1,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "old foo"
+              },
+              {
+                "type": "add",
+                "content": "new foo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "filePath": "Gone.java",
+        "hunks": [
+          {
+            "oldStart": 1,
+            "oldCount": 2,
+            "newStart": 0,
+            "newCount": 0,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "class Gone {"
+              },
+              {
+                "type": "remove",
+                "content": "}"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Binary file without hunks is kept as one file",
+    "input": {
+      "stdout": "diff --git a/logo.png b/logo.png\nindex abc..def 100644\nBinary files a/logo.png and b/logo.png differ\ndiff --git a/Foo.java b/Foo.java\nindex abc..def 100644\n--- a/Foo.java\n+++ b/Foo.java\n@@ -1 +1 @@\n-a\n+b\n"
+    },
+    "expected": [
+      {
+        "filePath": "logo.png",
+        "hunks": [],
+        "binary": true
+      },
+      {
+        "filePath": "Foo.java",
+        "hunks": [
+          {
+            "oldStart": 1,
+            "oldCount": 1,
+            "newStart": 1,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "a"
+              },
+              {
+                "type": "add",
+                "content": "b"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Content lines starting with --- / +++ stay in the hunk",
+    "input": {
+      "stdout": "diff --git a/a.sql b/a.sql\nindex abc..def 100644\n--- a/a.sql\n+++ b/a.sql\n@@ -1 +1 @@\n--- old comment\n+++ new\n"
+    },
+    "expected": [
+      {
+        "filePath": "a.sql",
+        "hunks": [
+          {
+            "oldStart": 1,
+            "oldCount": 1,
+            "newStart": 1,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "-- old comment"
+              },
+              {
+                "type": "add",
+                "content": "++ new"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Rename with edits records oldPath",
+    "input": {
+      "stdout": "diff --git a/Old.java b/New.java\nsimilarity index 90%\nrename from Old.java\nrename to New.java\nindex abc..def 100644\n--- a/Old.java\n+++ b/New.java\n@@ -5 +5 @@\n-x\n+y\n"
+    },
+    "expected": [
+      {
+        "filePath": "New.java",
+        "hunks": [
+          {
+            "oldStart": 5,
+            "oldCount": 1,
+            "newStart": 5,
+            "newCount": 1,
+            "lines": [
+              {
+                "type": "remove",
+                "content": "x"
+              },
+              {
+                "type": "add",
+                "content": "y"
+              }
+            ]
+          }
+        ],
+        "oldPath": "Old.java"
+      }
+    ]
   }
 ]

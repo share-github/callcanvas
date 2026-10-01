@@ -1,0 +1,57 @@
+[
+  {
+    "label": "メソッド・コンストラクタ・抽象メソッドを切り出す（フィールド初期化・文字列・コメント・匿名クラスの中は対象外）",
+    "input": {
+      "content": "package a;\nimport x.Y;\n/** doc */\n@Service\npublic class Foo extends Bar implements Baz {\n    private int a = compute(1);\n    String s = \"void fake() {\";\n    public Foo(int a) { this.a = a; }\n    @Override\n    public java.util.List<Map<String, Integer>> list(final @NotNull String name, int[] xs, Object... rest) throws IOException {\n        if (a > 0) { return null; }\n        new Runnable() { public void run() {} };\n        return foo(name);\n    }\n    abstract void abs(String s);\n    static <T> T gen(T t) {\n        // }\n        return t; }\n    Foo(String s) { }\n}\n"
+    },
+    "expected": [
+      {
+        "key": "Foo(int)",
+        "startLine": 8,
+        "endLine": 8
+      },
+      {
+        "key": "list(String,int[],Object[])",
+        "startLine": 9,
+        "endLine": 14
+      },
+      {
+        "key": "abs(String)",
+        "startLine": 15,
+        "endLine": 15
+      },
+      {
+        "key": "gen(T)",
+        "startLine": 16,
+        "endLine": 18
+      },
+      {
+        "key": "Foo(String)",
+        "startLine": 19,
+        "endLine": 19
+      }
+    ]
+  },
+  {
+    "label": "削除メソッド: 消えたオーバーロードだけを返す（アノテーション行を含む）",
+    "input": {
+      "baseContent": "class A {\n    void f(int a) {}\n    @Deprecated\n    void f(String s) {\n    }\n}\n",
+      "newContent": "class A {\n    void f(int a) {}\n}\n"
+    },
+    "expected": [
+      {
+        "key": "f(String)",
+        "startLine": 3,
+        "endLine": 5
+      }
+    ]
+  },
+  {
+    "label": "削除メソッド: 引数名だけの変更・本体の変更は削除ではない",
+    "input": {
+      "baseContent": "class A {\n    void f(int a) { x(); }\n}\n",
+      "newContent": "class A {\n    void f(int b) {\n        y();\n    }\n}\n"
+    },
+    "expected": []
+  }
+]

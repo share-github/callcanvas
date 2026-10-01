@@ -23,6 +23,10 @@ bad()  { printf '  FAIL %s\n' "$1"; FAIL=$((FAIL + 1)); }
 
 cleanup() {
     node "$PLUGIN_DIR/src/cli.js" stop --file "$TARGET_FILE" >/dev/null 2>&1
+    if [[ -n "${CS_REPO:-}" ]]; then
+        node "$PLUGIN_DIR/src/cli.js" stop --root "$CS_REPO" >/dev/null 2>&1
+        rm -rf "$(dirname "$CS_REPO")"
+    fi
     if [[ -n "${NVIM_PID:-}" ]]; then
         kill "$NVIM_PID" 2>/dev/null
     fi
@@ -101,6 +105,12 @@ if [[ -n "$APPNAME" ]]; then
         ok "<leader>vi runs :CallCanvasBuildIndex"
     else
         bad "<leader>vi maps to '$MAPPED_INDEX'"
+    fi
+    MAPPED_CS="$(nvim --server "$SOCK" --remote-expr "maparg(' vc', 'n')" 2>/dev/null)"
+    if [[ "$MAPPED_CS" == *"CallCanvasChangeSet"* ]]; then
+        ok "<leader>vc runs :CallCanvasChangeSet"
+    else
+        bad "<leader>vc maps to '$MAPPED_CS'"
     fi
 fi
 
@@ -350,6 +360,150 @@ if [[ "$WINS_AFTER" == "$WINS_BEFORE" ]]; then
     ok "repeated jumps reuse one window (still $WINS_AFTER)"
 else
     bad "a repeated jump split again: $WINS_BEFORE -> $WINS_AFTER"
+fi
+
+# One canvas for the changes of a commit. A throwaway git repository (two commits,
+# the second adds OrderService.changeSetProbe) is its own project, so this also starts
+# a second host next to the sample-app one. The Java extension copy with the new
+# analyzer (when resources still has an older JAR) reaches the host through Neovim's
+# environment, which `vim.system` passes on.
+#
+# Without an argument the commit is picked in Neovim (vim.ui.select — a picker under
+# LazyVim). The stub here records the offered items and picks "直前のコミット"; the
+# notifications are recorded too, to check what the user is told.
+step "run :CallCanvasChangeSet (no argument) from Neovim -> pick the last commit"
+FIXTURE="$(node "$PLUGIN_DIR/test/changeset-fixture.js" 2>"$WORK/fixture.err")"
+if [[ -z "$FIXTURE" ]]; then
+    bad "change set fixture: $(cat "$WORK/fixture.err")"
+else
+    CS_REPO="$(node -e "console.log(JSON.parse(process.argv[1]).repo)" "$FIXTURE")"
+    CS_COMMIT="$(node -e "console.log(JSON.parse(process.argv[1]).commit)" "$FIXTURE")"
+    CS_SUBJECT="$(node -e "console.log(JSON.parse(process.argv[1]).subject)" "$FIXTURE")"
+    CS_ENV="$(node -e "const e=JSON.parse(process.argv[1]).env; console.log(Object.entries(e).map(([k,v])=>k+'='+v).join(' '))" "$FIXTURE")"
+    for pair in $CS_ENV; do
+        nvim --server "$SOCK" --remote-expr "luaeval('(function() vim.env[_A[1]] = _A[2]; return 1 end)()', ['${pair%%=*}', '${pair#*=}'])" >/dev/null
+    done
+    # The repository is taken from the buffer, so look at a file of that repository.
+    nvim --server "$SOCK" --remote-expr \
+        "execute('tabnew $CS_REPO/src/main/java/com/example/changeset/order/OrderService.java')" >/dev/null
+
+    # Completion: workbench, HEAD and the recent short hashes.
+    COMPLETION="$(nvim --server "$SOCK" --remote-expr "join(getcompletion('CallCanvasChangeSet ', 'cmdline'), ',')" 2>/dev/null)"
+    if [[ ",$COMPLETION," == *",workbench,"* && ",$COMPLETION," == *",HEAD,"* && ",$COMPLETION," == *",$CS_COMMIT,"* ]]; then
+        ok "completion offers workbench, HEAD and the commits ($COMPLETION)"
+    else
+        bad "completion: '$COMPLETION'"
+    fi
+    PREFIXED="$(nvim --server "$SOCK" --remote-expr "join(getcompletion('CallCanvasChangeSet ${CS_COMMIT:0:3}', 'cmdline'), ',')" 2>/dev/null)"
+    if [[ "$PREFIXED" == *"$CS_COMMIT"* && "$PREFIXED" != *"workbench"* ]]; then
+        ok "completion narrows by what is typed (${CS_COMMIT:0:3} -> $PREFIXED)"
+    else
+        bad "completion for '${CS_COMMIT:0:3}': '$PREFIXED'"
+    fi
+
+    cat >"$WORK/cs-stub.lua" <<'LUA'
+_G.cs_offered, _G.cs_notes = nil, {}
+local notify = vim.notify
+vim.notify = function(msg, level, o)
+  table.insert(_G.cs_notes, msg)
+  return notify(msg, level, o)
+end
+vim.ui.select = function(items, opts, on_choice)
+  _G.cs_offered = vim.tbl_map(function(item) return opts.format_item(item) end, items)
+  for _, item in ipairs(items) do
+    if opts.format_item(item):match('^直前のコミット') then
+      return on_choice(item)
+    end
+  end
+  on_choice(nil)
+end
+return 1
+LUA
+    nvim --server "$SOCK" --remote-expr "luaeval('loadfile(_A)()', '$WORK/cs-stub.lua')" >/dev/null
+    nvim --server "$SOCK" --remote-expr "execute('CallCanvasChangeSet')" >/dev/null
+
+    OFFERED="$(nvim --server "$SOCK" --remote-expr "luaeval('table.concat(_G.cs_offered or {}, \"\\n\")')" 2>/dev/null)"
+    FIRST="$(sed -n 1p <<<"$OFFERED")"
+    SECOND="$(sed -n 2p <<<"$OFFERED")"
+    if [[ "$FIRST" == "ワークベンチ（未コミットの変更: 0 ファイル）" ]]; then
+        ok "the list starts with the workbench and its count, 0 with nothing uncommitted ($FIRST)"
+    else
+        bad "first item: '$FIRST'"
+    fi
+    if [[ "$SECOND" == "直前のコミット  $CS_COMMIT  $CS_SUBJECT  ("*")" ]]; then
+        ok "then the last commit, readable ($SECOND)"
+    else
+        bad "second item: '$SECOND'"
+    fi
+    if [[ "$OFFERED" != *".."* && "$OFFERED" != *"範囲"* ]]; then
+        ok "no range items are offered"
+    else
+        bad "range items offered: $OFFERED"
+    fi
+
+    CS_SESSION=""
+    for _ in $(seq 1 300); do
+        CS_SESSION="$(nvim --server "$SOCK" --remote-expr \
+            "luaeval('vim.json.encode(require(\"callcanvas\").session())')" 2>/dev/null)"
+        [[ "$CS_SESSION" == *"変更集合 $CS_COMMIT"* ]] && break
+        sleep 1
+    done
+    CS_PERMALINK="$(node -e "console.log(JSON.parse(process.argv[1]).permalink || '')" "$CS_SESSION" 2>/dev/null)"
+    CS_TITLE="$(node -e "console.log(JSON.parse(process.argv[1]).title || '')" "$CS_SESSION" 2>/dev/null)"
+    if [[ "$CS_PERMALINK" == */c/*'?t='* ]]; then
+        ok "picking the last commit opened its change set canvas ($CS_PERMALINK)"
+    else
+        bad "no change set canvas in the Neovim session: $CS_SESSION"
+    fi
+    if [[ "$CS_TITLE" == "変更集合 $CS_COMMIT $CS_SUBJECT" ]]; then
+        ok "the canvas is named after the commit ($CS_TITLE)"
+    else
+        bad "canvas title: '$CS_TITLE'"
+    fi
+    NOTES="$(nvim --server "$SOCK" --remote-expr "luaeval('table.concat(_G.cs_notes, \"\\n\")')" 2>/dev/null)"
+    HEADLINE_RE="変更集合 $CS_COMMIT（$CS_SUBJECT）: [0-9]+ ファイル / [1-9][0-9]* 島"
+    if [[ "$NOTES" =~ $HEADLINE_RE ]]; then
+        ok "the notification says what was opened ($(grep -m1 '変更集合 '"$CS_COMMIT" <<<"$NOTES"))"
+    else
+        bad "notifications: $NOTES"
+    fi
+    if ls "$CS_REPO"/build/call-hierarchy-output/callcanvas_changeset_*.json >/dev/null 2>&1; then
+        ok "the canvas JSON is written in the repository"
+    else
+        bad "no callcanvas_changeset_*.json under $CS_REPO/build/call-hierarchy-output"
+    fi
+    CODE="$(curl -s -o "$WORK/changeset.html" -w '%{http_code}' "$CS_PERMALINK")"
+    if [[ "$CODE" == "200" ]] && grep -q 'changeSetProbe' "$WORK/changeset.html"; then
+        ok "/c/<id> serves the change set canvas"
+    else
+        bad "change set canvas not served (HTTP $CODE)"
+    fi
+
+    step ":CallCanvasChangeSet workbench with nothing uncommitted"
+    nvim --server "$SOCK" --remote-expr "luaeval('(function() _G.cs_notes = {}; return 1 end)()')" >/dev/null
+    nvim --server "$SOCK" --remote-expr "execute('CallCanvasChangeSet workbench')" >/dev/null
+    NOTES=""
+    for _ in $(seq 1 120); do
+        NOTES="$(nvim --server "$SOCK" --remote-expr "luaeval('table.concat(_G.cs_notes, \"\\n\")')" 2>/dev/null)"
+        [[ "$NOTES" == *"ありません"* || "$NOTES" == *"failed"* ]] && break
+        sleep 1
+    done
+    if [[ "$NOTES" == *"ワークベンチに未コミットの変更はありません"*":CallCanvasChangeSet"* ]]; then
+        ok "an empty workbench says why and what to do instead"
+    else
+        bad "workbench notifications: $NOTES"
+    fi
+
+    step "the workbench count follows the working tree"
+    echo "// uncommitted" >>"$CS_REPO/src/main/java/com/example/changeset/order/OrderService.java"
+    DIRTY="$(nvim --server "$SOCK" --remote-expr \
+        "luaeval('require(\"callcanvas\").change_set_choices(_A)[1].text', '$CS_REPO')" 2>/dev/null)"
+    git -C "$CS_REPO" checkout -q -- .
+    if [[ "$DIRTY" == "ワークベンチ（未コミットの変更: 1 ファイル）" ]]; then
+        ok "one uncommitted file shows as 1 ($DIRTY)"
+    else
+        bad "workbench item with one change: '$DIRTY'"
+    fi
 fi
 
 step "host rejects an unauthenticated request"

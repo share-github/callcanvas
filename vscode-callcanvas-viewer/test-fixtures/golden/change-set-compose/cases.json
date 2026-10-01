@@ -1,0 +1,3449 @@
+[
+  {
+    "label": "全ブロック・Java 解析成功: 島・合流点・メソッド外 hunk に、作業ツリー不一致/削除/インデックス外の Java とほかのブロックのファイル単位ウィンドウを合流（files 全件・windows 実在・group 実在・ブロック順）",
+    "input": {
+      "files": [
+        {
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 5,
+              "oldCount": 1,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a"
+                },
+                {
+                  "type": "add",
+                  "content": "b"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderController {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 9,
+              "oldCount": 1,
+              "newStart": 9,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "x"
+                },
+                {
+                  "type": "add",
+                  "content": "y"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderService {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Util.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 0,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "import java.util.List;"
+                }
+              ]
+            }
+          ],
+          "headContent": "package x;\nimport java.util.List;\nclass Util {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Report.java",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "int a;"
+                },
+                {
+                  "type": "add",
+                  "content": "int b;"
+                }
+              ]
+            }
+          ],
+          "headContent": "class Report {\n\n    int b;\n}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Legacy.java",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 2,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "class Legacy {"
+                },
+                {
+                  "type": "remove",
+                  "content": "}"
+                }
+              ]
+            }
+          ],
+          "baseContent": "class Legacy {\n}\n"
+        },
+        {
+          "filePath": "src/test/java/com/ex/OrderTest.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 4,
+              "oldCount": 0,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "@Test void t2() {}"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderTest {\n}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/New.java",
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "status": "renamed",
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "old"
+                },
+                {
+                  "type": "add",
+                  "content": "new"
+                }
+              ]
+            }
+          ],
+          "headContent": "class New {}\n"
+        },
+        {
+          "filePath": "web/app.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "return 1;"
+                },
+                {
+                  "type": "add",
+                  "content": "return 2;"
+                }
+              ]
+            }
+          ],
+          "headContent": "function app() {\n  return 2;\n}\n"
+        },
+        {
+          "filePath": "web/index.html",
+          "status": "added",
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "<p>hi</p>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<p>hi</p>\n"
+        },
+        {
+          "filePath": "pom.xml",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "<v>1</v>"
+                },
+                {
+                  "type": "add",
+                  "content": "<v>2</v>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<project>\n<v>2</v>\n</project>\n"
+        },
+        {
+          "filePath": "db/V1__init.sql",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "CREATE TABLE t (id INT);"
+                }
+              ]
+            }
+          ],
+          "baseContent": "CREATE TABLE t (id INT);\n"
+        },
+        {
+          "filePath": "style.css",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a{}"
+                },
+                {
+                  "type": "add",
+                  "content": "b{}"
+                }
+              ]
+            }
+          ],
+          "headContent": "b{}\n"
+        },
+        {
+          "filePath": "assets/logo.png",
+          "status": "modified",
+          "binary": true,
+          "hunks": []
+        }
+      ],
+      "java": {
+        "success": true,
+        "data": {
+          "groups": [
+            {
+              "id": "blk-java",
+              "kind": "java",
+              "label": "Java"
+            },
+            {
+              "id": "isl-1",
+              "kind": "island",
+              "parent": "blk-java",
+              "label": "島 1: OrderController.create …"
+            },
+            {
+              "id": "isl-2",
+              "kind": "island",
+              "parent": "blk-java",
+              "label": "島 2: New.run"
+            }
+          ],
+          "windows": [
+            {
+              "id": "m-ctrl",
+              "group": "isl-1",
+              "windowType": "method",
+              "displayName": "OrderController.create",
+              "filePath": "src/main/java/com/ex/OrderController.java",
+              "startLine": 3,
+              "code": "void create() {\n  b\n}",
+              "change": {
+                "status": "modified",
+                "source": "worktree"
+              },
+              "diffState": {
+                "hunks": [
+                  {
+                    "oldStart": 5,
+                    "oldCount": 1,
+                    "newStart": 5,
+                    "newCount": 1,
+                    "lines": [
+                      {
+                        "type": "remove",
+                        "content": "a"
+                      },
+                      {
+                        "type": "add",
+                        "content": "b"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "j-app",
+              "group": "isl-1",
+              "windowType": "junction",
+              "displayName": "App.main",
+              "filePath": "src/main/java/com/ex/App.java",
+              "startLine": 1,
+              "code": "void main() {}"
+            },
+            {
+              "id": "m-svc",
+              "group": "isl-1",
+              "windowType": "method",
+              "displayName": "OrderService.place",
+              "filePath": "src/main/java/com/ex/OrderService.java",
+              "startLine": 8,
+              "code": "void place() {\n  y\n}",
+              "change": {
+                "status": "modified",
+                "source": "worktree"
+              },
+              "diffState": {
+                "hunks": [
+                  {
+                    "oldStart": 9,
+                    "oldCount": 1,
+                    "newStart": 9,
+                    "newCount": 1,
+                    "lines": [
+                      {
+                        "type": "remove",
+                        "content": "x"
+                      },
+                      {
+                        "type": "add",
+                        "content": "y"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "f-util",
+              "group": "blk-java",
+              "windowType": "file",
+              "displayName": "Util.java",
+              "filePath": "src/main/java/com/ex/Util.java",
+              "startLine": 1,
+              "code": "package x;\nimport java.util.List;\nclass Util {}",
+              "change": {
+                "status": "modified",
+                "source": "worktree",
+                "flags": [
+                  "outsideMethod"
+                ]
+              },
+              "diffState": {
+                "hunks": [
+                  {
+                    "oldStart": 2,
+                    "oldCount": 0,
+                    "newStart": 3,
+                    "newCount": 1,
+                    "lines": [
+                      {
+                        "type": "add",
+                        "content": "import java.util.List;"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "m-new",
+              "group": "isl-2",
+              "windowType": "method",
+              "displayName": "New.run",
+              "filePath": "src/main/java/com/ex/New.java",
+              "startLine": 2,
+              "code": "void run() {}",
+              "change": {
+                "status": "renamed",
+                "oldPath": "src/main/java/com/ex/Old.java",
+                "source": "worktree"
+              },
+              "diffState": {
+                "hunks": [
+                  {
+                    "oldStart": 3,
+                    "oldCount": 1,
+                    "newStart": 3,
+                    "newCount": 1,
+                    "lines": [
+                      {
+                        "type": "remove",
+                        "content": "old"
+                      },
+                      {
+                        "type": "add",
+                        "content": "new"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "connections": [
+            {
+              "from": "j-app",
+              "to": "m-ctrl",
+              "callLine": 1
+            },
+            {
+              "from": "m-ctrl",
+              "to": "m-svc",
+              "callLine": 4
+            }
+          ],
+          "symbols": {
+            "com.ex.Order": {
+              "kind": "type",
+              "displayName": "Order",
+              "filePath": "src/main/java/com/ex/Order.java",
+              "line": 1
+            }
+          },
+          "metadata": {
+            "changeSet": {
+              "files": [
+                {
+                  "path": "src/main/java/com/ex/OrderController.java",
+                  "status": "modified",
+                  "inGraph": true,
+                  "windows": [
+                    "m-ctrl"
+                  ]
+                },
+                {
+                  "path": "src/main/java/com/ex/OrderService.java",
+                  "status": "modified",
+                  "inGraph": true,
+                  "windows": [
+                    "m-svc"
+                  ]
+                },
+                {
+                  "path": "src/main/java/com/ex/Util.java",
+                  "status": "modified",
+                  "inGraph": true,
+                  "windows": [
+                    "f-util"
+                  ]
+                },
+                {
+                  "path": "src/main/java/com/ex/Report.java",
+                  "status": "modified",
+                  "inGraph": false,
+                  "reason": "worktreeMismatch",
+                  "windows": []
+                },
+                {
+                  "path": "src/main/java/com/ex/Legacy.java",
+                  "status": "deleted",
+                  "inGraph": false,
+                  "reason": "deleted",
+                  "windows": []
+                },
+                {
+                  "path": "src/main/java/com/ex/New.java",
+                  "oldPath": "src/main/java/com/ex/Old.java",
+                  "status": "renamed",
+                  "inGraph": true,
+                  "windows": [
+                    "m-new"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "unindexedFiles": [
+          "src/test/java/com/ex/OrderTest.java"
+        ]
+      }
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "java:blk-java",
+        "island:isl-1<blk-java",
+        "island:isl-2<blk-java",
+        "clientside:blk-clientside",
+        "xml:blk-xml",
+        "sql:blk-sql",
+        "other:blk-other"
+      ],
+      "windows": [
+        {
+          "group": "isl-1",
+          "windowType": "method",
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "startLine": 3,
+          "source": "worktree",
+          "code": "void create() {\n  b\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "isl-1",
+          "windowType": "junction",
+          "filePath": "src/main/java/com/ex/App.java",
+          "startLine": 1,
+          "code": "void main() {}",
+          "diffHunks": 0
+        },
+        {
+          "group": "isl-1",
+          "windowType": "method",
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "startLine": 8,
+          "source": "worktree",
+          "code": "void place() {\n  y\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Util.java",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "outsideMethod"
+          ],
+          "code": "package x;\nimport java.util.List;\nclass Util {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "isl-2",
+          "windowType": "method",
+          "filePath": "src/main/java/com/ex/New.java",
+          "startLine": 2,
+          "source": "worktree",
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "code": "void run() {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Report.java",
+          "startLine": 1,
+          "source": "head",
+          "flags": [
+            "worktreeMismatch"
+          ],
+          "label": "作業ツリーと不一致のためグラフ外",
+          "code": "class Report {\n\n    int b;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Legacy.java",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "class Legacy {\n}",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/test/java/com/ex/OrderTest.java",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "notIndexed"
+          ],
+          "label": "インデックス外（テスト等）",
+          "code": "class OrderTest {\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/app.js",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "function app() {\n  return 2;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/index.html",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "<p>hi</p>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-xml",
+          "windowType": "file",
+          "filePath": "pom.xml",
+          "startLine": 1,
+          "source": "head",
+          "label": "作業ツリーと不一致（head 時点の内容）",
+          "code": "<project>\n<v>2</v>\n</project>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-sql",
+          "windowType": "file",
+          "filePath": "db/V1__init.sql",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "CREATE TABLE t (id INT);",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "style.css",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "b{}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "assets/logo.png",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "binary"
+          ],
+          "label": "バイナリ（内容は表示しない）",
+          "code": "",
+          "diffHunks": 0
+        }
+      ],
+      "connections": 2,
+      "files": [
+        {
+          "path": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1
+        },
+        {
+          "path": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1
+        },
+        {
+          "path": "src/main/java/com/ex/Util.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1
+        },
+        {
+          "path": "src/main/java/com/ex/Report.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "worktreeMismatch"
+        },
+        {
+          "path": "src/main/java/com/ex/Legacy.java",
+          "status": "deleted",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "deleted"
+        },
+        {
+          "path": "src/test/java/com/ex/OrderTest.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "notIndexed"
+        },
+        {
+          "path": "src/main/java/com/ex/New.java",
+          "status": "renamed",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1,
+          "oldPath": "src/main/java/com/ex/Old.java"
+        },
+        {
+          "path": "web/app.js",
+          "status": "modified",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/index.html",
+          "status": "added",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "pom.xml",
+          "status": "modified",
+          "block": "xml",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "db/V1__init.sql",
+          "status": "deleted",
+          "block": "sql",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "style.css",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "assets/logo.png",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        }
+      ],
+      "changeSet": {
+        "kind": "commit",
+        "commit": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+      },
+      "symbols": [
+        "com.ex.Order"
+      ],
+      "javaError": null
+    }
+  },
+  {
+    "label": "Java 解析失敗: Java ファイルもすべてファイル単位ウィンドウ（漏れなし）。インデックス外は notIndexed",
+    "input": {
+      "commit": "a1b2c3d",
+      "files": [
+        {
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 5,
+              "oldCount": 1,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a"
+                },
+                {
+                  "type": "add",
+                  "content": "b"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderController {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 9,
+              "oldCount": 1,
+              "newStart": 9,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "x"
+                },
+                {
+                  "type": "add",
+                  "content": "y"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderService {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Util.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 0,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "import java.util.List;"
+                }
+              ]
+            }
+          ],
+          "headContent": "package x;\nimport java.util.List;\nclass Util {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Report.java",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "int a;"
+                },
+                {
+                  "type": "add",
+                  "content": "int b;"
+                }
+              ]
+            }
+          ],
+          "headContent": "class Report {\n\n    int b;\n}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Legacy.java",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 2,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "class Legacy {"
+                },
+                {
+                  "type": "remove",
+                  "content": "}"
+                }
+              ]
+            }
+          ],
+          "baseContent": "class Legacy {\n}\n"
+        },
+        {
+          "filePath": "src/test/java/com/ex/OrderTest.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 4,
+              "oldCount": 0,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "@Test void t2() {}"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderTest {\n}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/New.java",
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "status": "renamed",
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "old"
+                },
+                {
+                  "type": "add",
+                  "content": "new"
+                }
+              ]
+            }
+          ],
+          "headContent": "class New {}\n"
+        },
+        {
+          "filePath": "web/app.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "return 1;"
+                },
+                {
+                  "type": "add",
+                  "content": "return 2;"
+                }
+              ]
+            }
+          ],
+          "headContent": "function app() {\n  return 2;\n}\n"
+        },
+        {
+          "filePath": "web/index.html",
+          "status": "added",
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "<p>hi</p>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<p>hi</p>\n"
+        },
+        {
+          "filePath": "pom.xml",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "<v>1</v>"
+                },
+                {
+                  "type": "add",
+                  "content": "<v>2</v>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<project>\n<v>2</v>\n</project>\n"
+        },
+        {
+          "filePath": "db/V1__init.sql",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "CREATE TABLE t (id INT);"
+                }
+              ]
+            }
+          ],
+          "baseContent": "CREATE TABLE t (id INT);\n"
+        },
+        {
+          "filePath": "style.css",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a{}"
+                },
+                {
+                  "type": "add",
+                  "content": "b{}"
+                }
+              ]
+            }
+          ],
+          "headContent": "b{}\n"
+        },
+        {
+          "filePath": "assets/logo.png",
+          "status": "modified",
+          "binary": true,
+          "hunks": []
+        }
+      ],
+      "java": {
+        "success": false,
+        "error": "Call index is stale",
+        "unindexedFiles": [
+          "src/test/java/com/ex/OrderTest.java"
+        ]
+      }
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "java:blk-java",
+        "clientside:blk-clientside",
+        "xml:blk-xml",
+        "sql:blk-sql",
+        "other:blk-other"
+      ],
+      "windows": [
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "code": "class OrderController {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "code": "class OrderService {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Util.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "code": "package x;\nimport java.util.List;\nclass Util {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Report.java",
+          "startLine": 1,
+          "source": "head",
+          "flags": [
+            "worktreeMismatch"
+          ],
+          "label": "作業ツリーと不一致のためグラフ外",
+          "code": "class Report {\n\n    int b;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Legacy.java",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "class Legacy {\n}",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/test/java/com/ex/OrderTest.java",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "notIndexed"
+          ],
+          "label": "インデックス外（テスト等）",
+          "code": "class OrderTest {\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/New.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "code": "class New {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/app.js",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "function app() {\n  return 2;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/index.html",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "<p>hi</p>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-xml",
+          "windowType": "file",
+          "filePath": "pom.xml",
+          "startLine": 1,
+          "source": "head",
+          "label": "作業ツリーと不一致（head 時点の内容）",
+          "code": "<project>\n<v>2</v>\n</project>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-sql",
+          "windowType": "file",
+          "filePath": "db/V1__init.sql",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "CREATE TABLE t (id INT);",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "style.css",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "b{}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "assets/logo.png",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "binary"
+          ],
+          "label": "バイナリ（内容は表示しない）",
+          "code": "",
+          "diffHunks": 0
+        }
+      ],
+      "connections": 0,
+      "files": [
+        {
+          "path": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "src/main/java/com/ex/Util.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "src/main/java/com/ex/Report.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "worktreeMismatch"
+        },
+        {
+          "path": "src/main/java/com/ex/Legacy.java",
+          "status": "deleted",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "deleted"
+        },
+        {
+          "path": "src/test/java/com/ex/OrderTest.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "notIndexed"
+        },
+        {
+          "path": "src/main/java/com/ex/New.java",
+          "status": "renamed",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/app.js",
+          "status": "modified",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/index.html",
+          "status": "added",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "pom.xml",
+          "status": "modified",
+          "block": "xml",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "db/V1__init.sql",
+          "status": "deleted",
+          "block": "sql",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "style.css",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "assets/logo.png",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        }
+      ],
+      "changeSet": {
+        "kind": "commit",
+        "commit": "a1b2c3d"
+      },
+      "symbols": null,
+      "javaError": "Java の変更集合解析に失敗したため、Java ファイルはファイル単位で表示します"
+    }
+  },
+  {
+    "label": "Java 拡張が無い（java=null）: Java ファイルもすべてファイル単位ウィンドウ、head=null（作業ツリー）",
+    "input": {
+      "kind": "workbench",
+      "files": [
+        {
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 5,
+              "oldCount": 1,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a"
+                },
+                {
+                  "type": "add",
+                  "content": "b"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderController {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 9,
+              "oldCount": 1,
+              "newStart": 9,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "x"
+                },
+                {
+                  "type": "add",
+                  "content": "y"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderService {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Util.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 0,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "import java.util.List;"
+                }
+              ]
+            }
+          ],
+          "headContent": "package x;\nimport java.util.List;\nclass Util {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Report.java",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "int a;"
+                },
+                {
+                  "type": "add",
+                  "content": "int b;"
+                }
+              ]
+            }
+          ],
+          "headContent": "class Report {\n\n    int b;\n}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Legacy.java",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 2,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "class Legacy {"
+                },
+                {
+                  "type": "remove",
+                  "content": "}"
+                }
+              ]
+            }
+          ],
+          "baseContent": "class Legacy {\n}\n"
+        },
+        {
+          "filePath": "src/test/java/com/ex/OrderTest.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 4,
+              "oldCount": 0,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "@Test void t2() {}"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderTest {\n}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/New.java",
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "status": "renamed",
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "old"
+                },
+                {
+                  "type": "add",
+                  "content": "new"
+                }
+              ]
+            }
+          ],
+          "headContent": "class New {}\n"
+        },
+        {
+          "filePath": "web/app.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "return 1;"
+                },
+                {
+                  "type": "add",
+                  "content": "return 2;"
+                }
+              ]
+            }
+          ],
+          "headContent": "function app() {\n  return 2;\n}\n"
+        },
+        {
+          "filePath": "web/index.html",
+          "status": "added",
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "<p>hi</p>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<p>hi</p>\n"
+        },
+        {
+          "filePath": "pom.xml",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "<v>1</v>"
+                },
+                {
+                  "type": "add",
+                  "content": "<v>2</v>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<project>\n<v>2</v>\n</project>\n"
+        },
+        {
+          "filePath": "db/V1__init.sql",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "CREATE TABLE t (id INT);"
+                }
+              ]
+            }
+          ],
+          "baseContent": "CREATE TABLE t (id INT);\n"
+        },
+        {
+          "filePath": "style.css",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a{}"
+                },
+                {
+                  "type": "add",
+                  "content": "b{}"
+                }
+              ]
+            }
+          ],
+          "headContent": "b{}\n"
+        },
+        {
+          "filePath": "assets/logo.png",
+          "status": "modified",
+          "binary": true,
+          "hunks": []
+        }
+      ],
+      "java": null
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "java:blk-java",
+        "clientside:blk-clientside",
+        "xml:blk-xml",
+        "sql:blk-sql",
+        "other:blk-other"
+      ],
+      "windows": [
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "code": "class OrderController {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "code": "class OrderService {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Util.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "code": "package x;\nimport java.util.List;\nclass Util {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Report.java",
+          "startLine": 1,
+          "source": "head",
+          "flags": [
+            "worktreeMismatch"
+          ],
+          "label": "作業ツリーと不一致のためグラフ外",
+          "code": "class Report {\n\n    int b;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Legacy.java",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "class Legacy {\n}",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/test/java/com/ex/OrderTest.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "code": "class OrderTest {\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/New.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "Java 解析に失敗したためグラフ外",
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "code": "class New {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/app.js",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "function app() {\n  return 2;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/index.html",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "<p>hi</p>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-xml",
+          "windowType": "file",
+          "filePath": "pom.xml",
+          "startLine": 1,
+          "source": "head",
+          "label": "作業ツリーと不一致（head 時点の内容）",
+          "code": "<project>\n<v>2</v>\n</project>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-sql",
+          "windowType": "file",
+          "filePath": "db/V1__init.sql",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "CREATE TABLE t (id INT);",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "style.css",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "b{}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "assets/logo.png",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "binary"
+          ],
+          "label": "バイナリ（内容は表示しない）",
+          "code": "",
+          "diffHunks": 0
+        }
+      ],
+      "connections": 0,
+      "files": [
+        {
+          "path": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "src/main/java/com/ex/Util.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "src/main/java/com/ex/Report.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "worktreeMismatch"
+        },
+        {
+          "path": "src/main/java/com/ex/Legacy.java",
+          "status": "deleted",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "deleted"
+        },
+        {
+          "path": "src/test/java/com/ex/OrderTest.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "src/main/java/com/ex/New.java",
+          "status": "renamed",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/app.js",
+          "status": "modified",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/index.html",
+          "status": "added",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "pom.xml",
+          "status": "modified",
+          "block": "xml",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "db/V1__init.sql",
+          "status": "deleted",
+          "block": "sql",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "style.css",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "assets/logo.png",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        }
+      ],
+      "changeSet": {
+        "kind": "workbench",
+        "commit": null
+      },
+      "symbols": null,
+      "javaError": "Java の変更集合解析に失敗したため、Java ファイルはファイル単位で表示します"
+    }
+  },
+  {
+    "label": "Java ファイルが無い: blk-java を出さない",
+    "input": {
+      "files": [
+        {
+          "filePath": "web/app.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "return 1;"
+                },
+                {
+                  "type": "add",
+                  "content": "return 2;"
+                }
+              ]
+            }
+          ],
+          "headContent": "function app() {\n  return 2;\n}\n"
+        },
+        {
+          "filePath": "web/index.html",
+          "status": "added",
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "<p>hi</p>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<p>hi</p>\n"
+        },
+        {
+          "filePath": "pom.xml",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "<v>1</v>"
+                },
+                {
+                  "type": "add",
+                  "content": "<v>2</v>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<project>\n<v>2</v>\n</project>\n"
+        },
+        {
+          "filePath": "db/V1__init.sql",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "CREATE TABLE t (id INT);"
+                }
+              ]
+            }
+          ],
+          "baseContent": "CREATE TABLE t (id INT);\n"
+        },
+        {
+          "filePath": "style.css",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a{}"
+                },
+                {
+                  "type": "add",
+                  "content": "b{}"
+                }
+              ]
+            }
+          ],
+          "headContent": "b{}\n"
+        },
+        {
+          "filePath": "assets/logo.png",
+          "status": "modified",
+          "binary": true,
+          "hunks": []
+        }
+      ],
+      "java": null
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "clientside:blk-clientside",
+        "xml:blk-xml",
+        "sql:blk-sql",
+        "other:blk-other"
+      ],
+      "windows": [
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/app.js",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "function app() {\n  return 2;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/index.html",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "<p>hi</p>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-xml",
+          "windowType": "file",
+          "filePath": "pom.xml",
+          "startLine": 1,
+          "source": "head",
+          "label": "作業ツリーと不一致（head 時点の内容）",
+          "code": "<project>\n<v>2</v>\n</project>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-sql",
+          "windowType": "file",
+          "filePath": "db/V1__init.sql",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "CREATE TABLE t (id INT);",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "style.css",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "b{}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "assets/logo.png",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "binary"
+          ],
+          "label": "バイナリ（内容は表示しない）",
+          "code": "",
+          "diffHunks": 0
+        }
+      ],
+      "connections": 0,
+      "files": [
+        {
+          "path": "web/app.js",
+          "status": "modified",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/index.html",
+          "status": "added",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "pom.xml",
+          "status": "modified",
+          "block": "xml",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "db/V1__init.sql",
+          "status": "deleted",
+          "block": "sql",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "style.css",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "assets/logo.png",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        }
+      ],
+      "changeSet": {
+        "kind": "commit",
+        "commit": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+      },
+      "symbols": null,
+      "javaError": null
+    }
+  },
+  {
+    "label": "削除メソッド: グラフに当てたファイルで base にしか無いメソッドを base 時点の内容で出す",
+    "input": {
+      "files": [
+        {
+          "filePath": "src/main/java/com/ex/Svc.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 4,
+              "oldCount": 6,
+              "newStart": 3,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": ""
+                },
+                {
+                  "type": "remove",
+                  "content": "    /** gone */"
+                },
+                {
+                  "type": "remove",
+                  "content": "    @Deprecated"
+                },
+                {
+                  "type": "remove",
+                  "content": "    int gone(String s, java.util.List<String> xs) {"
+                },
+                {
+                  "type": "remove",
+                  "content": "        return 1;"
+                },
+                {
+                  "type": "remove",
+                  "content": "    }"
+                }
+              ]
+            }
+          ],
+          "headContent": "class Svc {\n    void keep() {\n    }\n}\n",
+          "baseContent": "class Svc {\n    void keep() {\n    }\n\n    /** gone */\n    @Deprecated\n    int gone(String s, java.util.List<String> xs) {\n        return 1;\n    }\n}\n"
+        }
+      ],
+      "java": {
+        "success": true,
+        "data": {
+          "groups": [
+            {
+              "id": "blk-java",
+              "kind": "java",
+              "label": "Java"
+            }
+          ],
+          "windows": [
+            {
+              "id": "f-svc",
+              "group": "blk-java",
+              "windowType": "file",
+              "displayName": "Svc.java",
+              "filePath": "src/main/java/com/ex/Svc.java",
+              "startLine": 1,
+              "code": "class Svc {\n    void keep() {\n    }\n}\n",
+              "change": {
+                "status": "modified",
+                "source": "worktree",
+                "flags": [
+                  "outsideMethod"
+                ]
+              }
+            }
+          ],
+          "connections": [],
+          "metadata": {
+            "changeSet": {
+              "files": [
+                {
+                  "path": "src/main/java/com/ex/Svc.java",
+                  "status": "modified",
+                  "inGraph": true,
+                  "windows": [
+                    "f-svc"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "java:blk-java"
+      ],
+      "windows": [
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Svc.java",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "outsideMethod"
+          ],
+          "code": "class Svc {\n    void keep() {\n    }\n}\n",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Svc.java",
+          "startLine": 6,
+          "source": "base",
+          "flags": [
+            "deletedMethod"
+          ],
+          "label": "削除メソッド（base 時点の内容）",
+          "code": "    @Deprecated\n    int gone(String s, java.util.List<String> xs) {\n        return 1;\n    }",
+          "diffHunks": 0
+        }
+      ],
+      "connections": 0,
+      "files": [
+        {
+          "path": "src/main/java/com/ex/Svc.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 2
+        }
+      ],
+      "changeSet": {
+        "kind": "commit",
+        "commit": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+      },
+      "symbols": null,
+      "javaError": null
+    }
+  },
+  {
+    "label": "解析器の結果の欠け: files[] に無いファイル・windows が空の inGraph・未知の group・絶対パスにも漏れなく対応",
+    "input": {
+      "files": [
+        {
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 5,
+              "oldCount": 1,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a"
+                },
+                {
+                  "type": "add",
+                  "content": "b"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderController {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 9,
+              "oldCount": 1,
+              "newStart": 9,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "x"
+                },
+                {
+                  "type": "add",
+                  "content": "y"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderService {}\n"
+        }
+      ],
+      "java": {
+        "success": true,
+        "data": {
+          "groups": [
+            {
+              "id": "blk-java",
+              "kind": "java",
+              "label": "Java"
+            },
+            {
+              "id": "isl-1",
+              "kind": "island",
+              "parent": "blk-java",
+              "label": "島 1"
+            }
+          ],
+          "windows": [
+            {
+              "id": "m-x",
+              "group": "isl-9",
+              "windowType": "method",
+              "displayName": "A.x",
+              "filePath": "/abs/src/main/java/com/ex/OrderController.java",
+              "startLine": 1,
+              "code": "x"
+            }
+          ],
+          "connections": [],
+          "metadata": {
+            "changeSet": {
+              "files": [
+                {
+                  "path": "src/main/java/com/ex/OrderService.java",
+                  "status": "modified",
+                  "inGraph": true,
+                  "windows": []
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "java:blk-java",
+        "island:isl-1<blk-java"
+      ],
+      "windows": [
+        {
+          "group": "blk-java",
+          "windowType": "method",
+          "filePath": "/abs/src/main/java/com/ex/OrderController.java",
+          "startLine": 1,
+          "code": "x",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "解析結果に含まれないためグラフ外",
+          "code": "class OrderController {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "class OrderService {}",
+          "diffHunks": 1
+        }
+      ],
+      "connections": 0,
+      "files": [
+        {
+          "path": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1
+        }
+      ],
+      "changeSet": {
+        "kind": "commit",
+        "commit": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+      },
+      "symbols": null,
+      "javaError": null
+    }
+  },
+  {
+    "label": "1000 行を超えるファイルもほかと同じく全文のファイル単位ウィンドウ（行数で省略しない）",
+    "input": {
+      "files": [
+        {
+          "filePath": "data/big.txt",
+          "status": "modified",
+          "headContent": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12\nline 13\nline 14\nline 15\nline 16\nline 17\nline 18\nline 19\nline 20\nline 21\nline 22\nline 23\nline 24\nline 25\nline 26\nline 27\nline 28\nline 29\nline 30\nline 31\nline 32\nline 33\nline 34\nline 35\nline 36\nline 37\nline 38\nline 39\nline 40\nline 41\nline 42\nline 43\nline 44\nline 45\nline 46\nline 47\nline 48\nline 49\nline 50\nline 51\nline 52\nline 53\nline 54\nline 55\nline 56\nline 57\nline 58\nline 59\nline 60\nline 61\nline 62\nline 63\nline 64\nline 65\nline 66\nline 67\nline 68\nline 69\nline 70\nline 71\nline 72\nline 73\nline 74\nline 75\nline 76\nline 77\nline 78\nline 79\nline 80\nline 81\nline 82\nline 83\nline 84\nline 85\nline 86\nline 87\nline 88\nline 89\nline 90\nline 91\nline 92\nline 93\nline 94\nline 95\nline 96\nline 97\nline 98\nline 99\nline 100\nline 101\nline 102\nline 103\nline 104\nline 105\nline 106\nline 107\nline 108\nline 109\nline 110\nline 111\nline 112\nline 113\nline 114\nline 115\nline 116\nline 117\nline 118\nline 119\nline 120\nline 121\nline 122\nline 123\nline 124\nline 125\nline 126\nline 127\nline 128\nline 129\nline 130\nline 131\nline 132\nline 133\nline 134\nline 135\nline 136\nline 137\nline 138\nline 139\nline 140\nline 141\nline 142\nline 143\nline 144\nline 145\nline 146\nline 147\nline 148\nline 149\nline 150\nline 151\nline 152\nline 153\nline 154\nline 155\nline 156\nline 157\nline 158\nline 159\nline 160\nline 161\nline 162\nline 163\nline 164\nline 165\nline 166\nline 167\nline 168\nline 169\nline 170\nline 171\nline 172\nline 173\nline 174\nline 175\nline 176\nline 177\nline 178\nline 179\nline 180\nline 181\nline 182\nline 183\nline 184\nline 185\nline 186\nline 187\nline 188\nline 189\nline 190\nline 191\nline 192\nline 193\nline 194\nline 195\nline 196\nline 197\nline 198\nline 199\nline 200\nline 201\nline 202\nline 203\nline 204\nline 205\nline 206\nline 207\nline 208\nline 209\nline 210\nline 211\nline 212\nline 213\nline 214\nline 215\nline 216\nline 217\nline 218\nline 219\nline 220\nline 221\nline 222\nline 223\nline 224\nline 225\nline 226\nline 227\nline 228\nline 229\nline 230\nline 231\nline 232\nline 233\nline 234\nline 235\nline 236\nline 237\nline 238\nline 239\nline 240\nline 241\nline 242\nline 243\nline 244\nline 245\nline 246\nline 247\nline 248\nline 249\nline 250\nline 251\nline 252\nline 253\nline 254\nline 255\nline 256\nline 257\nline 258\nline 259\nline 260\nline 261\nline 262\nline 263\nline 264\nline 265\nline 266\nline 267\nline 268\nline 269\nline 270\nline 271\nline 272\nline 273\nline 274\nline 275\nline 276\nline 277\nline 278\nline 279\nline 280\nline 281\nline 282\nline 283\nline 284\nline 285\nline 286\nline 287\nline 288\nline 289\nline 290\nline 291\nline 292\nline 293\nline 294\nline 295\nline 296\nline 297\nline 298\nline 299\nline 300\nline 301\nline 302\nline 303\nline 304\nline 305\nline 306\nline 307\nline 308\nline 309\nline 310\nline 311\nline 312\nline 313\nline 314\nline 315\nline 316\nline 317\nline 318\nline 319\nline 320\nline 321\nline 322\nline 323\nline 324\nline 325\nline 326\nline 327\nline 328\nline 329\nline 330\nline 331\nline 332\nline 333\nline 334\nline 335\nline 336\nline 337\nline 338\nline 339\nline 340\nline 341\nline 342\nline 343\nline 344\nline 345\nline 346\nline 347\nline 348\nline 349\nline 350\nline 351\nline 352\nline 353\nline 354\nline 355\nline 356\nline 357\nline 358\nline 359\nline 360\nline 361\nline 362\nline 363\nline 364\nline 365\nline 366\nline 367\nline 368\nline 369\nline 370\nline 371\nline 372\nline 373\nline 374\nline 375\nline 376\nline 377\nline 378\nline 379\nline 380\nline 381\nline 382\nline 383\nline 384\nline 385\nline 386\nline 387\nline 388\nline 389\nline 390\nline 391\nline 392\nline 393\nline 394\nline 395\nline 396\nline 397\nline 398\nline 399\nline 400\nline 401\nline 402\nline 403\nline 404\nline 405\nline 406\nline 407\nline 408\nline 409\nline 410\nline 411\nline 412\nline 413\nline 414\nline 415\nline 416\nline 417\nline 418\nline 419\nline 420\nline 421\nline 422\nline 423\nline 424\nline 425\nline 426\nline 427\nline 428\nline 429\nline 430\nline 431\nline 432\nline 433\nline 434\nline 435\nline 436\nline 437\nline 438\nline 439\nline 440\nline 441\nline 442\nline 443\nline 444\nline 445\nline 446\nline 447\nline 448\nline 449\nline 450\nline 451\nline 452\nline 453\nline 454\nline 455\nline 456\nline 457\nline 458\nline 459\nline 460\nline 461\nline 462\nline 463\nline 464\nline 465\nline 466\nline 467\nline 468\nline 469\nline 470\nline 471\nline 472\nline 473\nline 474\nline 475\nline 476\nline 477\nline 478\nline 479\nline 480\nline 481\nline 482\nline 483\nline 484\nline 485\nline 486\nline 487\nline 488\nline 489\nline 490\nline 491\nline 492\nline 493\nline 494\nline 495\nline 496\nline 497\nline 498\nline 499\nline 500\nline 501\nline 502\nline 503\nline 504\nline 505\nline 506\nline 507\nline 508\nline 509\nline 510\nline 511\nline 512\nline 513\nline 514\nline 515\nline 516\nline 517\nline 518\nline 519\nline 520\nline 521\nline 522\nline 523\nline 524\nline 525\nline 526\nline 527\nline 528\nline 529\nline 530\nline 531\nline 532\nline 533\nline 534\nline 535\nline 536\nline 537\nline 538\nline 539\nline 540\nline 541\nline 542\nline 543\nline 544\nline 545\nline 546\nline 547\nline 548\nline 549\nline 550\nline 551\nline 552\nline 553\nline 554\nline 555\nline 556\nline 557\nline 558\nline 559\nline 560\nline 561\nline 562\nline 563\nline 564\nline 565\nline 566\nline 567\nline 568\nline 569\nline 570\nline 571\nline 572\nline 573\nline 574\nline 575\nline 576\nline 577\nline 578\nline 579\nline 580\nline 581\nline 582\nline 583\nline 584\nline 585\nline 586\nline 587\nline 588\nline 589\nline 590\nline 591\nline 592\nline 593\nline 594\nline 595\nline 596\nline 597\nline 598\nline 599\nline 600\nline 601\nline 602\nline 603\nline 604\nline 605\nline 606\nline 607\nline 608\nline 609\nline 610\nline 611\nline 612\nline 613\nline 614\nline 615\nline 616\nline 617\nline 618\nline 619\nline 620\nline 621\nline 622\nline 623\nline 624\nline 625\nline 626\nline 627\nline 628\nline 629\nline 630\nline 631\nline 632\nline 633\nline 634\nline 635\nline 636\nline 637\nline 638\nline 639\nline 640\nline 641\nline 642\nline 643\nline 644\nline 645\nline 646\nline 647\nline 648\nline 649\nline 650\nline 651\nline 652\nline 653\nline 654\nline 655\nline 656\nline 657\nline 658\nline 659\nline 660\nline 661\nline 662\nline 663\nline 664\nline 665\nline 666\nline 667\nline 668\nline 669\nline 670\nline 671\nline 672\nline 673\nline 674\nline 675\nline 676\nline 677\nline 678\nline 679\nline 680\nline 681\nline 682\nline 683\nline 684\nline 685\nline 686\nline 687\nline 688\nline 689\nline 690\nline 691\nline 692\nline 693\nline 694\nline 695\nline 696\nline 697\nline 698\nline 699\nline 700\nline 701\nline 702\nline 703\nline 704\nline 705\nline 706\nline 707\nline 708\nline 709\nline 710\nline 711\nline 712\nline 713\nline 714\nline 715\nline 716\nline 717\nline 718\nline 719\nline 720\nline 721\nline 722\nline 723\nline 724\nline 725\nline 726\nline 727\nline 728\nline 729\nline 730\nline 731\nline 732\nline 733\nline 734\nline 735\nline 736\nline 737\nline 738\nline 739\nline 740\nline 741\nline 742\nline 743\nline 744\nline 745\nline 746\nline 747\nline 748\nline 749\nline 750\nline 751\nline 752\nline 753\nline 754\nline 755\nline 756\nline 757\nline 758\nline 759\nline 760\nline 761\nline 762\nline 763\nline 764\nline 765\nline 766\nline 767\nline 768\nline 769\nline 770\nline 771\nline 772\nline 773\nline 774\nline 775\nline 776\nline 777\nline 778\nline 779\nline 780\nline 781\nline 782\nline 783\nline 784\nline 785\nline 786\nline 787\nline 788\nline 789\nline 790\nline 791\nline 792\nline 793\nline 794\nline 795\nline 796\nline 797\nline 798\nline 799\nline 800\nline 801\nline 802\nline 803\nline 804\nline 805\nline 806\nline 807\nline 808\nline 809\nline 810\nline 811\nline 812\nline 813\nline 814\nline 815\nline 816\nline 817\nline 818\nline 819\nline 820\nline 821\nline 822\nline 823\nline 824\nline 825\nline 826\nline 827\nline 828\nline 829\nline 830\nline 831\nline 832\nline 833\nline 834\nline 835\nline 836\nline 837\nline 838\nline 839\nline 840\nline 841\nline 842\nline 843\nline 844\nline 845\nline 846\nline 847\nline 848\nline 849\nline 850\nline 851\nline 852\nline 853\nline 854\nline 855\nline 856\nline 857\nline 858\nline 859\nline 860\nline 861\nline 862\nline 863\nline 864\nline 865\nline 866\nline 867\nline 868\nline 869\nline 870\nline 871\nline 872\nline 873\nline 874\nline 875\nline 876\nline 877\nline 878\nline 879\nline 880\nline 881\nline 882\nline 883\nline 884\nline 885\nline 886\nline 887\nline 888\nline 889\nline 890\nline 891\nline 892\nline 893\nline 894\nline 895\nline 896\nline 897\nline 898\nline 899\nline 900\nline 901\nline 902\nline 903\nline 904\nline 905\nline 906\nline 907\nline 908\nline 909\nline 910\nline 911\nline 912\nline 913\nline 914\nline 915\nline 916\nline 917\nline 918\nline 919\nline 920\nline 921\nline 922\nline 923\nline 924\nline 925\nline 926\nline 927\nline 928\nline 929\nline 930\nline 931\nline 932\nline 933\nline 934\nline 935\nline 936\nline 937\nline 938\nline 939\nline 940\nline 941\nline 942\nline 943\nline 944\nline 945\nline 946\nline 947\nline 948\nline 949\nline 950\nline 951\nline 952\nline 953\nline 954\nline 955\nline 956\nline 957\nline 958\nline 959\nline 960\nline 961\nline 962\nline 963\nline 964\nline 965\nline 966\nline 967\nline 968\nline 969\nline 970\nline 971\nline 972\nline 973\nline 974\nline 975\nline 976\nline 977\nline 978\nline 979\nline 980\nline 981\nline 982\nline 983\nline 984\nline 985\nline 986\nline 987\nline 988\nline 989\nline 990\nline 991\nline 992\nline 993\nline 994\nline 995\nline 996\nline 997\nline 998\nline 999\nline 1000\nline 1001\nline 1002\nline 1003\nline 1004\nline 1005\nline 1006\nline 1007\nline 1008\nline 1009\nline 1010\nline 1011\nline 1012\nline 1013\nline 1014\nline 1015\nline 1016\nline 1017\nline 1018\nline 1019\nline 1020\nline 1021\nline 1022\nline 1023\nline 1024\nline 1025\nline 1026\nline 1027\nline 1028\nline 1029\nline 1030\nline 1031\nline 1032\nline 1033\nline 1034\nline 1035\nline 1036\nline 1037\nline 1038\nline 1039\nline 1040\nline 1041\nline 1042\nline 1043\nline 1044\nline 1045\nline 1046\nline 1047\nline 1048\nline 1049\nline 1050\nline 1051\nline 1052\nline 1053\nline 1054\nline 1055\nline 1056\nline 1057\nline 1058\nline 1059\nline 1060\nline 1061\nline 1062\nline 1063\nline 1064\nline 1065\nline 1066\nline 1067\nline 1068\nline 1069\nline 1070\nline 1071\nline 1072\nline 1073\nline 1074\nline 1075\nline 1076\nline 1077\nline 1078\nline 1079\nline 1080\nline 1081\nline 1082\nline 1083\nline 1084\nline 1085\nline 1086\nline 1087\nline 1088\nline 1089\nline 1090\nline 1091\nline 1092\nline 1093\nline 1094\nline 1095\nline 1096\nline 1097\nline 1098\nline 1099\nline 1100\nline 1101\nline 1102\nline 1103\nline 1104\nline 1105\nline 1106\nline 1107\nline 1108\nline 1109\nline 1110\nline 1111\nline 1112\nline 1113\nline 1114\nline 1115\nline 1116\nline 1117\nline 1118\nline 1119\nline 1120\nline 1121\nline 1122\nline 1123\nline 1124\nline 1125\nline 1126\nline 1127\nline 1128\nline 1129\nline 1130\nline 1131\nline 1132\nline 1133\nline 1134\nline 1135\nline 1136\nline 1137\nline 1138\nline 1139\nline 1140\nline 1141\nline 1142\nline 1143\nline 1144\nline 1145\nline 1146\nline 1147\nline 1148\nline 1149\nline 1150\nline 1151\nline 1152\nline 1153\nline 1154\nline 1155\nline 1156\nline 1157\nline 1158\nline 1159\nline 1160\nline 1161\nline 1162\nline 1163\nline 1164\nline 1165\nline 1166\nline 1167\nline 1168\nline 1169\nline 1170\nline 1171\nline 1172\nline 1173\nline 1174\nline 1175\nline 1176\nline 1177\nline 1178\nline 1179\nline 1180\nline 1181\nline 1182\nline 1183\nline 1184\nline 1185\nline 1186\nline 1187\nline 1188\nline 1189\nline 1190\nline 1191\nline 1192\nline 1193\nline 1194\nline 1195\nline 1196\nline 1197\nline 1198\nline 1199\nline 1200\nline 1201\nline 1202\nline 1203\nline 1204\nline 1205\nline 1206\nline 1207\nline 1208\nline 1209\nline 1210\nline 1211\nline 1212\nline 1213\nline 1214\nline 1215\nline 1216\nline 1217\nline 1218\nline 1219\nline 1220\nline 1221\nline 1222\nline 1223\nline 1224\nline 1225\nline 1226\nline 1227\nline 1228\nline 1229\nline 1230\nline 1231\nline 1232\nline 1233\nline 1234\nline 1235\nline 1236\nline 1237\nline 1238\nline 1239\nline 1240\nline 1241\nline 1242\nline 1243\nline 1244\nline 1245\nline 1246\nline 1247\nline 1248\nline 1249\nline 1250\nline 1251\nline 1252\nline 1253\nline 1254\nline 1255\nline 1256\nline 1257\nline 1258\nline 1259\nline 1260\nline 1261\nline 1262\nline 1263\nline 1264\nline 1265\nline 1266\nline 1267\nline 1268\nline 1269\nline 1270\nline 1271\nline 1272\nline 1273\nline 1274\nline 1275\nline 1276\nline 1277\nline 1278\nline 1279\nline 1280\nline 1281\nline 1282\nline 1283\nline 1284\nline 1285\nline 1286\nline 1287\nline 1288\nline 1289\nline 1290\nline 1291\nline 1292\nline 1293\nline 1294\nline 1295\nline 1296\nline 1297\nline 1298\nline 1299\nline 1300\nline 1301\nline 1302\nline 1303\nline 1304\nline 1305\nline 1306\nline 1307\nline 1308\nline 1309\nline 1310\nline 1311\nline 1312\nline 1313\nline 1314\nline 1315\nline 1316\nline 1317\nline 1318\nline 1319\nline 1320\nline 1321\nline 1322\nline 1323\nline 1324\nline 1325\nline 1326\nline 1327\nline 1328\nline 1329\nline 1330\nline 1331\nline 1332\nline 1333\nline 1334\nline 1335\nline 1336\nline 1337\nline 1338\nline 1339\nline 1340\nline 1341\nline 1342\nline 1343\nline 1344\nline 1345\nline 1346\nline 1347\nline 1348\nline 1349\nline 1350\nline 1351\nline 1352\nline 1353\nline 1354\nline 1355\nline 1356\nline 1357\nline 1358\nline 1359\nline 1360\nline 1361\nline 1362\nline 1363\nline 1364\nline 1365\nline 1366\nline 1367\nline 1368\nline 1369\nline 1370\nline 1371\nline 1372\nline 1373\nline 1374\nline 1375\nline 1376\nline 1377\nline 1378\nline 1379\nline 1380\nline 1381\nline 1382\nline 1383\nline 1384\nline 1385\nline 1386\nline 1387\nline 1388\nline 1389\nline 1390\nline 1391\nline 1392\nline 1393\nline 1394\nline 1395\nline 1396\nline 1397\nline 1398\nline 1399\nline 1400\nline 1401\nline 1402\nline 1403\nline 1404\nline 1405\nline 1406\nline 1407\nline 1408\nline 1409\nline 1410\nline 1411\nline 1412\nline 1413\nline 1414\nline 1415\nline 1416\nline 1417\nline 1418\nline 1419\nline 1420\nline 1421\nline 1422\nline 1423\nline 1424\nline 1425\nline 1426\nline 1427\nline 1428\nline 1429\nline 1430\nline 1431\nline 1432\nline 1433\nline 1434\nline 1435\nline 1436\nline 1437\nline 1438\nline 1439\nline 1440\nline 1441\nline 1442\nline 1443\nline 1444\nline 1445\nline 1446\nline 1447\nline 1448\nline 1449\nline 1450\nline 1451\nline 1452\nline 1453\nline 1454\nline 1455\nline 1456\nline 1457\nline 1458\nline 1459\nline 1460\nline 1461\nline 1462\nline 1463\nline 1464\nline 1465\nline 1466\nline 1467\nline 1468\nline 1469\nline 1470\nline 1471\nline 1472\nline 1473\nline 1474\nline 1475\nline 1476\nline 1477\nline 1478\nline 1479\nline 1480\nline 1481\nline 1482\nline 1483\nline 1484\nline 1485\nline 1486\nline 1487\nline 1488\nline 1489\nline 1490\nline 1491\nline 1492\nline 1493\nline 1494\nline 1495\nline 1496\nline 1497\nline 1498\nline 1499\nline 1500\n",
+          "hunks": [
+            {
+              "oldStart": 10,
+              "oldCount": 1,
+              "newStart": 10,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "old 10"
+                },
+                {
+                  "type": "add",
+                  "content": "line 10"
+                }
+              ]
+            },
+            {
+              "oldStart": 15,
+              "oldCount": 0,
+              "newStart": 16,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "line 16"
+                }
+              ]
+            },
+            {
+              "oldStart": 800,
+              "oldCount": 1,
+              "newStart": 800,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "old 800"
+                },
+                {
+                  "type": "add",
+                  "content": "line 800"
+                }
+              ]
+            },
+            {
+              "oldStart": 1498,
+              "oldCount": 2,
+              "newStart": 1497,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "gone a"
+                },
+                {
+                  "type": "remove",
+                  "content": "gone b"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "filePath": "data/small.txt",
+          "status": "modified",
+          "headContent": "s 1\ns 2\ns 3\ns 4\ns 5\ns 6\ns 7\ns 8\ns 9\ns 10\ns 11\ns 12\ns 13\ns 14\ns 15\ns 16\ns 17\ns 18\ns 19\ns 20\ns 21\ns 22\ns 23\ns 24\ns 25\ns 26\ns 27\ns 28\ns 29\ns 30\ns 31\ns 32\ns 33\ns 34\ns 35\ns 36\ns 37\ns 38\ns 39\ns 40\ns 41\ns 42\ns 43\ns 44\ns 45\ns 46\ns 47\ns 48\ns 49\ns 50\ns 51\ns 52\ns 53\ns 54\ns 55\ns 56\ns 57\ns 58\ns 59\ns 60\ns 61\ns 62\ns 63\ns 64\ns 65\ns 66\ns 67\ns 68\ns 69\ns 70\ns 71\ns 72\ns 73\ns 74\ns 75\ns 76\ns 77\ns 78\ns 79\ns 80\ns 81\ns 82\ns 83\ns 84\ns 85\ns 86\ns 87\ns 88\ns 89\ns 90\ns 91\ns 92\ns 93\ns 94\ns 95\ns 96\ns 97\ns 98\ns 99\ns 100\ns 101\ns 102\ns 103\ns 104\ns 105\ns 106\ns 107\ns 108\ns 109\ns 110\ns 111\ns 112\ns 113\ns 114\ns 115\ns 116\ns 117\ns 118\ns 119\ns 120\ns 121\ns 122\ns 123\ns 124\ns 125\ns 126\ns 127\ns 128\ns 129\ns 130\ns 131\ns 132\ns 133\ns 134\ns 135\ns 136\ns 137\ns 138\ns 139\ns 140\ns 141\ns 142\ns 143\ns 144\ns 145\ns 146\ns 147\ns 148\ns 149\ns 150\ns 151\ns 152\ns 153\ns 154\ns 155\ns 156\ns 157\ns 158\ns 159\ns 160\ns 161\ns 162\ns 163\ns 164\ns 165\ns 166\ns 167\ns 168\ns 169\ns 170\ns 171\ns 172\ns 173\ns 174\ns 175\ns 176\ns 177\ns 178\ns 179\ns 180\ns 181\ns 182\ns 183\ns 184\ns 185\ns 186\ns 187\ns 188\ns 189\ns 190\ns 191\ns 192\ns 193\ns 194\ns 195\ns 196\ns 197\ns 198\ns 199\ns 200\ns 201\ns 202\ns 203\ns 204\ns 205\ns 206\ns 207\ns 208\ns 209\ns 210\ns 211\ns 212\ns 213\ns 214\ns 215\ns 216\ns 217\ns 218\ns 219\ns 220\ns 221\ns 222\ns 223\ns 224\ns 225\ns 226\ns 227\ns 228\ns 229\ns 230\ns 231\ns 232\ns 233\ns 234\ns 235\ns 236\ns 237\ns 238\ns 239\ns 240\ns 241\ns 242\ns 243\ns 244\ns 245\ns 246\ns 247\ns 248\ns 249\ns 250\ns 251\ns 252\ns 253\ns 254\ns 255\ns 256\ns 257\ns 258\ns 259\ns 260\ns 261\ns 262\ns 263\ns 264\ns 265\ns 266\ns 267\ns 268\ns 269\ns 270\ns 271\ns 272\ns 273\ns 274\ns 275\ns 276\ns 277\ns 278\ns 279\ns 280\ns 281\ns 282\ns 283\ns 284\ns 285\ns 286\ns 287\ns 288\ns 289\ns 290\ns 291\ns 292\ns 293\ns 294\ns 295\ns 296\ns 297\ns 298\ns 299\ns 300\ns 301\ns 302\ns 303\ns 304\ns 305\ns 306\ns 307\ns 308\ns 309\ns 310\ns 311\ns 312\ns 313\ns 314\ns 315\ns 316\ns 317\ns 318\ns 319\ns 320\ns 321\ns 322\ns 323\ns 324\ns 325\ns 326\ns 327\ns 328\ns 329\ns 330\ns 331\ns 332\ns 333\ns 334\ns 335\ns 336\ns 337\ns 338\ns 339\ns 340\ns 341\ns 342\ns 343\ns 344\ns 345\ns 346\ns 347\ns 348\ns 349\ns 350\ns 351\ns 352\ns 353\ns 354\ns 355\ns 356\ns 357\ns 358\ns 359\ns 360\ns 361\ns 362\ns 363\ns 364\ns 365\ns 366\ns 367\ns 368\ns 369\ns 370\ns 371\ns 372\ns 373\ns 374\ns 375\ns 376\ns 377\ns 378\ns 379\ns 380\ns 381\ns 382\ns 383\ns 384\ns 385\ns 386\ns 387\ns 388\ns 389\ns 390\ns 391\ns 392\ns 393\ns 394\ns 395\ns 396\ns 397\ns 398\ns 399\ns 400\ns 401\ns 402\ns 403\ns 404\ns 405\ns 406\ns 407\ns 408\ns 409\ns 410\ns 411\ns 412\ns 413\ns 414\ns 415\ns 416\ns 417\ns 418\ns 419\ns 420\ns 421\ns 422\ns 423\ns 424\ns 425\ns 426\ns 427\ns 428\ns 429\ns 430\ns 431\ns 432\ns 433\ns 434\ns 435\ns 436\ns 437\ns 438\ns 439\ns 440\ns 441\ns 442\ns 443\ns 444\ns 445\ns 446\ns 447\ns 448\ns 449\ns 450\ns 451\ns 452\ns 453\ns 454\ns 455\ns 456\ns 457\ns 458\ns 459\ns 460\ns 461\ns 462\ns 463\ns 464\ns 465\ns 466\ns 467\ns 468\ns 469\ns 470\ns 471\ns 472\ns 473\ns 474\ns 475\ns 476\ns 477\ns 478\ns 479\ns 480\ns 481\ns 482\ns 483\ns 484\ns 485\ns 486\ns 487\ns 488\ns 489\ns 490\ns 491\ns 492\ns 493\ns 494\ns 495\ns 496\ns 497\ns 498\ns 499\ns 500\ns 501\ns 502\ns 503\ns 504\ns 505\ns 506\ns 507\ns 508\ns 509\ns 510\ns 511\ns 512\ns 513\ns 514\ns 515\ns 516\ns 517\ns 518\ns 519\ns 520\ns 521\ns 522\ns 523\ns 524\ns 525\ns 526\ns 527\ns 528\ns 529\ns 530\ns 531\ns 532\ns 533\ns 534\ns 535\ns 536\ns 537\ns 538\ns 539\ns 540\ns 541\ns 542\ns 543\ns 544\ns 545\ns 546\ns 547\ns 548\ns 549\ns 550\ns 551\ns 552\ns 553\ns 554\ns 555\ns 556\ns 557\ns 558\ns 559\ns 560\ns 561\ns 562\ns 563\ns 564\ns 565\ns 566\ns 567\ns 568\ns 569\ns 570\ns 571\ns 572\ns 573\ns 574\ns 575\ns 576\ns 577\ns 578\ns 579\ns 580\ns 581\ns 582\ns 583\ns 584\ns 585\ns 586\ns 587\ns 588\ns 589\ns 590\ns 591\ns 592\ns 593\ns 594\ns 595\ns 596\ns 597\ns 598\ns 599\ns 600\ns 601\ns 602\ns 603\ns 604\ns 605\ns 606\ns 607\ns 608\ns 609\ns 610\ns 611\ns 612\ns 613\ns 614\ns 615\ns 616\ns 617\ns 618\ns 619\ns 620\ns 621\ns 622\ns 623\ns 624\ns 625\ns 626\ns 627\ns 628\ns 629\ns 630\ns 631\ns 632\ns 633\ns 634\ns 635\ns 636\ns 637\ns 638\ns 639\ns 640\ns 641\ns 642\ns 643\ns 644\ns 645\ns 646\ns 647\ns 648\ns 649\ns 650\ns 651\ns 652\ns 653\ns 654\ns 655\ns 656\ns 657\ns 658\ns 659\ns 660\ns 661\ns 662\ns 663\ns 664\ns 665\ns 666\ns 667\ns 668\ns 669\ns 670\ns 671\ns 672\ns 673\ns 674\ns 675\ns 676\ns 677\ns 678\ns 679\ns 680\ns 681\ns 682\ns 683\ns 684\ns 685\ns 686\ns 687\ns 688\ns 689\ns 690\ns 691\ns 692\ns 693\ns 694\ns 695\ns 696\ns 697\ns 698\ns 699\ns 700\ns 701\ns 702\ns 703\ns 704\ns 705\ns 706\ns 707\ns 708\ns 709\ns 710\ns 711\ns 712\ns 713\ns 714\ns 715\ns 716\ns 717\ns 718\ns 719\ns 720\ns 721\ns 722\ns 723\ns 724\ns 725\ns 726\ns 727\ns 728\ns 729\ns 730\ns 731\ns 732\ns 733\ns 734\ns 735\ns 736\ns 737\ns 738\ns 739\ns 740\ns 741\ns 742\ns 743\ns 744\ns 745\ns 746\ns 747\ns 748\ns 749\ns 750\ns 751\ns 752\ns 753\ns 754\ns 755\ns 756\ns 757\ns 758\ns 759\ns 760\ns 761\ns 762\ns 763\ns 764\ns 765\ns 766\ns 767\ns 768\ns 769\ns 770\ns 771\ns 772\ns 773\ns 774\ns 775\ns 776\ns 777\ns 778\ns 779\ns 780\ns 781\ns 782\ns 783\ns 784\ns 785\ns 786\ns 787\ns 788\ns 789\ns 790\ns 791\ns 792\ns 793\ns 794\ns 795\ns 796\ns 797\ns 798\ns 799\ns 800\ns 801\ns 802\ns 803\ns 804\ns 805\ns 806\ns 807\ns 808\ns 809\ns 810\ns 811\ns 812\ns 813\ns 814\ns 815\ns 816\ns 817\ns 818\ns 819\ns 820\ns 821\ns 822\ns 823\ns 824\ns 825\ns 826\ns 827\ns 828\ns 829\ns 830\ns 831\ns 832\ns 833\ns 834\ns 835\ns 836\ns 837\ns 838\ns 839\ns 840\ns 841\ns 842\ns 843\ns 844\ns 845\ns 846\ns 847\ns 848\ns 849\ns 850\ns 851\ns 852\ns 853\ns 854\ns 855\ns 856\ns 857\ns 858\ns 859\ns 860\ns 861\ns 862\ns 863\ns 864\ns 865\ns 866\ns 867\ns 868\ns 869\ns 870\ns 871\ns 872\ns 873\ns 874\ns 875\ns 876\ns 877\ns 878\ns 879\ns 880\ns 881\ns 882\ns 883\ns 884\ns 885\ns 886\ns 887\ns 888\ns 889\ns 890\ns 891\ns 892\ns 893\ns 894\ns 895\ns 896\ns 897\ns 898\ns 899\ns 900\ns 901\ns 902\ns 903\ns 904\ns 905\ns 906\ns 907\ns 908\ns 909\ns 910\ns 911\ns 912\ns 913\ns 914\ns 915\ns 916\ns 917\ns 918\ns 919\ns 920\ns 921\ns 922\ns 923\ns 924\ns 925\ns 926\ns 927\ns 928\ns 929\ns 930\ns 931\ns 932\ns 933\ns 934\ns 935\ns 936\ns 937\ns 938\ns 939\ns 940\ns 941\ns 942\ns 943\ns 944\ns 945\ns 946\ns 947\ns 948\ns 949\ns 950\ns 951\ns 952\ns 953\ns 954\ns 955\ns 956\ns 957\ns 958\ns 959\ns 960\ns 961\ns 962\ns 963\ns 964\ns 965\ns 966\ns 967\ns 968\ns 969\ns 970\ns 971\ns 972\ns 973\ns 974\ns 975\ns 976\ns 977\ns 978\ns 979\ns 980\ns 981\ns 982\ns 983\ns 984\ns 985\ns 986\ns 987\ns 988\ns 989\ns 990\ns 991\ns 992\ns 993\ns 994\ns 995\ns 996\ns 997\ns 998\ns 999\ns 1000\n",
+          "hunks": [
+            {
+              "oldStart": 5,
+              "oldCount": 1,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "x"
+                },
+                {
+                  "type": "add",
+                  "content": "s 5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "java": null
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "other:blk-other"
+      ],
+      "windows": [
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "data/big.txt",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8\nline 9\nline 10\nline 11\nline 12\nline 13\nline 14\nline 15\nline 16\nline 17\nline 18\nline 19\nline 20\nline 21\nline 22\nline 23\nline 24\nline 25\nline 26\nline 27\nline 28\nline 29\nline 30\nline 31\nline 32\nline 33\nline 34\nline 35\nline 36\nline 37\nline 38\nline 39\nline 40\nline 41\nline 42\nline 43\nline 44\nline 45\nline 46\nline 47\nline 48\nline 49\nline 50\nline 51\nline 52\nline 53\nline 54\nline 55\nline 56\nline 57\nline 58\nline 59\nline 60\nline 61\nline 62\nline 63\nline 64\nline 65\nline 66\nline 67\nline 68\nline 69\nline 70\nline 71\nline 72\nline 73\nline 74\nline 75\nline 76\nline 77\nline 78\nline 79\nline 80\nline 81\nline 82\nline 83\nline 84\nline 85\nline 86\nline 87\nline 88\nline 89\nline 90\nline 91\nline 92\nline 93\nline 94\nline 95\nline 96\nline 97\nline 98\nline 99\nline 100\nline 101\nline 102\nline 103\nline 104\nline 105\nline 106\nline 107\nline 108\nline 109\nline 110\nline 111\nline 112\nline 113\nline 114\nline 115\nline 116\nline 117\nline 118\nline 119\nline 120\nline 121\nline 122\nline 123\nline 124\nline 125\nline 126\nline 127\nline 128\nline 129\nline 130\nline 131\nline 132\nline 133\nline 134\nline 135\nline 136\nline 137\nline 138\nline 139\nline 140\nline 141\nline 142\nline 143\nline 144\nline 145\nline 146\nline 147\nline 148\nline 149\nline 150\nline 151\nline 152\nline 153\nline 154\nline 155\nline 156\nline 157\nline 158\nline 159\nline 160\nline 161\nline 162\nline 163\nline 164\nline 165\nline 166\nline 167\nline 168\nline 169\nline 170\nline 171\nline 172\nline 173\nline 174\nline 175\nline 176\nline 177\nline 178\nline 179\nline 180\nline 181\nline 182\nline 183\nline 184\nline 185\nline 186\nline 187\nline 188\nline 189\nline 190\nline 191\nline 192\nline 193\nline 194\nline 195\nline 196\nline 197\nline 198\nline 199\nline 200\nline 201\nline 202\nline 203\nline 204\nline 205\nline 206\nline 207\nline 208\nline 209\nline 210\nline 211\nline 212\nline 213\nline 214\nline 215\nline 216\nline 217\nline 218\nline 219\nline 220\nline 221\nline 222\nline 223\nline 224\nline 225\nline 226\nline 227\nline 228\nline 229\nline 230\nline 231\nline 232\nline 233\nline 234\nline 235\nline 236\nline 237\nline 238\nline 239\nline 240\nline 241\nline 242\nline 243\nline 244\nline 245\nline 246\nline 247\nline 248\nline 249\nline 250\nline 251\nline 252\nline 253\nline 254\nline 255\nline 256\nline 257\nline 258\nline 259\nline 260\nline 261\nline 262\nline 263\nline 264\nline 265\nline 266\nline 267\nline 268\nline 269\nline 270\nline 271\nline 272\nline 273\nline 274\nline 275\nline 276\nline 277\nline 278\nline 279\nline 280\nline 281\nline 282\nline 283\nline 284\nline 285\nline 286\nline 287\nline 288\nline 289\nline 290\nline 291\nline 292\nline 293\nline 294\nline 295\nline 296\nline 297\nline 298\nline 299\nline 300\nline 301\nline 302\nline 303\nline 304\nline 305\nline 306\nline 307\nline 308\nline 309\nline 310\nline 311\nline 312\nline 313\nline 314\nline 315\nline 316\nline 317\nline 318\nline 319\nline 320\nline 321\nline 322\nline 323\nline 324\nline 325\nline 326\nline 327\nline 328\nline 329\nline 330\nline 331\nline 332\nline 333\nline 334\nline 335\nline 336\nline 337\nline 338\nline 339\nline 340\nline 341\nline 342\nline 343\nline 344\nline 345\nline 346\nline 347\nline 348\nline 349\nline 350\nline 351\nline 352\nline 353\nline 354\nline 355\nline 356\nline 357\nline 358\nline 359\nline 360\nline 361\nline 362\nline 363\nline 364\nline 365\nline 366\nline 367\nline 368\nline 369\nline 370\nline 371\nline 372\nline 373\nline 374\nline 375\nline 376\nline 377\nline 378\nline 379\nline 380\nline 381\nline 382\nline 383\nline 384\nline 385\nline 386\nline 387\nline 388\nline 389\nline 390\nline 391\nline 392\nline 393\nline 394\nline 395\nline 396\nline 397\nline 398\nline 399\nline 400\nline 401\nline 402\nline 403\nline 404\nline 405\nline 406\nline 407\nline 408\nline 409\nline 410\nline 411\nline 412\nline 413\nline 414\nline 415\nline 416\nline 417\nline 418\nline 419\nline 420\nline 421\nline 422\nline 423\nline 424\nline 425\nline 426\nline 427\nline 428\nline 429\nline 430\nline 431\nline 432\nline 433\nline 434\nline 435\nline 436\nline 437\nline 438\nline 439\nline 440\nline 441\nline 442\nline 443\nline 444\nline 445\nline 446\nline 447\nline 448\nline 449\nline 450\nline 451\nline 452\nline 453\nline 454\nline 455\nline 456\nline 457\nline 458\nline 459\nline 460\nline 461\nline 462\nline 463\nline 464\nline 465\nline 466\nline 467\nline 468\nline 469\nline 470\nline 471\nline 472\nline 473\nline 474\nline 475\nline 476\nline 477\nline 478\nline 479\nline 480\nline 481\nline 482\nline 483\nline 484\nline 485\nline 486\nline 487\nline 488\nline 489\nline 490\nline 491\nline 492\nline 493\nline 494\nline 495\nline 496\nline 497\nline 498\nline 499\nline 500\nline 501\nline 502\nline 503\nline 504\nline 505\nline 506\nline 507\nline 508\nline 509\nline 510\nline 511\nline 512\nline 513\nline 514\nline 515\nline 516\nline 517\nline 518\nline 519\nline 520\nline 521\nline 522\nline 523\nline 524\nline 525\nline 526\nline 527\nline 528\nline 529\nline 530\nline 531\nline 532\nline 533\nline 534\nline 535\nline 536\nline 537\nline 538\nline 539\nline 540\nline 541\nline 542\nline 543\nline 544\nline 545\nline 546\nline 547\nline 548\nline 549\nline 550\nline 551\nline 552\nline 553\nline 554\nline 555\nline 556\nline 557\nline 558\nline 559\nline 560\nline 561\nline 562\nline 563\nline 564\nline 565\nline 566\nline 567\nline 568\nline 569\nline 570\nline 571\nline 572\nline 573\nline 574\nline 575\nline 576\nline 577\nline 578\nline 579\nline 580\nline 581\nline 582\nline 583\nline 584\nline 585\nline 586\nline 587\nline 588\nline 589\nline 590\nline 591\nline 592\nline 593\nline 594\nline 595\nline 596\nline 597\nline 598\nline 599\nline 600\nline 601\nline 602\nline 603\nline 604\nline 605\nline 606\nline 607\nline 608\nline 609\nline 610\nline 611\nline 612\nline 613\nline 614\nline 615\nline 616\nline 617\nline 618\nline 619\nline 620\nline 621\nline 622\nline 623\nline 624\nline 625\nline 626\nline 627\nline 628\nline 629\nline 630\nline 631\nline 632\nline 633\nline 634\nline 635\nline 636\nline 637\nline 638\nline 639\nline 640\nline 641\nline 642\nline 643\nline 644\nline 645\nline 646\nline 647\nline 648\nline 649\nline 650\nline 651\nline 652\nline 653\nline 654\nline 655\nline 656\nline 657\nline 658\nline 659\nline 660\nline 661\nline 662\nline 663\nline 664\nline 665\nline 666\nline 667\nline 668\nline 669\nline 670\nline 671\nline 672\nline 673\nline 674\nline 675\nline 676\nline 677\nline 678\nline 679\nline 680\nline 681\nline 682\nline 683\nline 684\nline 685\nline 686\nline 687\nline 688\nline 689\nline 690\nline 691\nline 692\nline 693\nline 694\nline 695\nline 696\nline 697\nline 698\nline 699\nline 700\nline 701\nline 702\nline 703\nline 704\nline 705\nline 706\nline 707\nline 708\nline 709\nline 710\nline 711\nline 712\nline 713\nline 714\nline 715\nline 716\nline 717\nline 718\nline 719\nline 720\nline 721\nline 722\nline 723\nline 724\nline 725\nline 726\nline 727\nline 728\nline 729\nline 730\nline 731\nline 732\nline 733\nline 734\nline 735\nline 736\nline 737\nline 738\nline 739\nline 740\nline 741\nline 742\nline 743\nline 744\nline 745\nline 746\nline 747\nline 748\nline 749\nline 750\nline 751\nline 752\nline 753\nline 754\nline 755\nline 756\nline 757\nline 758\nline 759\nline 760\nline 761\nline 762\nline 763\nline 764\nline 765\nline 766\nline 767\nline 768\nline 769\nline 770\nline 771\nline 772\nline 773\nline 774\nline 775\nline 776\nline 777\nline 778\nline 779\nline 780\nline 781\nline 782\nline 783\nline 784\nline 785\nline 786\nline 787\nline 788\nline 789\nline 790\nline 791\nline 792\nline 793\nline 794\nline 795\nline 796\nline 797\nline 798\nline 799\nline 800\nline 801\nline 802\nline 803\nline 804\nline 805\nline 806\nline 807\nline 808\nline 809\nline 810\nline 811\nline 812\nline 813\nline 814\nline 815\nline 816\nline 817\nline 818\nline 819\nline 820\nline 821\nline 822\nline 823\nline 824\nline 825\nline 826\nline 827\nline 828\nline 829\nline 830\nline 831\nline 832\nline 833\nline 834\nline 835\nline 836\nline 837\nline 838\nline 839\nline 840\nline 841\nline 842\nline 843\nline 844\nline 845\nline 846\nline 847\nline 848\nline 849\nline 850\nline 851\nline 852\nline 853\nline 854\nline 855\nline 856\nline 857\nline 858\nline 859\nline 860\nline 861\nline 862\nline 863\nline 864\nline 865\nline 866\nline 867\nline 868\nline 869\nline 870\nline 871\nline 872\nline 873\nline 874\nline 875\nline 876\nline 877\nline 878\nline 879\nline 880\nline 881\nline 882\nline 883\nline 884\nline 885\nline 886\nline 887\nline 888\nline 889\nline 890\nline 891\nline 892\nline 893\nline 894\nline 895\nline 896\nline 897\nline 898\nline 899\nline 900\nline 901\nline 902\nline 903\nline 904\nline 905\nline 906\nline 907\nline 908\nline 909\nline 910\nline 911\nline 912\nline 913\nline 914\nline 915\nline 916\nline 917\nline 918\nline 919\nline 920\nline 921\nline 922\nline 923\nline 924\nline 925\nline 926\nline 927\nline 928\nline 929\nline 930\nline 931\nline 932\nline 933\nline 934\nline 935\nline 936\nline 937\nline 938\nline 939\nline 940\nline 941\nline 942\nline 943\nline 944\nline 945\nline 946\nline 947\nline 948\nline 949\nline 950\nline 951\nline 952\nline 953\nline 954\nline 955\nline 956\nline 957\nline 958\nline 959\nline 960\nline 961\nline 962\nline 963\nline 964\nline 965\nline 966\nline 967\nline 968\nline 969\nline 970\nline 971\nline 972\nline 973\nline 974\nline 975\nline 976\nline 977\nline 978\nline 979\nline 980\nline 981\nline 982\nline 983\nline 984\nline 985\nline 986\nline 987\nline 988\nline 989\nline 990\nline 991\nline 992\nline 993\nline 994\nline 995\nline 996\nline 997\nline 998\nline 999\nline 1000\nline 1001\nline 1002\nline 1003\nline 1004\nline 1005\nline 1006\nline 1007\nline 1008\nline 1009\nline 1010\nline 1011\nline 1012\nline 1013\nline 1014\nline 1015\nline 1016\nline 1017\nline 1018\nline 1019\nline 1020\nline 1021\nline 1022\nline 1023\nline 1024\nline 1025\nline 1026\nline 1027\nline 1028\nline 1029\nline 1030\nline 1031\nline 1032\nline 1033\nline 1034\nline 1035\nline 1036\nline 1037\nline 1038\nline 1039\nline 1040\nline 1041\nline 1042\nline 1043\nline 1044\nline 1045\nline 1046\nline 1047\nline 1048\nline 1049\nline 1050\nline 1051\nline 1052\nline 1053\nline 1054\nline 1055\nline 1056\nline 1057\nline 1058\nline 1059\nline 1060\nline 1061\nline 1062\nline 1063\nline 1064\nline 1065\nline 1066\nline 1067\nline 1068\nline 1069\nline 1070\nline 1071\nline 1072\nline 1073\nline 1074\nline 1075\nline 1076\nline 1077\nline 1078\nline 1079\nline 1080\nline 1081\nline 1082\nline 1083\nline 1084\nline 1085\nline 1086\nline 1087\nline 1088\nline 1089\nline 1090\nline 1091\nline 1092\nline 1093\nline 1094\nline 1095\nline 1096\nline 1097\nline 1098\nline 1099\nline 1100\nline 1101\nline 1102\nline 1103\nline 1104\nline 1105\nline 1106\nline 1107\nline 1108\nline 1109\nline 1110\nline 1111\nline 1112\nline 1113\nline 1114\nline 1115\nline 1116\nline 1117\nline 1118\nline 1119\nline 1120\nline 1121\nline 1122\nline 1123\nline 1124\nline 1125\nline 1126\nline 1127\nline 1128\nline 1129\nline 1130\nline 1131\nline 1132\nline 1133\nline 1134\nline 1135\nline 1136\nline 1137\nline 1138\nline 1139\nline 1140\nline 1141\nline 1142\nline 1143\nline 1144\nline 1145\nline 1146\nline 1147\nline 1148\nline 1149\nline 1150\nline 1151\nline 1152\nline 1153\nline 1154\nline 1155\nline 1156\nline 1157\nline 1158\nline 1159\nline 1160\nline 1161\nline 1162\nline 1163\nline 1164\nline 1165\nline 1166\nline 1167\nline 1168\nline 1169\nline 1170\nline 1171\nline 1172\nline 1173\nline 1174\nline 1175\nline 1176\nline 1177\nline 1178\nline 1179\nline 1180\nline 1181\nline 1182\nline 1183\nline 1184\nline 1185\nline 1186\nline 1187\nline 1188\nline 1189\nline 1190\nline 1191\nline 1192\nline 1193\nline 1194\nline 1195\nline 1196\nline 1197\nline 1198\nline 1199\nline 1200\nline 1201\nline 1202\nline 1203\nline 1204\nline 1205\nline 1206\nline 1207\nline 1208\nline 1209\nline 1210\nline 1211\nline 1212\nline 1213\nline 1214\nline 1215\nline 1216\nline 1217\nline 1218\nline 1219\nline 1220\nline 1221\nline 1222\nline 1223\nline 1224\nline 1225\nline 1226\nline 1227\nline 1228\nline 1229\nline 1230\nline 1231\nline 1232\nline 1233\nline 1234\nline 1235\nline 1236\nline 1237\nline 1238\nline 1239\nline 1240\nline 1241\nline 1242\nline 1243\nline 1244\nline 1245\nline 1246\nline 1247\nline 1248\nline 1249\nline 1250\nline 1251\nline 1252\nline 1253\nline 1254\nline 1255\nline 1256\nline 1257\nline 1258\nline 1259\nline 1260\nline 1261\nline 1262\nline 1263\nline 1264\nline 1265\nline 1266\nline 1267\nline 1268\nline 1269\nline 1270\nline 1271\nline 1272\nline 1273\nline 1274\nline 1275\nline 1276\nline 1277\nline 1278\nline 1279\nline 1280\nline 1281\nline 1282\nline 1283\nline 1284\nline 1285\nline 1286\nline 1287\nline 1288\nline 1289\nline 1290\nline 1291\nline 1292\nline 1293\nline 1294\nline 1295\nline 1296\nline 1297\nline 1298\nline 1299\nline 1300\nline 1301\nline 1302\nline 1303\nline 1304\nline 1305\nline 1306\nline 1307\nline 1308\nline 1309\nline 1310\nline 1311\nline 1312\nline 1313\nline 1314\nline 1315\nline 1316\nline 1317\nline 1318\nline 1319\nline 1320\nline 1321\nline 1322\nline 1323\nline 1324\nline 1325\nline 1326\nline 1327\nline 1328\nline 1329\nline 1330\nline 1331\nline 1332\nline 1333\nline 1334\nline 1335\nline 1336\nline 1337\nline 1338\nline 1339\nline 1340\nline 1341\nline 1342\nline 1343\nline 1344\nline 1345\nline 1346\nline 1347\nline 1348\nline 1349\nline 1350\nline 1351\nline 1352\nline 1353\nline 1354\nline 1355\nline 1356\nline 1357\nline 1358\nline 1359\nline 1360\nline 1361\nline 1362\nline 1363\nline 1364\nline 1365\nline 1366\nline 1367\nline 1368\nline 1369\nline 1370\nline 1371\nline 1372\nline 1373\nline 1374\nline 1375\nline 1376\nline 1377\nline 1378\nline 1379\nline 1380\nline 1381\nline 1382\nline 1383\nline 1384\nline 1385\nline 1386\nline 1387\nline 1388\nline 1389\nline 1390\nline 1391\nline 1392\nline 1393\nline 1394\nline 1395\nline 1396\nline 1397\nline 1398\nline 1399\nline 1400\nline 1401\nline 1402\nline 1403\nline 1404\nline 1405\nline 1406\nline 1407\nline 1408\nline 1409\nline 1410\nline 1411\nline 1412\nline 1413\nline 1414\nline 1415\nline 1416\nline 1417\nline 1418\nline 1419\nline 1420\nline 1421\nline 1422\nline 1423\nline 1424\nline 1425\nline 1426\nline 1427\nline 1428\nline 1429\nline 1430\nline 1431\nline 1432\nline 1433\nline 1434\nline 1435\nline 1436\nline 1437\nline 1438\nline 1439\nline 1440\nline 1441\nline 1442\nline 1443\nline 1444\nline 1445\nline 1446\nline 1447\nline 1448\nline 1449\nline 1450\nline 1451\nline 1452\nline 1453\nline 1454\nline 1455\nline 1456\nline 1457\nline 1458\nline 1459\nline 1460\nline 1461\nline 1462\nline 1463\nline 1464\nline 1465\nline 1466\nline 1467\nline 1468\nline 1469\nline 1470\nline 1471\nline 1472\nline 1473\nline 1474\nline 1475\nline 1476\nline 1477\nline 1478\nline 1479\nline 1480\nline 1481\nline 1482\nline 1483\nline 1484\nline 1485\nline 1486\nline 1487\nline 1488\nline 1489\nline 1490\nline 1491\nline 1492\nline 1493\nline 1494\nline 1495\nline 1496\nline 1497\nline 1498\nline 1499\nline 1500",
+          "diffHunks": 4
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "data/small.txt",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "s 1\ns 2\ns 3\ns 4\ns 5\ns 6\ns 7\ns 8\ns 9\ns 10\ns 11\ns 12\ns 13\ns 14\ns 15\ns 16\ns 17\ns 18\ns 19\ns 20\ns 21\ns 22\ns 23\ns 24\ns 25\ns 26\ns 27\ns 28\ns 29\ns 30\ns 31\ns 32\ns 33\ns 34\ns 35\ns 36\ns 37\ns 38\ns 39\ns 40\ns 41\ns 42\ns 43\ns 44\ns 45\ns 46\ns 47\ns 48\ns 49\ns 50\ns 51\ns 52\ns 53\ns 54\ns 55\ns 56\ns 57\ns 58\ns 59\ns 60\ns 61\ns 62\ns 63\ns 64\ns 65\ns 66\ns 67\ns 68\ns 69\ns 70\ns 71\ns 72\ns 73\ns 74\ns 75\ns 76\ns 77\ns 78\ns 79\ns 80\ns 81\ns 82\ns 83\ns 84\ns 85\ns 86\ns 87\ns 88\ns 89\ns 90\ns 91\ns 92\ns 93\ns 94\ns 95\ns 96\ns 97\ns 98\ns 99\ns 100\ns 101\ns 102\ns 103\ns 104\ns 105\ns 106\ns 107\ns 108\ns 109\ns 110\ns 111\ns 112\ns 113\ns 114\ns 115\ns 116\ns 117\ns 118\ns 119\ns 120\ns 121\ns 122\ns 123\ns 124\ns 125\ns 126\ns 127\ns 128\ns 129\ns 130\ns 131\ns 132\ns 133\ns 134\ns 135\ns 136\ns 137\ns 138\ns 139\ns 140\ns 141\ns 142\ns 143\ns 144\ns 145\ns 146\ns 147\ns 148\ns 149\ns 150\ns 151\ns 152\ns 153\ns 154\ns 155\ns 156\ns 157\ns 158\ns 159\ns 160\ns 161\ns 162\ns 163\ns 164\ns 165\ns 166\ns 167\ns 168\ns 169\ns 170\ns 171\ns 172\ns 173\ns 174\ns 175\ns 176\ns 177\ns 178\ns 179\ns 180\ns 181\ns 182\ns 183\ns 184\ns 185\ns 186\ns 187\ns 188\ns 189\ns 190\ns 191\ns 192\ns 193\ns 194\ns 195\ns 196\ns 197\ns 198\ns 199\ns 200\ns 201\ns 202\ns 203\ns 204\ns 205\ns 206\ns 207\ns 208\ns 209\ns 210\ns 211\ns 212\ns 213\ns 214\ns 215\ns 216\ns 217\ns 218\ns 219\ns 220\ns 221\ns 222\ns 223\ns 224\ns 225\ns 226\ns 227\ns 228\ns 229\ns 230\ns 231\ns 232\ns 233\ns 234\ns 235\ns 236\ns 237\ns 238\ns 239\ns 240\ns 241\ns 242\ns 243\ns 244\ns 245\ns 246\ns 247\ns 248\ns 249\ns 250\ns 251\ns 252\ns 253\ns 254\ns 255\ns 256\ns 257\ns 258\ns 259\ns 260\ns 261\ns 262\ns 263\ns 264\ns 265\ns 266\ns 267\ns 268\ns 269\ns 270\ns 271\ns 272\ns 273\ns 274\ns 275\ns 276\ns 277\ns 278\ns 279\ns 280\ns 281\ns 282\ns 283\ns 284\ns 285\ns 286\ns 287\ns 288\ns 289\ns 290\ns 291\ns 292\ns 293\ns 294\ns 295\ns 296\ns 297\ns 298\ns 299\ns 300\ns 301\ns 302\ns 303\ns 304\ns 305\ns 306\ns 307\ns 308\ns 309\ns 310\ns 311\ns 312\ns 313\ns 314\ns 315\ns 316\ns 317\ns 318\ns 319\ns 320\ns 321\ns 322\ns 323\ns 324\ns 325\ns 326\ns 327\ns 328\ns 329\ns 330\ns 331\ns 332\ns 333\ns 334\ns 335\ns 336\ns 337\ns 338\ns 339\ns 340\ns 341\ns 342\ns 343\ns 344\ns 345\ns 346\ns 347\ns 348\ns 349\ns 350\ns 351\ns 352\ns 353\ns 354\ns 355\ns 356\ns 357\ns 358\ns 359\ns 360\ns 361\ns 362\ns 363\ns 364\ns 365\ns 366\ns 367\ns 368\ns 369\ns 370\ns 371\ns 372\ns 373\ns 374\ns 375\ns 376\ns 377\ns 378\ns 379\ns 380\ns 381\ns 382\ns 383\ns 384\ns 385\ns 386\ns 387\ns 388\ns 389\ns 390\ns 391\ns 392\ns 393\ns 394\ns 395\ns 396\ns 397\ns 398\ns 399\ns 400\ns 401\ns 402\ns 403\ns 404\ns 405\ns 406\ns 407\ns 408\ns 409\ns 410\ns 411\ns 412\ns 413\ns 414\ns 415\ns 416\ns 417\ns 418\ns 419\ns 420\ns 421\ns 422\ns 423\ns 424\ns 425\ns 426\ns 427\ns 428\ns 429\ns 430\ns 431\ns 432\ns 433\ns 434\ns 435\ns 436\ns 437\ns 438\ns 439\ns 440\ns 441\ns 442\ns 443\ns 444\ns 445\ns 446\ns 447\ns 448\ns 449\ns 450\ns 451\ns 452\ns 453\ns 454\ns 455\ns 456\ns 457\ns 458\ns 459\ns 460\ns 461\ns 462\ns 463\ns 464\ns 465\ns 466\ns 467\ns 468\ns 469\ns 470\ns 471\ns 472\ns 473\ns 474\ns 475\ns 476\ns 477\ns 478\ns 479\ns 480\ns 481\ns 482\ns 483\ns 484\ns 485\ns 486\ns 487\ns 488\ns 489\ns 490\ns 491\ns 492\ns 493\ns 494\ns 495\ns 496\ns 497\ns 498\ns 499\ns 500\ns 501\ns 502\ns 503\ns 504\ns 505\ns 506\ns 507\ns 508\ns 509\ns 510\ns 511\ns 512\ns 513\ns 514\ns 515\ns 516\ns 517\ns 518\ns 519\ns 520\ns 521\ns 522\ns 523\ns 524\ns 525\ns 526\ns 527\ns 528\ns 529\ns 530\ns 531\ns 532\ns 533\ns 534\ns 535\ns 536\ns 537\ns 538\ns 539\ns 540\ns 541\ns 542\ns 543\ns 544\ns 545\ns 546\ns 547\ns 548\ns 549\ns 550\ns 551\ns 552\ns 553\ns 554\ns 555\ns 556\ns 557\ns 558\ns 559\ns 560\ns 561\ns 562\ns 563\ns 564\ns 565\ns 566\ns 567\ns 568\ns 569\ns 570\ns 571\ns 572\ns 573\ns 574\ns 575\ns 576\ns 577\ns 578\ns 579\ns 580\ns 581\ns 582\ns 583\ns 584\ns 585\ns 586\ns 587\ns 588\ns 589\ns 590\ns 591\ns 592\ns 593\ns 594\ns 595\ns 596\ns 597\ns 598\ns 599\ns 600\ns 601\ns 602\ns 603\ns 604\ns 605\ns 606\ns 607\ns 608\ns 609\ns 610\ns 611\ns 612\ns 613\ns 614\ns 615\ns 616\ns 617\ns 618\ns 619\ns 620\ns 621\ns 622\ns 623\ns 624\ns 625\ns 626\ns 627\ns 628\ns 629\ns 630\ns 631\ns 632\ns 633\ns 634\ns 635\ns 636\ns 637\ns 638\ns 639\ns 640\ns 641\ns 642\ns 643\ns 644\ns 645\ns 646\ns 647\ns 648\ns 649\ns 650\ns 651\ns 652\ns 653\ns 654\ns 655\ns 656\ns 657\ns 658\ns 659\ns 660\ns 661\ns 662\ns 663\ns 664\ns 665\ns 666\ns 667\ns 668\ns 669\ns 670\ns 671\ns 672\ns 673\ns 674\ns 675\ns 676\ns 677\ns 678\ns 679\ns 680\ns 681\ns 682\ns 683\ns 684\ns 685\ns 686\ns 687\ns 688\ns 689\ns 690\ns 691\ns 692\ns 693\ns 694\ns 695\ns 696\ns 697\ns 698\ns 699\ns 700\ns 701\ns 702\ns 703\ns 704\ns 705\ns 706\ns 707\ns 708\ns 709\ns 710\ns 711\ns 712\ns 713\ns 714\ns 715\ns 716\ns 717\ns 718\ns 719\ns 720\ns 721\ns 722\ns 723\ns 724\ns 725\ns 726\ns 727\ns 728\ns 729\ns 730\ns 731\ns 732\ns 733\ns 734\ns 735\ns 736\ns 737\ns 738\ns 739\ns 740\ns 741\ns 742\ns 743\ns 744\ns 745\ns 746\ns 747\ns 748\ns 749\ns 750\ns 751\ns 752\ns 753\ns 754\ns 755\ns 756\ns 757\ns 758\ns 759\ns 760\ns 761\ns 762\ns 763\ns 764\ns 765\ns 766\ns 767\ns 768\ns 769\ns 770\ns 771\ns 772\ns 773\ns 774\ns 775\ns 776\ns 777\ns 778\ns 779\ns 780\ns 781\ns 782\ns 783\ns 784\ns 785\ns 786\ns 787\ns 788\ns 789\ns 790\ns 791\ns 792\ns 793\ns 794\ns 795\ns 796\ns 797\ns 798\ns 799\ns 800\ns 801\ns 802\ns 803\ns 804\ns 805\ns 806\ns 807\ns 808\ns 809\ns 810\ns 811\ns 812\ns 813\ns 814\ns 815\ns 816\ns 817\ns 818\ns 819\ns 820\ns 821\ns 822\ns 823\ns 824\ns 825\ns 826\ns 827\ns 828\ns 829\ns 830\ns 831\ns 832\ns 833\ns 834\ns 835\ns 836\ns 837\ns 838\ns 839\ns 840\ns 841\ns 842\ns 843\ns 844\ns 845\ns 846\ns 847\ns 848\ns 849\ns 850\ns 851\ns 852\ns 853\ns 854\ns 855\ns 856\ns 857\ns 858\ns 859\ns 860\ns 861\ns 862\ns 863\ns 864\ns 865\ns 866\ns 867\ns 868\ns 869\ns 870\ns 871\ns 872\ns 873\ns 874\ns 875\ns 876\ns 877\ns 878\ns 879\ns 880\ns 881\ns 882\ns 883\ns 884\ns 885\ns 886\ns 887\ns 888\ns 889\ns 890\ns 891\ns 892\ns 893\ns 894\ns 895\ns 896\ns 897\ns 898\ns 899\ns 900\ns 901\ns 902\ns 903\ns 904\ns 905\ns 906\ns 907\ns 908\ns 909\ns 910\ns 911\ns 912\ns 913\ns 914\ns 915\ns 916\ns 917\ns 918\ns 919\ns 920\ns 921\ns 922\ns 923\ns 924\ns 925\ns 926\ns 927\ns 928\ns 929\ns 930\ns 931\ns 932\ns 933\ns 934\ns 935\ns 936\ns 937\ns 938\ns 939\ns 940\ns 941\ns 942\ns 943\ns 944\ns 945\ns 946\ns 947\ns 948\ns 949\ns 950\ns 951\ns 952\ns 953\ns 954\ns 955\ns 956\ns 957\ns 958\ns 959\ns 960\ns 961\ns 962\ns 963\ns 964\ns 965\ns 966\ns 967\ns 968\ns 969\ns 970\ns 971\ns 972\ns 973\ns 974\ns 975\ns 976\ns 977\ns 978\ns 979\ns 980\ns 981\ns 982\ns 983\ns 984\ns 985\ns 986\ns 987\ns 988\ns 989\ns 990\ns 991\ns 992\ns 993\ns 994\ns 995\ns 996\ns 997\ns 998\ns 999\ns 1000",
+          "diffHunks": 1
+        }
+      ],
+      "connections": 0,
+      "files": [
+        {
+          "path": "data/big.txt",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "data/small.txt",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        }
+      ],
+      "changeSet": {
+        "kind": "commit",
+        "commit": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+      },
+      "symbols": null,
+      "javaError": null
+    }
+  },
+  {
+    "label": "中継の via ウィンドウ: 解析器の via（change なし・展開して表示）と実線の接続をそのまま合流する",
+    "input": {
+      "files": [
+        {
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 5,
+              "oldCount": 1,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a"
+                },
+                {
+                  "type": "add",
+                  "content": "b"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderController {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 9,
+              "oldCount": 1,
+              "newStart": 9,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "x"
+                },
+                {
+                  "type": "add",
+                  "content": "y"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderService {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Util.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 0,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "import java.util.List;"
+                }
+              ]
+            }
+          ],
+          "headContent": "package x;\nimport java.util.List;\nclass Util {}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Report.java",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "int a;"
+                },
+                {
+                  "type": "add",
+                  "content": "int b;"
+                }
+              ]
+            }
+          ],
+          "headContent": "class Report {\n\n    int b;\n}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/Legacy.java",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 2,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "class Legacy {"
+                },
+                {
+                  "type": "remove",
+                  "content": "}"
+                }
+              ]
+            }
+          ],
+          "baseContent": "class Legacy {\n}\n"
+        },
+        {
+          "filePath": "src/test/java/com/ex/OrderTest.java",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 4,
+              "oldCount": 0,
+              "newStart": 5,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "@Test void t2() {}"
+                }
+              ]
+            }
+          ],
+          "headContent": "class OrderTest {\n}\n"
+        },
+        {
+          "filePath": "src/main/java/com/ex/New.java",
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "status": "renamed",
+          "hunks": [
+            {
+              "oldStart": 3,
+              "oldCount": 1,
+              "newStart": 3,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "old"
+                },
+                {
+                  "type": "add",
+                  "content": "new"
+                }
+              ]
+            }
+          ],
+          "headContent": "class New {}\n"
+        },
+        {
+          "filePath": "web/app.js",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "return 1;"
+                },
+                {
+                  "type": "add",
+                  "content": "return 2;"
+                }
+              ]
+            }
+          ],
+          "headContent": "function app() {\n  return 2;\n}\n"
+        },
+        {
+          "filePath": "web/index.html",
+          "status": "added",
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "<p>hi</p>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<p>hi</p>\n"
+        },
+        {
+          "filePath": "pom.xml",
+          "status": "modified",
+          "worktreeMatches": false,
+          "hunks": [
+            {
+              "oldStart": 2,
+              "oldCount": 1,
+              "newStart": 2,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "<v>1</v>"
+                },
+                {
+                  "type": "add",
+                  "content": "<v>2</v>"
+                }
+              ]
+            }
+          ],
+          "headContent": "<project>\n<v>2</v>\n</project>\n"
+        },
+        {
+          "filePath": "db/V1__init.sql",
+          "status": "deleted",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 0,
+              "newCount": 0,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "CREATE TABLE t (id INT);"
+                }
+              ]
+            }
+          ],
+          "baseContent": "CREATE TABLE t (id INT);\n"
+        },
+        {
+          "filePath": "style.css",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 1,
+              "oldCount": 1,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "a{}"
+                },
+                {
+                  "type": "add",
+                  "content": "b{}"
+                }
+              ]
+            }
+          ],
+          "headContent": "b{}\n"
+        },
+        {
+          "filePath": "assets/logo.png",
+          "status": "modified",
+          "binary": true,
+          "hunks": []
+        }
+      ],
+      "java": {
+        "success": true,
+        "data": {
+          "groups": [
+            {
+              "id": "blk-java",
+              "kind": "java",
+              "label": "Java"
+            },
+            {
+              "id": "isl-1",
+              "kind": "island",
+              "parent": "blk-java",
+              "label": "島 1: OrderController.create …"
+            },
+            {
+              "id": "isl-2",
+              "kind": "island",
+              "parent": "blk-java",
+              "label": "島 2: New.run"
+            }
+          ],
+          "windows": [
+            {
+              "id": "m-ctrl",
+              "group": "isl-1",
+              "windowType": "method",
+              "displayName": "OrderController.create",
+              "filePath": "src/main/java/com/ex/OrderController.java",
+              "startLine": 3,
+              "code": "void create() {\n  b\n}",
+              "change": {
+                "status": "modified",
+                "source": "worktree"
+              },
+              "diffState": {
+                "hunks": [
+                  {
+                    "oldStart": 5,
+                    "oldCount": 1,
+                    "newStart": 5,
+                    "newCount": 1,
+                    "lines": [
+                      {
+                        "type": "remove",
+                        "content": "a"
+                      },
+                      {
+                        "type": "add",
+                        "content": "b"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "j-app",
+              "group": "isl-1",
+              "windowType": "junction",
+              "displayName": "App.main",
+              "filePath": "src/main/java/com/ex/App.java",
+              "startLine": 1,
+              "code": "void main() {}"
+            },
+            {
+              "id": "v-fac",
+              "group": "isl-1",
+              "windowType": "via",
+              "displayName": "OrderFacade.place",
+              "filePath": "src/main/java/com/ex/OrderFacade.java",
+              "startLine": 4,
+              "code": "void place() {\n  svc.place();\n}"
+            },
+            {
+              "id": "v-wf",
+              "group": "isl-1",
+              "windowType": "via",
+              "displayName": "OrderWorkflow.run",
+              "filePath": "src/main/java/com/ex/OrderWorkflow.java",
+              "startLine": 6,
+              "code": "void run() {\n  facade.place();\n}"
+            },
+            {
+              "id": "m-svc",
+              "group": "isl-1",
+              "windowType": "method",
+              "displayName": "OrderService.place",
+              "filePath": "src/main/java/com/ex/OrderService.java",
+              "startLine": 8,
+              "code": "void place() {\n  y\n}",
+              "change": {
+                "status": "modified",
+                "source": "worktree"
+              },
+              "diffState": {
+                "hunks": [
+                  {
+                    "oldStart": 9,
+                    "oldCount": 1,
+                    "newStart": 9,
+                    "newCount": 1,
+                    "lines": [
+                      {
+                        "type": "remove",
+                        "content": "x"
+                      },
+                      {
+                        "type": "add",
+                        "content": "y"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "f-util",
+              "group": "blk-java",
+              "windowType": "file",
+              "displayName": "Util.java",
+              "filePath": "src/main/java/com/ex/Util.java",
+              "startLine": 1,
+              "code": "package x;\nimport java.util.List;\nclass Util {}",
+              "change": {
+                "status": "modified",
+                "source": "worktree",
+                "flags": [
+                  "outsideMethod"
+                ]
+              },
+              "diffState": {
+                "hunks": [
+                  {
+                    "oldStart": 2,
+                    "oldCount": 0,
+                    "newStart": 3,
+                    "newCount": 1,
+                    "lines": [
+                      {
+                        "type": "add",
+                        "content": "import java.util.List;"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "id": "m-new",
+              "group": "isl-2",
+              "windowType": "method",
+              "displayName": "New.run",
+              "filePath": "src/main/java/com/ex/New.java",
+              "startLine": 2,
+              "code": "void run() {}",
+              "change": {
+                "status": "renamed",
+                "oldPath": "src/main/java/com/ex/Old.java",
+                "source": "worktree"
+              },
+              "diffState": {
+                "hunks": [
+                  {
+                    "oldStart": 3,
+                    "oldCount": 1,
+                    "newStart": 3,
+                    "newCount": 1,
+                    "lines": [
+                      {
+                        "type": "remove",
+                        "content": "old"
+                      },
+                      {
+                        "type": "add",
+                        "content": "new"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "connections": [
+            {
+              "from": "j-app",
+              "to": "m-ctrl",
+              "callLine": 1
+            },
+            {
+              "from": "m-ctrl",
+              "to": "v-wf",
+              "callLine": 4
+            },
+            {
+              "from": "v-wf",
+              "to": "v-fac",
+              "callLine": 7
+            },
+            {
+              "from": "v-fac",
+              "to": "m-svc",
+              "callLine": 5
+            }
+          ],
+          "symbols": {
+            "com.ex.Order": {
+              "kind": "type",
+              "displayName": "Order",
+              "filePath": "src/main/java/com/ex/Order.java",
+              "line": 1
+            }
+          },
+          "metadata": {
+            "changeSet": {
+              "files": [
+                {
+                  "path": "src/main/java/com/ex/OrderController.java",
+                  "status": "modified",
+                  "inGraph": true,
+                  "windows": [
+                    "m-ctrl"
+                  ]
+                },
+                {
+                  "path": "src/main/java/com/ex/OrderService.java",
+                  "status": "modified",
+                  "inGraph": true,
+                  "windows": [
+                    "m-svc"
+                  ]
+                },
+                {
+                  "path": "src/main/java/com/ex/Util.java",
+                  "status": "modified",
+                  "inGraph": true,
+                  "windows": [
+                    "f-util"
+                  ]
+                },
+                {
+                  "path": "src/main/java/com/ex/Report.java",
+                  "status": "modified",
+                  "inGraph": false,
+                  "reason": "worktreeMismatch",
+                  "windows": []
+                },
+                {
+                  "path": "src/main/java/com/ex/Legacy.java",
+                  "status": "deleted",
+                  "inGraph": false,
+                  "reason": "deleted",
+                  "windows": []
+                },
+                {
+                  "path": "src/main/java/com/ex/New.java",
+                  "oldPath": "src/main/java/com/ex/Old.java",
+                  "status": "renamed",
+                  "inGraph": true,
+                  "windows": [
+                    "m-new"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "unindexedFiles": [
+          "src/test/java/com/ex/OrderTest.java"
+        ]
+      }
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "java:blk-java",
+        "island:isl-1<blk-java",
+        "island:isl-2<blk-java",
+        "clientside:blk-clientside",
+        "xml:blk-xml",
+        "sql:blk-sql",
+        "other:blk-other"
+      ],
+      "windows": [
+        {
+          "group": "isl-1",
+          "windowType": "method",
+          "filePath": "src/main/java/com/ex/OrderController.java",
+          "startLine": 3,
+          "source": "worktree",
+          "code": "void create() {\n  b\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "isl-1",
+          "windowType": "junction",
+          "filePath": "src/main/java/com/ex/App.java",
+          "startLine": 1,
+          "code": "void main() {}",
+          "diffHunks": 0
+        },
+        {
+          "group": "isl-1",
+          "windowType": "via",
+          "filePath": "src/main/java/com/ex/OrderFacade.java",
+          "startLine": 4,
+          "code": "void place() {\n  svc.place();\n}",
+          "diffHunks": 0
+        },
+        {
+          "group": "isl-1",
+          "windowType": "via",
+          "filePath": "src/main/java/com/ex/OrderWorkflow.java",
+          "startLine": 6,
+          "code": "void run() {\n  facade.place();\n}",
+          "diffHunks": 0
+        },
+        {
+          "group": "isl-1",
+          "windowType": "method",
+          "filePath": "src/main/java/com/ex/OrderService.java",
+          "startLine": 8,
+          "source": "worktree",
+          "code": "void place() {\n  y\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Util.java",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "outsideMethod"
+          ],
+          "code": "package x;\nimport java.util.List;\nclass Util {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "isl-2",
+          "windowType": "method",
+          "filePath": "src/main/java/com/ex/New.java",
+          "startLine": 2,
+          "source": "worktree",
+          "oldPath": "src/main/java/com/ex/Old.java",
+          "code": "void run() {}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Report.java",
+          "startLine": 1,
+          "source": "head",
+          "flags": [
+            "worktreeMismatch"
+          ],
+          "label": "作業ツリーと不一致のためグラフ外",
+          "code": "class Report {\n\n    int b;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/main/java/com/ex/Legacy.java",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "class Legacy {\n}",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-java",
+          "windowType": "file",
+          "filePath": "src/test/java/com/ex/OrderTest.java",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "notIndexed"
+          ],
+          "label": "インデックス外（テスト等）",
+          "code": "class OrderTest {\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/app.js",
+          "startLine": 1,
+          "source": "worktree",
+          "label": "解析に失敗したためグラフ外",
+          "code": "function app() {\n  return 2;\n}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-clientside",
+          "windowType": "file",
+          "filePath": "web/index.html",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "<p>hi</p>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-xml",
+          "windowType": "file",
+          "filePath": "pom.xml",
+          "startLine": 1,
+          "source": "head",
+          "label": "作業ツリーと不一致（head 時点の内容）",
+          "code": "<project>\n<v>2</v>\n</project>",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-sql",
+          "windowType": "file",
+          "filePath": "db/V1__init.sql",
+          "startLine": 1,
+          "source": "base",
+          "flags": [
+            "deleted"
+          ],
+          "label": "削除（base 時点の内容）",
+          "code": "CREATE TABLE t (id INT);",
+          "diffHunks": 0
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "style.css",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "b{}",
+          "diffHunks": 1
+        },
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "assets/logo.png",
+          "startLine": 1,
+          "source": "worktree",
+          "flags": [
+            "binary"
+          ],
+          "label": "バイナリ（内容は表示しない）",
+          "code": "",
+          "diffHunks": 0
+        }
+      ],
+      "connections": 4,
+      "files": [
+        {
+          "path": "src/main/java/com/ex/OrderController.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1
+        },
+        {
+          "path": "src/main/java/com/ex/OrderService.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1
+        },
+        {
+          "path": "src/main/java/com/ex/Util.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1
+        },
+        {
+          "path": "src/main/java/com/ex/Report.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "worktreeMismatch"
+        },
+        {
+          "path": "src/main/java/com/ex/Legacy.java",
+          "status": "deleted",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "deleted"
+        },
+        {
+          "path": "src/test/java/com/ex/OrderTest.java",
+          "status": "modified",
+          "block": "java",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "notIndexed"
+        },
+        {
+          "path": "src/main/java/com/ex/New.java",
+          "status": "renamed",
+          "block": "java",
+          "inGraph": true,
+          "windowCount": 1,
+          "oldPath": "src/main/java/com/ex/Old.java"
+        },
+        {
+          "path": "web/app.js",
+          "status": "modified",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1,
+          "reason": "analysisFailed"
+        },
+        {
+          "path": "web/index.html",
+          "status": "added",
+          "block": "clientside",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "pom.xml",
+          "status": "modified",
+          "block": "xml",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "db/V1__init.sql",
+          "status": "deleted",
+          "block": "sql",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "style.css",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        },
+        {
+          "path": "assets/logo.png",
+          "status": "modified",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        }
+      ],
+      "changeSet": {
+        "kind": "commit",
+        "commit": "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+      },
+      "symbols": [
+        "com.ex.Order"
+      ],
+      "javaError": null
+    }
+  }
+]

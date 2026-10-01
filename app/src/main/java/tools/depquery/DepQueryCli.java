@@ -277,6 +277,17 @@ public class DepQueryCli {
             return;
         }
 
+        // --changed-methods: 変更集合キャンバスの Java ブロックを出力して終了（インデックス必須）
+        if (cfg.changedMethodsPath != null) {
+            try {
+                ChangeSetAnalyzer.run(cfg);
+            } catch (ChangeSetAnalyzer.ChangeSetException e) {
+                System.err.println("[ERROR] " + e.getMessage());
+                System.exit(2);
+            }
+            return;
+        }
+
         // === 解析パス開始（build-index / resolve-from-index の early return の後）===
         Files.createDirectories(cfg.outDir);
 
@@ -415,8 +426,6 @@ public class DepQueryCli {
             }
             endTiming("BFS Analysis", analysisStart);
         } else {
-            // BFS再帰の安全上限
-            final int MAX_INCOMING_DEPTH = 50;
             int maxDepth = (cfg.depth == -1) ? MAX_INCOMING_DEPTH : cfg.depth;
             if (onDemand) {
                 // インデックス無しでは 1 階層のみ（全階層の呼び出し元を求めるには全ファイルの解析が要る）

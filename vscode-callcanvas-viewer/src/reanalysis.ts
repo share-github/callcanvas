@@ -263,9 +263,14 @@ export function resolveDeclarationLine(windowData: any): number {
 /**
  * Build the plan for "ルート再解析" from the canvas on disk.
  * `defaults.depth` is the language config depth, used only when the canvas has
- * no recorded analysis.
+ * no recorded analysis. A change set canvas (`metadata.changeSet`) has no plan (null).
  */
 export function buildReanalysisPlan(currentJson: any, defaults: any): ReanalysisPlan | null {
+    // 変更集合キャンバス（metadata.changeSet）はルートを持たない。再生成は callcanvas.openChangeSet で行う
+    const meta = currentJson && currentJson.metadata;
+    if (meta && typeof meta === 'object' && meta.changeSet && typeof meta.changeSet === 'object') {
+        return null;
+    }
     const windows = (currentJson && Array.isArray(currentJson.windows)) ? currentJson.windows : [];
     if (windows.length === 0) {
         return null;

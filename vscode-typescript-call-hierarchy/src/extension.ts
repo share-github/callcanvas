@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as ts from 'typescript';
 import { ProjectContext, CallCanvasJSON, CallCanvasMetadata } from './types';
 import { detectProject } from './projectDetector';
-import { resolveFunctionAtLine } from './functionResolver';
+import { resolveFunctionAtLine, resolveSignaturesAtLines } from './functionResolver';
 import { createProgram, analyzeCallHierarchy, analyzeCallHierarchyBySignature } from './analyzer';
 import { formatAsCallCanvasJSON } from './callcanvasFormatter';
 
@@ -50,18 +50,47 @@ export function activate(context: vscode.ExtensionContext): void {
                 const projectContext = getOrDetectProject(absolutePath);
                 const program = getOrCreateProgram(projectContext);
 
-                const sourceFile = program.getSourceFile(absolutePath);
-                if (!sourceFile) {
+                const signatures = resolveSignaturesAtLines(program, absolutePath, [lineNumber], projectContext.rootDir);
+                if (!signatures) {
                     log(`[API] Source file not in program: ${absolutePath}`);
                     return null;
                 }
 
-                const funcInfo = resolveFunctionAtLine(sourceFile, lineNumber, projectContext.rootDir);
-                log(`[API] resolveMethodSignature: ${filePath}:${lineNumber} -> ${funcInfo?.signature || 'null'}`);
-                return funcInfo?.signature ?? null;
+                log(`[API] resolveMethodSignature: ${filePath}:${lineNumber} -> ${signatures[0] || 'null'}`);
+                return signatures[0];
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
                 log(`[API] resolveMethodSignature error: ${message}`);
+                return null;
+            }
+        }
+    );
+
+    // resolveMethodSignature for several lines of one file (one program instead of one per line).
+    // Used by the Viewer's change set canvas to map diff hunks to functions.
+    const resolveMethodSignaturesCommand = vscode.commands.registerCommand(
+        'tsCallHierarchy.resolveMethodSignatures',
+        async (filePath: string, lineNumbers: number[]): Promise<(string | null)[] | null> => {
+            try {
+                log(`[API] resolveMethodSignatures: ${filePath} (${lineNumbers.length} lines)`);
+
+                const absolutePath = resolveFilePath(filePath);
+                if (!absolutePath || !fs.existsSync(absolutePath)) {
+                    log(`[API] File not found: ${filePath}`);
+                    return null;
+                }
+
+                const projectContext = getOrDetectProject(absolutePath);
+                const program = getOrCreateProgram(projectContext);
+
+                const signatures = resolveSignaturesAtLines(program, absolutePath, lineNumbers, projectContext.rootDir);
+                if (!signatures) {
+                    log(`[API] Source file not in program: ${absolutePath}`);
+                }
+                return signatures;
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                log(`[API] resolveMethodSignatures error: ${message}`);
                 return null;
             }
         }
@@ -148,6 +177,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         openViewerCommand,
         resolveMethodSignatureCommand,
+        resolveMethodSignaturesCommand,
         analyzeMethodCommand,
         outputChannel
     );
