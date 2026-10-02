@@ -454,5 +454,33 @@
         }
       }
     }
+  },
+  {
+    "label": "line-comment-reload",
+    "input": {
+      "scenario": "line-comment-reload"
+    },
+    "expected": {
+      "before": [
+        "context:25=context comment",
+        "removed:26=removed comment",
+        "added:26=added comment"
+      ],
+      "savedLineComments": {
+        "25": "context comment"
+      },
+      "savedDiffComments": {
+        "removed:26": "removed comment",
+        "added:26": "added comment"
+      },
+      "afterReload": [
+        "context:25=context comment",
+        "removed:26=removed comment",
+        "added:26=added comment"
+      ],
+      "afterClearDiff": [
+        "context:25=context comment"
+      ]
+    }
   }
 ]

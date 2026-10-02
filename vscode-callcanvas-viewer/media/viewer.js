@@ -2948,6 +2948,18 @@ function showCommentInputPopover(lineRow, windowId, lineNumber, initialValue, di
     setTimeout(() => document.addEventListener('click', closeOnClickOutside), 0);
 }
 
+/**
+ * While a diff overlay is shown, win.code holds copies of the _originalCode lines, but saving
+ * (lineComments) and clearing the overlay read _originalCode. Mirror a comment on an unchanged line
+ * there too, or it is lost on save (Change Set Canvas windows always have the overlay).
+ * Comments on diff lines are kept by diffComments instead.
+ */
+function syncOriginalLineComment(windowData, lineNumber, text, diffType) {
+    if (diffType || !windowData._originalCode) return;
+    const original = windowData._originalCode.find(line => line.line === lineNumber && !line.diffType);
+    if (original) original.comment = text;
+}
+
 function setLineComment(windowId, lineNumber, text, diffType) {
     const windowData = currentData.windows.find(w => w.id === windowId);
     if (!windowData) return;
@@ -2955,6 +2967,7 @@ function setLineComment(windowId, lineNumber, text, diffType) {
         line.line === lineNumber && (diffType ? line.diffType === diffType : !line.diffType));
     if (!lineData) return;
     lineData.comment = text;
+    syncOriginalLineComment(windowData, lineNumber, text, diffType);
     addOrUpdateCommentBubble(windowId, lineNumber, text, diffType);
     saveData();
 }
@@ -2966,6 +2979,7 @@ function removeLineComment(windowId, lineNumber, diffType) {
         line.line === lineNumber && (diffType ? line.diffType === diffType : !line.diffType));
     if (!lineData) return;
     lineData.comment = undefined;
+    syncOriginalLineComment(windowData, lineNumber, undefined, diffType);
     removeCommentBubble(windowId, lineNumber, diffType);
     saveData();
 }

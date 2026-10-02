@@ -2,7 +2,7 @@
     "name": "callcanvas-viewer",
     "displayName": "CallCanvas Code Navigation Viewer",
     "description": "Visualize call hierarchies and navigate code with CallCanvas viewer",
-    "version": "0.2.8",
+    "version": "0.2.9",
     "publisher": "share-github",
     "license": "MIT",
     "author": "share-github",

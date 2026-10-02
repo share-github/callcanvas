@@ -102,6 +102,8 @@ function loadGlobalsSandbox() {
         'buildGroupLayoutPlan', 'groupWindowHeight', 'layoutGroupUnit', 'layoutGroupedWindows',
         'mergeSymbols', 'adoptWindowRefs', 'mergeSymbolIndex', 'buildSaveData', 'reanalyzeRoot',
         'mergeCallCanvasData', 'findConnectionsAtLine',
+        'restoreDiffStates', 'applyDiffOverlayToWindow', 'clearDiffOverlay', 'setLineComment',
+        'removeLineComment', 'syncOriginalLineComment',
     ];
     const code = names.map(n => {
         const f = extractTopLevelFunctionSimple(src, n);
@@ -120,6 +122,7 @@ function loadGlobalsSandbox() {
         document: { querySelector: () => container, getElementById: () => null },
         createWindow: () => ({}),
         updateArrows() {}, updateContainerSize() {}, saveData() {}, renderViewportWindows() {},
+        rerenderCodeArea() {}, addOrUpdateCommentBubble() {}, removeCommentBubble() {},
         rerenderCodeAreas() {}, resetLayout() {}, jumpToWindowWithOrigin() {}, showJumpPopupMenu() {},
     };
     sandbox.vscode = { postMessage: m => sandbox.posted.push(m) };
@@ -285,6 +288,41 @@ const scenarios = {
                 island1Members: merged.windows.filter(w => w.group === 'isl-1').length,
                 geometryAfterMerge: checkGeometry(wv, merged),
             },
+        };
+    },
+    // Line comments under the diff overlay (every Change Set Canvas window has one) survive
+    // save → reload: unchanged lines via lineComments, added / removed lines via diffState.diffComments.
+    // Clearing the overlay keeps the unchanged-line comment too.
+    'line-comment-reload'() {
+        const sb = loadGlobalsSandbox();
+        const load = canvas => {
+            const data = { ...canvas, windows: canvas.windows.map(w => sb.normalizeWindowData(w)) };
+            sb.__set(data);
+            sb.restoreDiffStates();
+            return data;
+        };
+        const comments = data => {
+            const w = data.windows.find(x => x.id === 'w-order-create');
+            return w.code.filter(l => l.comment).map(l => `${l.diffType || 'context'}:${l.line}=${l.comment}`);
+        };
+        const data = load(loadSample());
+        sb.setLineComment('w-order-create', 25, 'context comment');
+        sb.setLineComment('w-order-create', 26, 'added comment', 'added');
+        sb.setLineComment('w-order-create', 26, 'removed comment', 'removed');
+        sb.setLineComment('w-order-create', 27, 'to be removed');
+        sb.removeLineComment('w-order-create', 27);
+        const before = comments(data);
+        const saved = sb.buildSaveData();
+        const savedWindow = saved.windows.find(w => w.id === 'w-order-create');
+        const reloaded = load(clone(saved));
+        const afterReload = comments(reloaded);
+        sb.clearDiffOverlay();
+        return {
+            before,
+            savedLineComments: savedWindow.lineComments || null,
+            savedDiffComments: (savedWindow.diffState && savedWindow.diffState.diffComments) || null,
+            afterReload,
+            afterClearDiff: comments(reloaded),
         };
     },
 };
