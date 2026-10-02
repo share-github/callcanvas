@@ -393,6 +393,7 @@ class ChangeSetAnalyzer {
         if (call != null) {
             conn.put("callLine", call.line);
             conn.put("callEndLine", call.endLine);
+            if (call.endCol > 0) conn.put("callEndCol", call.endCol);
         }
         connections.put(conn);
     }

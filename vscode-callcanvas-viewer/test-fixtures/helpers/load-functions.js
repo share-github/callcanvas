@@ -583,6 +583,16 @@ function loadWebviewFunctions(settingsOverride) {
         'layoutGroupedWindows',
         'computeGroupFrames',
         'buildWindowChangeDecor',
+        // Step navigation (← / →)
+        'buildStepModel',
+        'stepEnterableCalls',
+        'cloneStepState',
+        'stepPosition',
+        'stepFirst',
+        'stepNext',
+        'stepPrev',
+        'stepStateFromRow',
+        'findStepPathTo',
     ];
 
     const codeFragments = [];
@@ -716,6 +726,7 @@ function loadWebviewFunctions(settingsOverride) {
         parseInt,
         parseFloat,
         isNaN,
+        Infinity,
         undefined,
     };
 

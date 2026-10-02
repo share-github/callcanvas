@@ -144,6 +144,28 @@ for (const testName of testCases) {
 
     const actual = normalizeCallGraph(callGraph, testDir, absoluteTarget, targetLine);
 
+    // --- callOrder mode: callEndCol orders the root's calls by execution ---
+    if (config.callOrder) {
+        const result = { callOrder: callOrderOf(callGraph, actual.rootFunction, absoluteTarget) };
+        if (UPDATE) {
+            fs.writeFileSync(expectedPath, JSON.stringify(result, null, 2) + '\n', 'utf-8');
+            console.log(`[UPDATE] ${testName}`);
+            passed++;
+            continue;
+        }
+        const expected = fs.existsSync(expectedPath) ? JSON.parse(fs.readFileSync(expectedPath, 'utf-8')) : null;
+        if (expected && JSON.stringify(expected) === JSON.stringify(result)) {
+            console.log(`[PASS]   ${testName}`);
+            passed++;
+        } else {
+            console.error(`[FAIL]   ${testName}:`);
+            console.error(`         expected ${JSON.stringify(expected && expected.callOrder)}`);
+            console.error(`         got      ${JSON.stringify(result.callOrder)}`);
+            failed++;
+        }
+        continue;
+    }
+
     if (UPDATE) {
         let prev = {};
         try {
@@ -412,4 +434,17 @@ function compareResults(expected, actual) {
     }
 
     return diffs;
+}
+
+/** Root's calls sorted by (callEndLine, callEndCol) — the execution order the viewer's ← / → steps follow (edges without callEndCol, e.g. nested definitions, print `:-`) */
+function callOrderOf(callGraph, rootFunction, targetAbsPath) {
+    const name = new Map(Array.from(callGraph.functions).map(([sig, info]) => [sig, info.functionName]));
+    const rootSigs = new Set(Array.from(callGraph.functions)
+        .filter(([, info]) => info.functionName === rootFunction && info.absolutePath === targetAbsPath)
+        .map(([sig]) => sig));
+    return callGraph.calls
+        .filter(c => rootSigs.has(c.callerSignature))
+        .slice()
+        .sort((a, b) => (a.callEndLine - b.callEndLine) || ((a.callEndCol ?? 1e9) - (b.callEndCol ?? 1e9)))
+        .map(c => `${name.get(c.calleeSignature)}@${c.callLine}-${c.callEndLine}:${c.callEndCol ?? '-'}`);
 }

@@ -44,6 +44,40 @@ const testRegistry = {
         args: (input) => [input],
     },
     // 変更集合キャンバスの viewer 描画（グループ枠・グループ単位の自動配置・省略接続・保存往復・再解析しない）
+    // ← / → のステップ移動: 先頭から末尾までの順・末尾から ← で逆順に戻ること・クリックした行からの再開
+    'step-navigation': {
+        fn: (input) => {
+            const data = { ...input.canvas, windows: input.canvas.windows.map(w => wv.normalizeWindowData(w)) };
+            const model = wv.buildStepModel(data);
+            const fmt = st => { const p = wv.stepPosition(model, st); return p ? p.windowId + ':' + p.line : null; };
+            const walk = (st, step, limit) => {
+                const out = [];
+                for (let s = st; s && out.length < limit; s = step(model, s)) out.push(fmt(s));
+                return out;
+            };
+            const forward = [];
+            let last = null;
+            for (let s = wv.stepFirst(model); s && forward.length < 1000; s = wv.stepNext(model, s)) { forward.push(fmt(s)); last = s; }
+            const backward = last ? walk(last, wv.stepPrev, 1000) : [];
+            const anchors = (input.anchors || []).map(a => {
+                const prev = a.after ? (() => {
+                    let s = wv.stepFirst(model);
+                    for (let i = 0; i < a.after; i++) s = wv.stepNext(model, s);
+                    return s;
+                })() : null;
+                const st = wv.stepStateFromRow(model, prev, a.windowId, a.line);
+                const step = a.direction === 'prev' ? wv.stepPrev : wv.stepNext;
+                return walk(st && step(model, st), step, a.steps);
+            });
+            return {
+                starts: model.starts,
+                forward,
+                backwardIsReverse: JSON.stringify(backward) === JSON.stringify(forward.slice().reverse()),
+                anchors,
+            };
+        },
+        args: (input) => [input],
+    },
     'changeset-canvas': {
         fn: (input) => require(path.join(helpersDir, 'changeset-canvas.js')).runScenario(input, wv),
         args: (input) => [input],

@@ -152,6 +152,12 @@ let selectionStart = null;           // Selection start coordinates {x, y}
 let jumpHistory = [];                // Stack of {windowId, lineNumber}
 const JUMP_HISTORY_MAX_SIZE = 50;
 
+// Step navigation (← / →)
+let stepState = null;     // current step (start index + call stack)
+let stepExpect = null;    // {windowId, line} the last step focused; a different focused row re-anchors
+let stepSeq = 0;          // number of the latest step
+let stepJumpPending = 0;  // stepSeq of the window jump whose row focus (100 ms later) is still to come; 0 = none
+
 // Search functionality
 let searchQuery = '';                // Current search query
 let searchMatches = [];              // Array of matched window IDs
@@ -566,6 +572,8 @@ function reloadViewer(newData, reloadSource) {
     selectedWindows.clear();
     selectedConnections.clear();
     jumpHistory = [];
+    stepState = null;
+    stepExpect = null;
 
     const container = document.querySelector('.container');
     if (container) {
@@ -751,7 +759,8 @@ function mergeCallCanvasData(newData, sourceWindowDisplayName, sourceWindowId) {
                     from: fromId, 
                     to: toId,
                     callLine: conn.callLine,
-                    callEndLine: conn.callEndLine
+                    callEndLine: conn.callEndLine,
+                    ...(conn.callEndCol != null ? { callEndCol: conn.callEndCol } : {})
                 });
             }
         });
@@ -1442,6 +1451,17 @@ function initializeConnectionMode() {
                         }
                     }
                 }
+            }
+        }
+
+        // ← / → to step through the canvas in execution order (from the clicked row)
+        if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+            const t = e.target;
+            const inInput = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+            const inMenu = t && t.closest && t.closest('.jump-popup-menu, .line-context-menu, .toolbar-dropdown-menu');
+            if (!inInput && !inMenu) {
+                e.preventDefault();
+                moveStep(e.key === 'ArrowRight' ? 1 : -1);
             }
         }
 
@@ -3020,7 +3040,7 @@ function removeCommentBubble(windowId, lineNumber, diffType) {
 }
 
 // Jump to a window by ID
-function jumpToWindow(windowId, skipHistory = false) {
+function jumpToWindow(windowId, skipHistory = false, focusLine = null, step = null) {
     // visible:false の場合は表示を復元してレイアウト再計算
     const windowData = currentData.windows.find(w => w.id === windowId);
     if (windowData && windowData.visible === false) {
@@ -3031,7 +3051,7 @@ function jumpToWindow(windowId, skipHistory = false) {
         }
         updateArrows();
         // 可視ウィンドウのみ再レイアウトし、完了後に再度ジャンプ
-        resetLayout(() => jumpToWindow(windowId, skipHistory));
+        resetLayout(() => jumpToWindow(windowId, skipHistory, focusLine, step));
         return;
     }
 
@@ -3068,12 +3088,28 @@ function jumpToWindow(windowId, skipHistory = false) {
     // Scroll window into view (center both vertically and horizontally)
     windowElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
     
-    // Focus first code line after a short delay (for expand animation). preventScroll keeps our centering.
+    // Focus first code line (or focusLine: step navigation) after a short delay (for expand animation).
+    // preventScroll keeps our centering; a focusLine row outside the code area scrolls only the code area.
+    // step = {current, done}: a step superseded by a later one does not take the focus.
     setTimeout(() => {
-        const firstRow = windowElement.querySelector('.code-line-row');
-        if (firstRow) {
-            firstRow.focus({ preventScroll: true });
+        if (focusLine == null) {
+            const firstRow = windowElement.querySelector('.code-line-row');
+            if (firstRow) {
+                firstRow.focus({ preventScroll: true });
+            }
+            return;
         }
+        if (step && !step.current()) return;
+        const codeArea = windowElement.querySelector('.code-area');
+        if (codeArea && codeArea.dataset.rendered !== 'true' && windowData) {
+            rerenderCodeArea(codeArea, windowData);
+        }
+        const row = findStepRow(windowElement, focusLine);
+        if (row) {
+            row.focus({ preventScroll: true });
+            scrollRowIntoCodeArea(row);
+        }
+        if (step) step.done();
     }, 100);
 }
 
@@ -3125,6 +3161,337 @@ function jumpBack() {
             if (firstRow) firstRow.focus({ preventScroll: true });
         }
     }, 100);
+}
+
+// ========== Step navigation (← / →) ==========
+// Walk the canvas in execution order like a debugger's step into: rows top to bottom; on a row with calls,
+// enter each callee in execution order (callEndLine, callEndCol), then land back on the call row.
+// Static: both branches of an if are walked, loops once. Blank / comment / removed-diff / nested-omit card
+// rows are not steps. Every window is reachable: roots (no incoming connection) in screen order (group layout),
+// then windows no earlier start reaches. State = start index + call stack; computed lazily per key press.
+
+/**
+ * Steps of each window and the order of starts.
+ * groups: windowId → [{line, endLine, calls: [{to, callLine}]}] — one group per executable row;
+ * a multi-line call (callLine..callEndLine) absorbs the rows it spans and every call starting in them.
+ */
+function buildStepModel(data) {
+    const windows = (data && Array.isArray(data.windows)) ? data.windows : [];
+    const conns = (data && Array.isArray(data.connections)) ? data.connections : [];
+    const exists = new Set(windows.map(w => w.id));
+    const groups = new Map();
+    for (const w of windows) {
+        const code = Array.isArray(w.code) ? w.code : [];
+        // Nested-omit cards are definitions of nested functions (TS): the parent→nested connection there is not a call
+        const cards = code.filter(l => l && l.nestedOmitCard).map(l => [l.line, l.omitEndLine != null ? l.omitEndLine : l.line]);
+        const calls = [];
+        conns.forEach((c, index) => {
+            if (!c || c.from !== w.id || typeof c.callLine !== 'number' || !exists.has(c.to)) return;
+            const end = typeof c.callEndLine === 'number' ? c.callEndLine : c.callLine;
+            if (cards.some(([s, e]) => c.callLine <= e && end >= s)) return;
+            calls.push({ to: c.to, callLine: c.callLine, endLine: end,
+                endCol: typeof c.callEndCol === 'number' ? c.callEndCol : Infinity, index });
+        });
+        calls.sort((a, b) => (a.endLine - b.endLine) || (a.endCol - b.endCol) || (a.index - b.index));
+        const rows = [];
+        const seen = new Set();
+        for (const l of code) {
+            if (!l || l.diffType === 'removed' || l.nestedOmitCard || l.isComment) continue;
+            if (typeof l.content !== 'string' || l.content.trim() === '' || seen.has(l.line)) continue;
+            seen.add(l.line);
+            rows.push(l.line);
+        }
+        rows.sort((a, b) => a - b);
+        const list = [];
+        let consumedUntil = -Infinity;
+        for (const line of rows) {
+            if (line <= consumedUntil) continue;
+            let endLine = line;
+            let grew = true;
+            while (grew) {
+                grew = false;
+                for (const c of calls) {
+                    if (c.callLine >= line && c.callLine <= endLine && c.endLine > endLine) { endLine = c.endLine; grew = true; }
+                }
+            }
+            const own = calls.filter(c => c.callLine >= line && c.callLine <= endLine).map(c => ({ to: c.to, callLine: c.callLine }));
+            list.push({ line, endLine, calls: own });
+            consumedUntil = endLine;
+        }
+        groups.set(w.id, list);
+    }
+
+    // Same order as the screen: grouped canvases follow the group layout (block → its islands → its direct windows)
+    const ordered = hasCanvasGroups(data)
+        ? buildGroupLayoutPlan(data.groups, windows).flatMap(b => b.units.flatMap(u => u.windows.map(w => w.id)))
+        : windows.map(w => w.id);
+    const incoming = new Set(conns.filter(c => c && exists.has(c.from) && exists.has(c.to)).map(c => c.to));
+    const reached = new Set();
+    const reach = (id) => {
+        const q = [id];
+        while (q.length) {
+            const u = q.pop();
+            if (reached.has(u)) continue;
+            reached.add(u);
+            for (const g of groups.get(u) || []) for (const c of g.calls) q.push(c.to);
+        }
+    };
+    const starts = [];
+    for (const id of ordered) if (!incoming.has(id)) { starts.push(id); reach(id); }
+    for (const id of ordered) if (!reached.has(id)) { starts.push(id); reach(id); }
+    return { groups, starts };
+}
+
+/** Calls of group g of frames[depth] that can be entered (callee not already on the call stack = no recursion) */
+function stepEnterableCalls(model, frames, depth, g) {
+    const f = frames[depth];
+    const group = (model.groups.get(f.w) || [])[g];
+    if (!group) return [];
+    const onStack = new Set(frames.slice(0, depth + 1).map(x => x.w));
+    return group.calls.filter(c => !onStack.has(c.to));
+}
+
+function cloneStepState(state) {
+    return { si: state.si, frames: state.frames.map(f => Object.assign({}, f)) };
+}
+
+/** {windowId, line} of a step state (phase -1 = the group's row, k ≥ 0 = back on the row of call k) */
+function stepPosition(model, state) {
+    if (!state || !state.frames.length) return null;
+    const d = state.frames.length - 1;
+    const top = state.frames[d];
+    const group = (model.groups.get(top.w) || [])[top.g];
+    if (!group || top.phase < -1) return null;
+    if (top.phase === -1) return { windowId: top.w, line: group.line };
+    const call = stepEnterableCalls(model, state.frames, d, top.g)[top.phase];
+    return call ? { windowId: top.w, line: call.callLine } : null;
+}
+
+/** First step of the canvas (null when there is none) */
+function stepFirst(model) {
+    if (!model.starts.length) return null;
+    return stepNext(model, { si: 0, frames: [{ w: model.starts[0], g: 0, phase: -2 }] });
+}
+
+/** Next step (→). phase -2 = just before group g (an anchor between steps). null at the end. */
+function stepNext(model, state) {
+    const s = cloneStepState(state);
+    for (;;) {
+        const d = s.frames.length - 1;
+        const top = s.frames[d];
+        const groups = model.groups.get(top.w) || [];
+        if (top.phase === -2) {
+            if (top.g < groups.length) { top.phase = -1; return s; }
+        } else {
+            const calls = stepEnterableCalls(model, s.frames, d, top.g);
+            const k = top.phase + 1;
+            if (k < calls.length) {
+                const callee = calls[k].to;
+                if (!(model.groups.get(callee) || []).length) { top.phase = k; return s; }
+                top.inCall = k;
+                s.frames.push({ w: callee, g: 0, phase: -1 });
+                return s;
+            }
+            if (top.g + 1 < groups.length) { top.g++; top.phase = -1; return s; }
+        }
+        // End of this window: back on the caller's call row, or on to the next start
+        s.frames.pop();
+        if (s.frames.length) {
+            const p = s.frames[s.frames.length - 1];
+            p.phase = p.inCall;
+            delete p.inCall;
+            return s;
+        }
+        if (s.si + 1 >= model.starts.length) return null;
+        s.si++;
+        s.frames = [{ w: model.starts[s.si], g: 0, phase: -2 }];
+    }
+}
+
+/** Previous step (←). null at the beginning. */
+function stepPrev(model, state) {
+    const s = cloneStepState(state);
+    for (;;) {
+        const d = s.frames.length - 1;
+        const top = s.frames[d];
+        const groups = model.groups.get(top.w) || [];
+        if (top.phase >= 0) {
+            // Back on the row of call k ← the callee's last step (always in the callee: its last row or a landing there)
+            const k = top.phase;
+            const call = stepEnterableCalls(model, s.frames, d, top.g)[k];
+            if (!call) { top.phase = -1; return s; }
+            const callee = call.to;
+            const calleeGroups = model.groups.get(callee) || [];
+            if (!calleeGroups.length) { top.phase = k - 1; return s; }
+            top.inCall = k;
+            const child = { w: callee, g: calleeGroups.length - 1, phase: -1 };
+            s.frames.push(child);
+            child.phase = stepEnterableCalls(model, s.frames, d + 1, child.g).length - 1;
+            return s;
+        }
+        if (top.g - 1 >= 0 && top.g - 1 < groups.length) {
+            top.g--;
+            top.phase = stepEnterableCalls(model, s.frames, d, top.g).length - 1;
+            return s;
+        }
+        // Entry of this window ← the step before the caller entered it
+        s.frames.pop();
+        if (s.frames.length) {
+            const p = s.frames[s.frames.length - 1];
+            p.phase = p.inCall - 1;
+            delete p.inCall;
+            return s;
+        }
+        if (s.si - 1 < 0) return null;
+        s.si--;
+        const w = model.starts[s.si];
+        s.frames = [{ w, g: (model.groups.get(w) || []).length, phase: -2 }];
+    }
+}
+
+/**
+ * Step state anchored at a clicked row: on a step row → that step; otherwise just before the next step row.
+ * The call stack is kept from `prev` when the window is on it (the flow being followed);
+ * otherwise it is the first place the window is entered in step order.
+ */
+function stepStateFromRow(model, prev, windowId, line) {
+    const groups = model.groups.get(windowId);
+    if (!groups) return null;
+    const gi = groups.findIndex(g => g.line === line);
+    const top = gi >= 0 ? { w: windowId, g: gi, phase: -1 }
+        : { w: windowId, g: (i => i < 0 ? groups.length : i)(groups.findIndex(g => g.line > line)), phase: -2 };
+    if (prev && prev.frames) {
+        const i = prev.frames.findIndex(f => f.w === windowId);
+        if (i >= 0) return { si: prev.si, frames: prev.frames.slice(0, i).map(f => Object.assign({}, f)).concat([top]) };
+    }
+    const path = findStepPathTo(model, windowId);
+    if (!path) return null;
+    path.frames[path.frames.length - 1] = top;
+    return path;
+}
+
+/** First call stack (in step order) that enters `target`: {si, frames} with inCall set on the callers */
+function findStepPathTo(model, target) {
+    const canReach = new Set([target]);
+    let grew = true;
+    while (grew) {
+        grew = false;
+        for (const [w, groups] of model.groups) {
+            if (canReach.has(w)) continue;
+            if (groups.some(g => g.calls.some(c => canReach.has(c.to)))) { canReach.add(w); grew = true; }
+        }
+    }
+    const failed = new Set();
+    const dfs = (frames) => {
+        const d = frames.length - 1;
+        const top = frames[d];
+        if (top.w === target) return true;
+        const groups = model.groups.get(top.w) || [];
+        for (let g = 0; g < groups.length; g++) {
+            const calls = stepEnterableCalls(model, frames, d, g);
+            for (let k = 0; k < calls.length; k++) {
+                const callee = calls[k].to;
+                if (!canReach.has(callee) || failed.has(callee)) continue;
+                top.g = g;
+                top.phase = -1;
+                top.inCall = k;
+                frames.push({ w: callee, g: 0, phase: -1 });
+                if (dfs(frames)) return true;
+                frames.pop();
+            }
+        }
+        delete top.inCall;
+        failed.add(top.w);
+        return false;
+    };
+    for (let si = 0; si < model.starts.length; si++) {
+        if (!canReach.has(model.starts[si])) continue;
+        failed.clear();
+        const frames = [{ w: model.starts[si], g: 0, phase: -1 }];
+        if (dfs(frames)) return { si, frames };
+    }
+    return null;
+}
+
+function isStepStateValid(model, state) {
+    return !!state && state.si < model.starts.length && state.frames.length > 0
+        && state.frames[0].w === model.starts[state.si]
+        && state.frames.every(f => model.groups.has(f.w));
+}
+
+/** ← / →: move one step and focus its row (window changes follow the call-target jump; rows inside a window follow ↑ / ↓) */
+function moveStep(direction) {
+    if (!currentData) return;
+    const model = buildStepModel(currentData);
+    if (!model.starts.length) return;
+    let state = isStepStateValid(model, stepState) ? stepState : null;
+    const active = document.activeElement;
+    const row = active && active.classList && active.classList.contains('code-line-row') ? active : null;
+    const rowMatches = row && stepExpect && row.getAttribute('data-window-id') === stepExpect.windowId
+        && parseInt(row.getAttribute('data-line-number'), 10) === stepExpect.line;
+    // Keep following while a jump's focus is still to come (key repeat): the focused row is not the step yet
+    const following = !!(state && stepExpect && (stepJumpPending || rowMatches));
+    const fromWindowId = following ? stepExpect.windowId : (row ? row.getAttribute('data-window-id') : null);
+    if (!following) {
+        state = null;
+        stepJumpPending = 0;
+        if (row && row.getAttribute('data-diff-removed') !== 'true') {
+            state = stepStateFromRow(model, stepState, row.getAttribute('data-window-id'), parseInt(row.getAttribute('data-line-number'), 10));
+        } else if (selectedWindows.size === 1) {
+            state = stepStateFromRow(model, stepState, Array.from(selectedWindows)[0], -Infinity);
+        }
+    }
+    const next = direction > 0 ? (state ? stepNext(model, state) : stepFirst(model)) : (state ? stepPrev(model, state) : null);
+    const pos = next && stepPosition(model, next);
+    if (!pos) return;
+    stepState = next;
+    stepExpect = pos;
+    focusStepRow(pos, fromWindowId, ++stepSeq);
+}
+
+function findStepRow(windowElement, line) {
+    const rows = Array.from(windowElement.querySelectorAll('.code-line-row:not([data-diff-removed="true"])'));
+    let best = null;
+    for (const r of rows) {
+        const n = parseInt(r.getAttribute('data-line-number'), 10);
+        if (n === line) return r;
+        if (n < line) best = r;
+    }
+    return best || rows[0] || null;
+}
+
+function focusStepRow(pos, fromWindowId, seq) {
+    const windowElement = document.getElementById(pos.windowId);
+    const windowData = currentData.windows.find(w => w.id === pos.windowId);
+    if (!windowElement || !windowData) return;
+    // Same window as the previous step and no jump in flight → like ↑ / ↓. Otherwise like the call-target jump;
+    // a later step supersedes this jump's delayed focus (key repeat must not let an old jump steal the focus).
+    const sameWindow = fromWindowId === pos.windowId && !stepJumpPending
+        && windowData.visible !== false && windowData.collapsed !== true;
+    const target = sameWindow ? findStepRow(windowElement, pos.line) : null;
+    if (!target) {
+        stepJumpPending = seq;
+        const done = () => { if (stepJumpPending === seq) stepJumpPending = 0; };
+        jumpToWindow(pos.windowId, true, pos.line, { current: () => stepSeq === seq, done });
+        setTimeout(done, 1000);
+        return;
+    }
+    target.focus();
+    if (!windowElement.classList.contains('selected')) {
+        selectWindow(pos.windowId, false, true);
+    }
+}
+
+/** Scroll only the window's code area so the row is inside it (the canvas stays where the jump put it) */
+function scrollRowIntoCodeArea(row) {
+    const codeArea = row.closest('.code-area');
+    if (!codeArea) return;
+    const c = codeArea.getBoundingClientRect();
+    const r = row.getBoundingClientRect();
+    const scale = codeArea.offsetHeight > 0 ? c.height / codeArea.offsetHeight : 1;
+    if (!scale) return;
+    if (r.top < c.top) codeArea.scrollTop -= (c.top - r.top) / scale;
+    else if (r.bottom > c.bottom) codeArea.scrollTop += (r.bottom - c.bottom) / scale;
 }
 
 // ========== Search functions ==========

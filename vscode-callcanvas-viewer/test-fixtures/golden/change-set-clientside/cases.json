@@ -1521,5 +1521,189 @@
       "symbolIndex": null,
       "clientsideError": null
     }
+  },
+  {
+    "label": "TS の入れ子関数: 定義の接続（callEndCol 無し）と呼んでいる行の接続があれば、呼んでいる行の接続を島の接続にする（ステップ実行がそこから入る）",
+    "input": {
+      "files": [
+        {
+          "filePath": "web/ts/nested.ts",
+          "status": "modified",
+          "hunks": [
+            {
+              "oldStart": 6,
+              "oldCount": 1,
+              "newStart": 6,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "    await save();"
+                },
+                {
+                  "type": "add",
+                  "content": "    await saveNote();"
+                }
+              ]
+            },
+            {
+              "oldStart": 8,
+              "oldCount": 1,
+              "newStart": 8,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "remove",
+                  "content": "  const n = 0;"
+                },
+                {
+                  "type": "add",
+                  "content": "  const n = 1;"
+                }
+              ]
+            }
+          ],
+          "headContent": "import { saveNote } from \"./actions\";\n\n\nexport function outer() {\n  async function onSubmit() {\n    await saveNote();\n  }\n  const n = 1;\n  void n;\n\n  onSubmit();\n}"
+        }
+      ],
+      "clientside": {
+        "lineSignatures": {
+          "web/ts/nested.ts": {
+            "6": "ts/nested.ts#onSubmit:5",
+            "8": "ts/nested.ts#outer:4"
+          }
+        },
+        "analyses": {
+          "web/ts/nested.ts\nts/nested.ts#outer:4": {
+            "success": true,
+            "data": {
+              "autoLayout": true,
+              "windows": [
+                {
+                  "id": "window-1",
+                  "displayName": "nested # outer",
+                  "filePath": "web/ts/nested.ts",
+                  "language": "typescript",
+                  "code": "export function outer() {\n  async function onSubmit() {\n    await saveNote();\n  }\n  const n = 1;\n  void n;\n\n  onSubmit();\n}",
+                  "startLine": 4,
+                  "endLine": 12,
+                  "nestedOmissions": [
+                    {
+                      "startLine": 5,
+                      "endLine": 7,
+                      "previewText": "async function onSubmit() {..."
+                    }
+                  ]
+                },
+                {
+                  "id": "window-2",
+                  "displayName": "nested # onSubmit",
+                  "filePath": "web/ts/nested.ts",
+                  "language": "typescript",
+                  "code": "  async function onSubmit() {\n    await saveNote();\n  }",
+                  "startLine": 5,
+                  "endLine": 7
+                }
+              ],
+              "connections": [
+                {
+                  "id": "connection-1",
+                  "from": "window-1",
+                  "to": "window-2",
+                  "callLine": 5,
+                  "callEndLine": 7
+                },
+                {
+                  "id": "connection-2",
+                  "from": "window-1",
+                  "to": "window-2",
+                  "callLine": 11,
+                  "callEndLine": 11,
+                  "callEndCol": 12
+                }
+              ]
+            }
+          },
+          "web/ts/nested.ts\nts/nested.ts#onSubmit:5": {
+            "success": true,
+            "data": {
+              "autoLayout": true,
+              "windows": [
+                {
+                  "id": "window-2",
+                  "displayName": "nested # onSubmit",
+                  "filePath": "web/ts/nested.ts",
+                  "language": "typescript",
+                  "code": "  async function onSubmit() {\n    await saveNote();\n  }",
+                  "startLine": 5,
+                  "endLine": 7
+                }
+              ],
+              "connections": []
+            }
+          }
+        }
+      }
+    },
+    "expected": {
+      "request": [
+        {
+          "path": "web/ts/nested.ts",
+          "kind": "typescript",
+          "lines": [
+            6,
+            8
+          ]
+        }
+      ],
+      "invariantErrors": [],
+      "groups": [
+        "clientside:blk-clientside",
+        "island:cs-isl-1<blk-clientside"
+      ],
+      "windows": [
+        {
+          "name": "nested # onSubmit",
+          "group": "cs-isl-1",
+          "windowType": "method",
+          "filePath": "web/ts/nested.ts",
+          "startLine": 5,
+          "status": "modified",
+          "source": "worktree",
+          "code": "  async function onSubmit() {\n    await saveNote();\n  }",
+          "diffHunks": [
+            "+6,1"
+          ]
+        },
+        {
+          "name": "nested # outer",
+          "group": "cs-isl-1",
+          "windowType": "method",
+          "filePath": "web/ts/nested.ts",
+          "startLine": 4,
+          "status": "modified",
+          "source": "worktree",
+          "code": "export function outer() {\n  async function onSubmit() {\n    await saveNote();\n  }\n  const n = 1;\n  void n;\n\n  onSubmit();\n}",
+          "diffHunks": [
+            "+8,1"
+          ]
+        }
+      ],
+      "connections": [
+        "nested # outer -> nested # onSubmit @11"
+      ],
+      "files": [
+        {
+          "path": "web/ts/nested.ts",
+          "inGraph": true,
+          "windows": [
+            "nested # onSubmit",
+            "nested # outer"
+          ]
+        }
+      ],
+      "symbolIndex": null,
+      "clientsideError": null
+    }
   }
 ]

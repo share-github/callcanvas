@@ -376,7 +376,7 @@ function hunkSignatures(h: DiffHunk, sigs: Record<string, string | null>): strin
 }
 
 /** analyzeMethod の結果 1 つを、節点（キーは正規化したファイルパスと開始行）と下向きの辺にする */
-function analysisGraph(data: any, norm: (p: string) => string): { root: string | null; nodes: Map<string, any>; out: Map<string, Array<{ to: string; callLine?: number; callEndLine?: number }>> } {
+function analysisGraph(data: any, norm: (p: string) => string): { root: string | null; nodes: Map<string, any>; out: Map<string, Array<{ to: string; callLine?: number; callEndLine?: number; callEndCol?: number }>> } {
     const nodes = new Map<string, any>();
     const keyOf = new Map<string, string>();
     for (const w of (Array.isArray(data && data.windows) ? data.windows : [])) {
@@ -385,13 +385,17 @@ function analysisGraph(data: any, norm: (p: string) => string): { root: string |
         keyOf.set(w.id, key);
         if (!nodes.has(key)) nodes.set(key, w);
     }
-    const out = new Map<string, Array<{ to: string; callLine?: number; callEndLine?: number }>>();
+    const out = new Map<string, Array<{ to: string; callLine?: number; callEndLine?: number; callEndCol?: number }>>();
     for (const c of (Array.isArray(data && data.connections) ? data.connections : [])) {
         const a = c && keyOf.get(c.from);
         const b = c && keyOf.get(c.to);
         if (!a || !b || a === b) continue;
         const list = out.get(a) || [];
-        if (!list.some(e => e.to === b)) list.push({ to: b, callLine: c.callLine, callEndLine: c.callEndLine });
+        const edge = { to: b, callLine: c.callLine, callEndLine: c.callEndLine, callEndCol: c.callEndCol };
+        const i = list.findIndex(e => e.to === b);
+        // 1 組 1 本。TS の入れ子関数は定義の接続（callEndCol 無し）より呼んでいる行の接続を採る（ステップ実行がそこから入る）
+        if (i < 0) list.push(edge);
+        else if (typeof list[i].callEndCol !== 'number' && typeof c.callEndCol === 'number') list[i] = edge;
         out.set(a, list);
     }
     const rootId = data && data.metadata && data.metadata.analysis && data.metadata.analysis.rootWindowId;
@@ -489,20 +493,20 @@ function composeClientside(
     const find = (i: number): number => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
     const union = (a: number, b: number) => { const ra = find(a), rb = find(b); if (ra !== rb) { if (ra < rb) parent[rb] = ra; else parent[ra] = rb; } };
     const idx = new Map<string, number>(seedKeys.map((k, i) => [k, i]));
-    type Link = { path: string[]; calls: Array<{ callLine?: number; callEndLine?: number }>; nodes: Map<string, any> };
+    type Link = { path: string[]; calls: Array<{ callLine?: number; callEndLine?: number; callEndCol?: number }>; nodes: Map<string, any> };
     const links: Link[] = [];
     for (const s of seedKeys) {
         const g = seeds.get(s)!.graph;
-        const prev = new Map<string, { from: string | null; call?: { callLine?: number; callEndLine?: number } }>([[s, { from: null }]]);
+        const prev = new Map<string, { from: string | null; call?: { callLine?: number; callEndLine?: number; callEndCol?: number } }>([[s, { from: null }]]);
         const q: string[] = [s];
         while (q.length > 0) {
             const u = q.shift()!;
             for (const e of (g.out.get(u) || [])) {
                 if (prev.has(e.to)) continue;
-                prev.set(e.to, { from: u, call: { callLine: e.callLine, callEndLine: e.callEndLine } });
+                prev.set(e.to, { from: u, call: { callLine: e.callLine, callEndLine: e.callEndLine, callEndCol: e.callEndCol } });
                 if (seeds.has(e.to)) {
                     const p: string[] = [];
-                    const calls: Array<{ callLine?: number; callEndLine?: number }> = [];
+                    const calls: Array<{ callLine?: number; callEndLine?: number; callEndCol?: number }> = [];
                     for (let n: string | null = e.to; n !== null; n = prev.get(n)!.from) {
                         p.unshift(n);
                         const c = prev.get(n)!.call;
@@ -592,6 +596,7 @@ function composeClientside(
             if (call && typeof call.callLine === 'number') {
                 c.callLine = call.callLine;
                 if (typeof call.callEndLine === 'number') c.callEndLine = call.callEndLine;
+                if (typeof call.callEndCol === 'number') c.callEndCol = call.callEndCol;
             }
             out.connections.push(c);
         }

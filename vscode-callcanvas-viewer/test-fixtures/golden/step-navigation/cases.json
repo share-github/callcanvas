@@ -1,0 +1,733 @@
+[
+  {
+    "label": "Java: 引数・複数行・同じ行の文を実行順に。コメントと空行は飛ばす。クリックした行から再開",
+    "input": {
+      "canvas": {
+        "windows": [
+          {
+            "id": "run",
+            "displayName": "run",
+            "filePath": "src/run.java",
+            "startLine": 10,
+            "code": "public void run() {\n    outer(inner(1));\n    // comment\n\n    wrap(\n        arg()\n    );\n    a(); b();\n}",
+            "language": "java"
+          },
+          {
+            "id": "inner",
+            "displayName": "inner",
+            "filePath": "src/inner.java",
+            "startLine": 30,
+            "code": "int inner(int x) {\n    return x;\n}",
+            "language": "java"
+          },
+          {
+            "id": "outer",
+            "displayName": "outer",
+            "filePath": "src/outer.java",
+            "startLine": 40,
+            "code": "void outer(int x) { }",
+            "language": "java"
+          },
+          {
+            "id": "wrap",
+            "displayName": "wrap",
+            "filePath": "src/wrap.java",
+            "startLine": 50,
+            "code": "void wrap(int x) { }",
+            "language": "java"
+          },
+          {
+            "id": "arg",
+            "displayName": "arg",
+            "filePath": "src/arg.java",
+            "startLine": 60,
+            "code": "int arg() { return 0; }",
+            "language": "java"
+          },
+          {
+            "id": "a",
+            "displayName": "a",
+            "filePath": "src/a.java",
+            "startLine": 70,
+            "code": "void a() { }",
+            "language": "java"
+          },
+          {
+            "id": "b",
+            "displayName": "b",
+            "filePath": "src/b.java",
+            "startLine": 80,
+            "code": "void b() { }",
+            "language": "java"
+          }
+        ],
+        "connections": [
+          {
+            "from": "run",
+            "to": "outer",
+            "callLine": 11,
+            "callEndLine": 11,
+            "callEndCol": 20
+          },
+          {
+            "from": "run",
+            "to": "inner",
+            "callLine": 11,
+            "callEndLine": 11,
+            "callEndCol": 19
+          },
+          {
+            "from": "run",
+            "to": "wrap",
+            "callLine": 14,
+            "callEndLine": 16,
+            "callEndCol": 6
+          },
+          {
+            "from": "run",
+            "to": "arg",
+            "callLine": 15,
+            "callEndLine": 15,
+            "callEndCol": 13
+          },
+          {
+            "from": "run",
+            "to": "b",
+            "callLine": 17,
+            "callEndLine": 17,
+            "callEndCol": 15
+          },
+          {
+            "from": "run",
+            "to": "a",
+            "callLine": 17,
+            "callEndLine": 17,
+            "callEndCol": 10
+          }
+        ]
+      },
+      "anchors": [
+        {
+          "windowId": "run",
+          "line": 13,
+          "steps": 2
+        },
+        {
+          "windowId": "run",
+          "line": 13,
+          "steps": 2,
+          "direction": "prev"
+        },
+        {
+          "windowId": "inner",
+          "line": 31,
+          "steps": 3
+        },
+        {
+          "windowId": "run",
+          "line": 17,
+          "steps": 3
+        }
+      ]
+    },
+    "expected": {
+      "starts": [
+        "run"
+      ],
+      "forward": [
+        "run:10",
+        "run:11",
+        "inner:30",
+        "inner:31",
+        "inner:32",
+        "run:11",
+        "outer:40",
+        "run:11",
+        "run:14",
+        "arg:60",
+        "run:15",
+        "wrap:50",
+        "run:14",
+        "run:17",
+        "a:70",
+        "run:17",
+        "b:80",
+        "run:17",
+        "run:18"
+      ],
+      "backwardIsReverse": true,
+      "anchors": [
+        [
+          "run:14",
+          "arg:60"
+        ],
+        [
+          "run:11",
+          "outer:40"
+        ],
+        [
+          "inner:32",
+          "run:11",
+          "outer:40"
+        ],
+        [
+          "a:70",
+          "run:17",
+          "b:80"
+        ]
+      ]
+    }
+  },
+  {
+    "label": "callEndCol の無い古い JSON は接続の並び順",
+    "input": {
+      "canvas": {
+        "windows": [
+          {
+            "id": "run",
+            "displayName": "run",
+            "filePath": "src/run.java",
+            "startLine": 1,
+            "code": "void run() {\n    x(y());\n}",
+            "language": "java"
+          },
+          {
+            "id": "x",
+            "displayName": "x",
+            "filePath": "src/x.java",
+            "startLine": 10,
+            "code": "void x(int v) { }",
+            "language": "java"
+          },
+          {
+            "id": "y",
+            "displayName": "y",
+            "filePath": "src/y.java",
+            "startLine": 20,
+            "code": "int y() { return 1; }",
+            "language": "java"
+          }
+        ],
+        "connections": [
+          {
+            "from": "run",
+            "to": "x",
+            "callLine": 2,
+            "callEndLine": 2
+          },
+          {
+            "from": "run",
+            "to": "y",
+            "callLine": 2,
+            "callEndLine": 2
+          }
+        ]
+      }
+    },
+    "expected": {
+      "starts": [
+        "run"
+      ],
+      "forward": [
+        "run:1",
+        "run:2",
+        "x:10",
+        "run:2",
+        "y:20",
+        "run:2",
+        "run:3"
+      ],
+      "backwardIsReverse": true,
+      "anchors": []
+    }
+  },
+  {
+    "label": "再帰には入らない・共有の呼び出し先は呼ばれるたびに入る・クリックはたどっていた流れを優先",
+    "input": {
+      "canvas": {
+        "windows": [
+          {
+            "id": "A",
+            "displayName": "A",
+            "filePath": "src/A.java",
+            "startLine": 1,
+            "code": "void a() {\n    b();\n    c();\n}",
+            "language": "java"
+          },
+          {
+            "id": "B",
+            "displayName": "B",
+            "filePath": "src/B.java",
+            "startLine": 10,
+            "code": "void b() {\n    c();\n    a();\n}",
+            "language": "java"
+          },
+          {
+            "id": "C",
+            "displayName": "C",
+            "filePath": "src/C.java",
+            "startLine": 20,
+            "code": "void c() { }",
+            "language": "java"
+          }
+        ],
+        "connections": [
+          {
+            "from": "A",
+            "to": "B",
+            "callLine": 2,
+            "callEndLine": 2,
+            "callEndCol": 7
+          },
+          {
+            "from": "A",
+            "to": "C",
+            "callLine": 3,
+            "callEndLine": 3,
+            "callEndCol": 7
+          },
+          {
+            "from": "B",
+            "to": "C",
+            "callLine": 11,
+            "callEndLine": 11,
+            "callEndCol": 7
+          },
+          {
+            "from": "B",
+            "to": "A",
+            "callLine": 12,
+            "callEndLine": 12,
+            "callEndCol": 7
+          }
+        ]
+      },
+      "anchors": [
+        {
+          "windowId": "C",
+          "line": 20,
+          "steps": 3
+        },
+        {
+          "windowId": "C",
+          "line": 20,
+          "steps": 2,
+          "after": 10
+        }
+      ]
+    },
+    "expected": {
+      "starts": [
+        "A"
+      ],
+      "forward": [
+        "A:1",
+        "A:2",
+        "B:10",
+        "B:11",
+        "C:20",
+        "B:11",
+        "B:12",
+        "B:13",
+        "A:2",
+        "A:3",
+        "C:20",
+        "A:3",
+        "A:4"
+      ],
+      "backwardIsReverse": true,
+      "anchors": [
+        [
+          "B:11",
+          "B:12",
+          "B:13"
+        ],
+        [
+          "A:3",
+          "A:4"
+        ]
+      ]
+    }
+  },
+  {
+    "label": "TS: 省略カード（入れ子関数の定義）と定義の接続は飛ばし、呼んでいる行から入る（関数をそのまま渡したときは受け取る呼び出しの後）。呼ばれない入れ子（useEffect のコールバック等）は最後に回す",
+    "input": {
+      "canvas": {
+        "windows": [
+          {
+            "id": "outer",
+            "displayName": "outer",
+            "filePath": "src/nested.ts",
+            "startLine": 4,
+            "code": "export function outer() {\n  async function onSubmit() {\n    await saveNote();\n  }\n  useEffect(() => {\n    saveNote();\n  }, []);\n  takeCallback(onSubmit);\n}",
+            "nestedOmissions": [
+              {
+                "startLine": 5,
+                "endLine": 7,
+                "previewText": "async function onSubmit() {..."
+              },
+              {
+                "startLine": 8,
+                "endLine": 10,
+                "previewText": "useEffect(() => {..."
+              }
+            ],
+            "language": "typescript"
+          },
+          {
+            "id": "onSubmit",
+            "displayName": "onSubmit",
+            "filePath": "src/nested.ts",
+            "startLine": 5,
+            "code": "  async function onSubmit() {\n    await saveNote();\n  }",
+            "language": "typescript"
+          },
+          {
+            "id": "effect",
+            "displayName": "effect",
+            "filePath": "src/nested.ts",
+            "startLine": 8,
+            "code": "  useEffect(() => {\n    saveNote();\n  }, []);",
+            "language": "typescript"
+          },
+          {
+            "id": "takeCallback",
+            "displayName": "takeCallback",
+            "filePath": "src/callbacks.ts",
+            "startLine": 1,
+            "code": "export function takeCallback(cb: () => void) { }",
+            "language": "typescript"
+          },
+          {
+            "id": "saveNote",
+            "displayName": "saveNote",
+            "filePath": "src/actions.ts",
+            "startLine": 1,
+            "code": "export async function saveNote() { }",
+            "language": "typescript"
+          }
+        ],
+        "connections": [
+          {
+            "from": "outer",
+            "to": "onSubmit",
+            "callLine": 5,
+            "callEndLine": 7
+          },
+          {
+            "from": "outer",
+            "to": "effect",
+            "callLine": 8,
+            "callEndLine": 10
+          },
+          {
+            "from": "outer",
+            "to": "takeCallback",
+            "callLine": 11,
+            "callEndLine": 11,
+            "callEndCol": 24
+          },
+          {
+            "from": "outer",
+            "to": "onSubmit",
+            "callLine": 11,
+            "callEndLine": 11,
+            "callEndCol": 24
+          },
+          {
+            "from": "onSubmit",
+            "to": "saveNote",
+            "callLine": 6,
+            "callEndLine": 6,
+            "callEndCol": 20
+          },
+          {
+            "from": "effect",
+            "to": "saveNote",
+            "callLine": 9,
+            "callEndLine": 9,
+            "callEndCol": 14
+          }
+        ]
+      }
+    },
+    "expected": {
+      "starts": [
+        "outer",
+        "effect"
+      ],
+      "forward": [
+        "outer:4",
+        "outer:11",
+        "takeCallback:1",
+        "outer:11",
+        "onSubmit:5",
+        "onSubmit:6",
+        "saveNote:1",
+        "onSubmit:6",
+        "onSubmit:7",
+        "outer:11",
+        "outer:12",
+        "effect:8",
+        "effect:9",
+        "saveNote:1",
+        "effect:9",
+        "effect:10"
+      ],
+      "backwardIsReverse": true,
+      "anchors": []
+    }
+  },
+  {
+    "label": "変更集合: 画面の並び（ブロック→その島→ブロック直下のファイル→次のブロック）の順で次の島へ続く。差分の削除行は飛ばす",
+    "input": {
+      "canvas": {
+        "groups": [
+          {
+            "id": "blk-java",
+            "kind": "java",
+            "label": "Java"
+          },
+          {
+            "id": "isl-1",
+            "kind": "island",
+            "label": "",
+            "parent": "blk-java"
+          },
+          {
+            "id": "isl-2",
+            "kind": "island",
+            "label": "",
+            "parent": "blk-java"
+          },
+          {
+            "id": "blk-other",
+            "kind": "other",
+            "label": "その他"
+          }
+        ],
+        "windows": [
+          {
+            "id": "f2",
+            "displayName": "notes.txt",
+            "filePath": "notes.txt",
+            "group": "blk-other",
+            "windowType": "file",
+            "startLine": 1,
+            "code": "memo",
+            "language": null
+          },
+          {
+            "id": "f1",
+            "displayName": "AppConfig.java",
+            "filePath": "src/AppConfig.java",
+            "group": "blk-java",
+            "windowType": "file",
+            "startLine": 1,
+            "code": "class AppConfig {\n}",
+            "language": "java"
+          },
+          {
+            "id": "m2",
+            "displayName": "m2",
+            "filePath": "src/m2.java",
+            "startLine": 1,
+            "code": "void two() { }",
+            "group": "isl-2",
+            "language": "java"
+          },
+          {
+            "id": "m1",
+            "displayName": "m1",
+            "filePath": "src/m1.java",
+            "group": "isl-1",
+            "code": [
+              {
+                "line": 1,
+                "content": "void one() {"
+              },
+              {
+                "line": 2,
+                "content": "    old();",
+                "diffType": "removed"
+              },
+              {
+                "line": 2,
+                "content": "    via();",
+                "diffType": "added"
+              },
+              {
+                "line": 3,
+                "content": "}"
+              }
+            ],
+            "language": "java"
+          },
+          {
+            "id": "v1",
+            "displayName": "v1",
+            "filePath": "src/v1.java",
+            "startLine": 10,
+            "code": "void via() {\n    leaf();\n}",
+            "group": "isl-1",
+            "windowType": "via",
+            "language": "java"
+          },
+          {
+            "id": "m3",
+            "displayName": "m3",
+            "filePath": "src/m3.java",
+            "startLine": 20,
+            "code": "void leaf() { }",
+            "group": "isl-1",
+            "language": "java"
+          }
+        ],
+        "connections": [
+          {
+            "from": "m1",
+            "to": "v1",
+            "callLine": 2,
+            "callEndLine": 2,
+            "callEndCol": 10
+          },
+          {
+            "from": "v1",
+            "to": "m3",
+            "callLine": 11,
+            "callEndLine": 11,
+            "callEndCol": 11
+          }
+        ]
+      }
+    },
+    "expected": {
+      "starts": [
+        "m1",
+        "m2",
+        "f1",
+        "f2"
+      ],
+      "forward": [
+        "m1:1",
+        "m1:2",
+        "v1:10",
+        "v1:11",
+        "m3:20",
+        "v1:11",
+        "v1:12",
+        "m1:2",
+        "m1:3",
+        "m2:1",
+        "f1:1",
+        "f1:2",
+        "f2:1"
+      ],
+      "backwardIsReverse": true,
+      "anchors": []
+    }
+  },
+  {
+    "label": "Java: override（宣言行からの接続）は実装へ順に入る。キャンバスに無い呼び出し先は無視、中身の無いウィンドウは入らずに戻る",
+    "input": {
+      "canvas": {
+        "windows": [
+          {
+            "id": "run",
+            "displayName": "run",
+            "filePath": "src/run.java",
+            "startLine": 1,
+            "code": "void run() {\n    repo.save(u); gen();\n}",
+            "language": "java"
+          },
+          {
+            "id": "iface",
+            "displayName": "iface",
+            "filePath": "src/iface.java",
+            "startLine": 5,
+            "code": "void save(User u);",
+            "language": "java"
+          },
+          {
+            "id": "implA",
+            "displayName": "implA",
+            "filePath": "src/implA.java",
+            "startLine": 10,
+            "code": "public void save(User u) { }",
+            "language": "java"
+          },
+          {
+            "id": "implB",
+            "displayName": "implB",
+            "filePath": "src/implB.java",
+            "startLine": 20,
+            "code": "public void save(User u) { }",
+            "language": "java"
+          },
+          {
+            "id": "gen",
+            "displayName": "gen",
+            "filePath": "src/gen.java",
+            "startLine": 30,
+            "code": "// generated",
+            "language": "java"
+          }
+        ],
+        "connections": [
+          {
+            "from": "run",
+            "to": "iface",
+            "callLine": 2,
+            "callEndLine": 2,
+            "callEndCol": 17
+          },
+          {
+            "from": "iface",
+            "to": "implA",
+            "callLine": 5,
+            "callEndLine": 5
+          },
+          {
+            "from": "iface",
+            "to": "implB",
+            "callLine": 5,
+            "callEndLine": 5
+          },
+          {
+            "from": "run",
+            "to": "ghost",
+            "callLine": 2,
+            "callEndLine": 2,
+            "callEndCol": 5
+          },
+          {
+            "from": "run",
+            "to": "gen",
+            "callLine": 2,
+            "callEndLine": 2,
+            "callEndCol": 24
+          }
+        ]
+      }
+    },
+    "expected": {
+      "starts": [
+        "run"
+      ],
+      "forward": [
+        "run:1",
+        "run:2",
+        "iface:5",
+        "implA:10",
+        "iface:5",
+        "implB:20",
+        "iface:5",
+        "run:2",
+        "run:2",
+        "run:3"
+      ],
+      "backwardIsReverse": true,
+      "anchors": []
+    }
+  }
+]

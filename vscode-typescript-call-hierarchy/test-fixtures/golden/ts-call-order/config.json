@@ -1,0 +1,7 @@
+{
+  "files": ["order.ts"],
+  "targetFile": "order.ts",
+  "targetLine": 1,
+  "depth": 2,
+  "callOrder": true
+}

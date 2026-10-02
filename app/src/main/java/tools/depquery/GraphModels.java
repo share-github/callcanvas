@@ -43,13 +43,16 @@ public class GraphModels {
         public final String from, to, kind;
         public final int callLine;
         public final int callEndLine;
+        /** 呼び出し式の終端の直後の列（0 = 不明。override 辺など） */
+        public final int callEndCol;
 
-        public Edge(String from, String to, String kind, int callLine, int callEndLine) {
+        public Edge(String from, String to, String kind, int callLine, int callEndLine, int callEndCol) {
             this.from = from;
             this.to = to;
             this.kind = kind;
             this.callLine = callLine;
             this.callEndLine = callEndLine;
+            this.callEndCol = callEndCol;
         }
     }
 
@@ -74,8 +77,8 @@ public class GraphModels {
             nodes.put(n.id, n);
         }
 
-        public void addEdge(String from, String to, String kind, int line, int endLine) {
-            edges.add(new Edge(from, to, kind, line, endLine));
+        public void addEdge(String from, String to, String kind, int line, int endLine, int endCol) {
+            edges.add(new Edge(from, to, kind, line, endLine, endCol));
         }
 
         public void addUnresolved(String from, String expr, int line, String reason) {

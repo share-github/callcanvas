@@ -75,6 +75,7 @@ export function formatAsCallCanvasJSON(
                 to: toId,
                 callLine: call.callLine,
                 callEndLine: call.callEndLine,
+                ...(call.callEndCol != null ? { callEndCol: call.callEndCol } : {}),
             });
             connectionIndex++;
         }

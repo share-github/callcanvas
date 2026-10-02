@@ -76,16 +76,18 @@ class CallGraphAnalyzer {
                     MethodEntry interfaceEntry = callIndex.getMethod(lastCallTargetFqn);
                     int overrideCallLine = calleeRef.line;
                     int overrideCallEndLine = calleeRef.endLine;
+                    int overrideCallEndCol = calleeRef.endCol;
                     if (interfaceEntry != null && interfaceEntry.lineStart > 0) {
                         overrideCallLine = interfaceEntry.lineStart;
                         overrideCallEndLine = interfaceEntry.lineEnd;
+                        overrideCallEndCol = 0;
                     }
                     graph.addEdge(lastCallTargetFqn, calleeRef.fqn, "override",
-                                overrideCallLine, overrideCallEndLine);
+                                overrideCallLine, overrideCallEndLine, overrideCallEndCol);
                 } else {
                     // Normal call: caller -> callee
                     graph.addEdge(it.fqn, calleeRef.fqn, calleeRef.type,
-                                calleeRef.line, calleeRef.endLine);
+                                calleeRef.line, calleeRef.endLine, calleeRef.endCol);
                 }
 
                 // 呼び出し先のノードを追加（メタデータ使用）
@@ -146,7 +148,7 @@ class CallGraphAnalyzer {
                 }
 
                 g.addEdge(callerRef.fqn, entry.fqn, callerRef.type,
-                        callerRef.line, callerRef.endLine);
+                        callerRef.line, callerRef.endLine, callerRef.endCol);
                 callersFound++;
 
                 // BFS: 未訪問かつ深さ上限内なら次の探索候補に追加

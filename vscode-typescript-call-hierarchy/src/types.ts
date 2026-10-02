@@ -54,6 +54,8 @@ export interface CallInfo {
     callLine: number;
     /** End line of the call (1-based) */
     callEndLine: number;
+    /** Column just past the call expression on callEndLine (0-based). Absent for non-call edges (nested definitions). */
+    callEndCol?: number;
 }
 
 /** Static constant for CallCanvas Viewer tooltips (aligned with Java symbolIndex entries). */
@@ -139,4 +141,6 @@ export interface CallCanvasConnection {
     to: string;
     callLine: number;
     callEndLine: number;
+    /** Column just past the call expression on callEndLine; the viewer's step navigation orders same-line calls by it */
+    callEndCol?: number;
 }

@@ -350,6 +350,17 @@ class OutputGenerator {
             int l2 = e2.callLine > 0 ? e2.callLine : Integer.MAX_VALUE / 2 + edgeIndex.get(e2);
             if (l1 != l2)
                 return Integer.compare(l1, l2);
+            // 同じ行は実行順（終端の位置）。同じ行・同じ呼び出し先の重複除去で先に実行される方を残す
+            // （列の分からない辺は後ろ。比較を全順序に保つため）
+            boolean c1 = e1.callEndCol > 0, c2 = e2.callEndCol > 0;
+            if (c1 != c2)
+                return c1 ? -1 : 1;
+            if (c1) {
+                if (e1.callEndLine != e2.callEndLine)
+                    return Integer.compare(e1.callEndLine, e2.callEndLine);
+                if (e1.callEndCol != e2.callEndCol)
+                    return Integer.compare(e1.callEndCol, e2.callEndCol);
+            }
             return Integer.compare(edgeIndex.get(e1), edgeIndex.get(e2));
         });
 
@@ -359,7 +370,7 @@ class OutputGenerator {
 
             // ケース1: 両端がソースあり → 通常の接続
             if (includedNodeIds.contains(fromId) && includedNodeIds.contains(toId)) {
-                addConnection(connections, addedConnections, nodeIdToWindowId, fromId, toId, edge.callLine, edge.callEndLine);
+                addConnection(connections, addedConnections, nodeIdToWindowId, fromId, toId, edge.callLine, edge.callEndLine, edge.callEndCol);
                 continue;
             }
 
@@ -368,7 +379,7 @@ class OutputGenerator {
             if (!includedNodeIds.contains(fromId) && includedNodeIds.contains(toId)) {
                 Set<String> ancestors = findSourcedAncestors(fromId, includedNodeIds, incomingNodes, new HashSet<>());
                 for (String ancestor : ancestors) {
-                    addConnection(connections, addedConnections, nodeIdToWindowId, ancestor, toId, edge.callLine, edge.callEndLine);
+                    addConnection(connections, addedConnections, nodeIdToWindowId, ancestor, toId, edge.callLine, edge.callEndLine, edge.callEndCol);
                 }
             }
         }
@@ -556,7 +567,8 @@ class OutputGenerator {
             String fromId,
             String toId,
             int callLine,
-            int callEndLine) {
+            int callEndLine,
+            int callEndCol) {
 
         String fromWindowId = nodeIdToWindowId.get(fromId);
         String toWindowId = nodeIdToWindowId.get(toId);
@@ -571,6 +583,7 @@ class OutputGenerator {
                 if (callLine > 0) {
                     conn.put("callLine", callLine);
                     conn.put("callEndLine", callEndLine);
+                    if (callEndCol > 0) conn.put("callEndCol", callEndCol);
                 }
                 connections.put(conn);
                 addedConnections.add(connKey);

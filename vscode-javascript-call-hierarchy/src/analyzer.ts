@@ -90,13 +90,14 @@ export function analyzeCallHierarchy(
             funcNode, funcSourceFile, checker, rootDir, currentSig, program, log
         );
 
-        for (const { calleeInfo, callLine, callEndLine } of callsFound) {
+        for (const { calleeInfo, callLine, callEndLine, callEndCol } of callsFound) {
             // Record call relationship
             calls.push({
                 callerSignature: currentSig,
                 calleeSignature: calleeInfo.signature,
                 callLine,
                 callEndLine,
+                callEndCol,
             });
 
             // Add callee to functions map if new
@@ -145,6 +146,8 @@ interface CallFound {
     calleeInfo: FunctionInfo;
     callLine: number;
     callEndLine: number;
+    /** Column just past the call expression on callEndLine (0-based, UTF-16). Orders calls on the same line by execution. */
+    callEndCol: number;
 }
 
 function findCallsInFunction(
@@ -171,6 +174,7 @@ function findCallsInFunction(
             const callEnd = sourceFile.getLineAndCharacterOfPosition(node.getEnd());
             const callLine = callStart.line + 1;
             const callEndLine = callEnd.line + 1;
+            const callEndCol = callEnd.character;
 
             let symbol: ts.Symbol | undefined;
             try {
@@ -197,7 +201,7 @@ function findCallsInFunction(
                             symbol, decl, declSourceFile, rootDir
                         );
                         if (calleeInfo) {
-                            results.push({ calleeInfo, callLine, callEndLine });
+                            results.push({ calleeInfo, callLine, callEndLine, callEndCol });
                         }
                     }
                 }
@@ -257,8 +261,9 @@ function findCallsInFunction(
                         const refEnd = sourceFile.getLineAndCharacterOfPosition(lineNode.getEnd());
                         const refLine = refStart.line + 1;
                         const refEndLine = refEnd.line + 1;
+                        const refEndCol = refEnd.character;
                         log(`  Callback reference: ${calleeInfo.functionName} at line ${refLine}`);
-                        results.push({ calleeInfo, callLine: refLine, callEndLine: refEndLine });
+                        results.push({ calleeInfo, callLine: refLine, callEndLine: refEndLine, callEndCol: refEndCol });
                     }
                 };
 
@@ -304,8 +309,9 @@ function findCallsInFunction(
                                 const refEnd = sourceFile.getLineAndCharacterOfPosition(prop.name.getEnd());
                                 const refLine = refStart.line + 1;
                                 const refEndLine = refEnd.line + 1;
+                                const refEndCol = refEnd.character;
                                 log(`  Shorthand callback reference: ${calleeInfo.functionName} at line ${refLine}`);
-                                results.push({ calleeInfo, callLine: refLine, callEndLine: refEndLine });
+                                results.push({ calleeInfo, callLine: refLine, callEndLine: refEndLine, callEndCol: refEndCol });
                             }
                         }
                     }
@@ -356,6 +362,7 @@ function findCallsInFunction(
             const callEnd = sourceFile.getLineAndCharacterOfPosition(node.getEnd());
             const callLine = callStart.line + 1;
             const callEndLine = callEnd.line + 1;
+            const callEndCol = callEnd.character;
 
             let symbol: ts.Symbol | undefined;
             try {
@@ -375,7 +382,7 @@ function findCallsInFunction(
                             symbol, decl, declSourceFile, rootDir
                         );
                         if (calleeInfo) {
-                            results.push({ calleeInfo, callLine, callEndLine });
+                            results.push({ calleeInfo, callLine, callEndLine, callEndCol });
                         }
                     }
                 }

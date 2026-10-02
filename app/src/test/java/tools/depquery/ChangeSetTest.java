@@ -197,7 +197,7 @@ public class ChangeSetTest {
         JSONArray conns = out.getJSONArray("connections");
         for (int i = 0; i < conns.length(); i++) {
             JSONObject c = conns.getJSONObject(i);
-            assertEquals(Set.of("from", "to", "callLine", "callEndLine"), c.keySet(), c.toString());
+            assertEquals(Set.of("from", "to", "callLine", "callEndLine", "callEndCol"), c.keySet(), c.toString());
         }
         assertEquals(Set.of("files"),
                 out.getJSONObject("metadata").getJSONObject("changeSet").keySet());

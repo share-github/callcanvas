@@ -108,11 +108,11 @@ class CallIndexBuilder {
         for (RawCall call : c.calls) {
             if (!acceptByFilter(call.callee(), cfg)) continue;
             // 【順序前提】呼び出し先の直後にその override 群を並べる（解析側が lastCallTargetFqn で辿る）
-            entry.addCallee(call.callee(), call.line(), call.endLine(), call.type());
+            entry.addCallee(call.callee(), call.line(), call.endLine(), call.endCol(), call.type());
             if (call.virtual()) {
                 for (String impl : cha.findOverrides(call.callee())) {
                     if (!impl.equals(call.callee()) && acceptByFilter(impl, cfg)) {
-                        entry.addCallee(impl, call.line(), call.endLine(), "override");
+                        entry.addCallee(impl, call.line(), call.endLine(), call.endCol(), "override");
                     }
                 }
             }
@@ -177,7 +177,7 @@ class CallIndexBuilder {
             for (CallRef calleeRef : caller.callees) {
                 MethodEntry callee = index.getMethod(calleeRef.fqn);
                 if (callee != null) {
-                    callee.addCaller(caller.fqn, calleeRef.line, calleeRef.endLine, calleeRef.type);
+                    callee.addCaller(caller.fqn, calleeRef.line, calleeRef.endLine, calleeRef.endCol, calleeRef.type);
                 }
             }
         }

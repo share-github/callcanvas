@@ -62,7 +62,7 @@ final class JdtCallCollector {
     }
 
     /** CHA 展開前の呼び出し 1 件。virtual は CHA で override を展開する対象か。 */
-    record RawCall(String callee, int line, int endLine, String type, boolean virtual) {}
+    record RawCall(String callee, int line, int endLine, int endCol, String type, boolean virtual) {}
 
     /** 呼び出し元 1 件（メソッドエントリ + 収集した呼び出し） */
     static final class Caller {
@@ -378,6 +378,8 @@ final class JdtCallCollector {
         int line(int pos) { return cu.getLineNumber(pos); }
         int startLine(ASTNode n) { return line(n.getStartPosition()); }
         int endLine(ASTNode n) { return line(n.getStartPosition() + Math.max(n.getLength() - 1, 0)); }
+        /** 終端の直後の列（0 始まり、UTF-16。endLine の行の中での位置）。同じ行の呼び出しの実行順の比較に使う */
+        int endCol(ASTNode n) { return cu.getColumnNumber(n.getStartPosition() + Math.max(n.getLength() - 1, 0)) + 1; }
 
         boolean inBody() { return !owners.isEmpty(); }
 
@@ -792,7 +794,7 @@ final class JdtCallCollector {
             boolean virtual = dispatchable && !uncertain && !b.isConstructor()
                     && !Modifier.isStatic(mod) && !Modifier.isPrivate(mod);
             stats.calls++;
-            owners.peek().calls.add(new RawCall(callee, startLine(n), endLine(n), type, virtual));
+            owners.peek().calls.add(new RawCall(callee, startLine(n), endLine(n), endCol(n), type, virtual));
         }
 
         boolean hasUnresolvedArgument(List<?> args) {
@@ -904,11 +906,11 @@ final class JdtCallCollector {
             if (owners.isEmpty()) return;
             stats.unresolvedCalls++;
             String name = n.getName().getIdentifier();
-            int line = startLine(n), end = endLine(n);
+            int line = startLine(n), end = endLine(n), col = endCol(n);
             if (n.getExpression() != null) {
                 ITypeBinding t = n.getExpression().resolveTypeBinding();
                 if (t == null || t.isRecovered() || t.isArray() || t.isPrimitive()) return;
-                owners.peek().calls.add(new RawCall(className(t) + "#" + name + "(...)", line, end, "call", false));
+                owners.peek().calls.add(new RawCall(className(t) + "#" + name + "(...)", line, end, col, "call", false));
                 return;
             }
             ITypeBinding self = enclosingType(n);
@@ -924,7 +926,7 @@ final class JdtCallCollector {
                 for (IMethodBinding m : t.getDeclaredMethods()) {
                     if (m.getName().equals(name) && m.getParameterTypes().length == arity) {
                         int mod = m.getModifiers();
-                        owners.peek().calls.add(new RawCall(calleeFqn(m), line, end, "call",
+                        owners.peek().calls.add(new RawCall(calleeFqn(m), line, end, col, "call",
                                 !Modifier.isStatic(mod) && !Modifier.isPrivate(mod)));
                         found = true;
                     }

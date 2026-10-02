@@ -2,7 +2,7 @@
   "name": "javascript-call-hierarchy",
   "displayName": "JavaScript/TypeScript Call Hierarchy Analyzer",
   "description": "Analyze and visualize JavaScript/TypeScript function call hierarchies",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "share-github",
   "license": "MIT",
   "author": "share-github",
