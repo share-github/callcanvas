@@ -22,6 +22,9 @@
  *
  * Call graph alone does not inspect `code`; use these to lock snippet boundaries.
  *
+ * Every analysis suite also fails when two function signatures share one declaration (file:line) —
+ * i.e. one function would get two windows (e.g. a nested `function onSubmit` passed as a callback).
+ *
  * config.json:
  *   tsconfig       - optional, relative path to tsconfig (default: tsconfig.json if file exists)
  *   files          - optional, explicit file list (relative paths) when no tsconfig
@@ -138,6 +141,18 @@ for (const testName of testCases) {
         callGraph = analyzeCallHierarchy(program, absoluteTarget, targetLine, projectContext.rootDir, depth);
     } catch (e) {
         console.error(`[ERROR] ${testName}: Analysis failed: ${e.message}`);
+        failed++;
+        continue;
+    }
+
+    // Every suite: one declaration = one window (a nested local reached by a callback reference
+    // like `handleSubmit(onSubmit)` must reuse the `outer>onSubmit` window, not get a second one).
+    const duplicated = duplicateDeclarations(callGraph, testDir);
+    if (duplicated.length > 0) {
+        console.error(`[FAIL]   ${testName}:`);
+        for (const line of duplicated) {
+            console.error(`         Duplicate window for one declaration: ${line}`);
+        }
         failed++;
         continue;
     }
@@ -282,6 +297,16 @@ function buildProjectContext(testDir, opts) {
         rootDir: testDir,
         compilerOptions,
     };
+}
+
+/** Declarations (file:line) that more than one function signature points at. */
+function duplicateDeclarations(callGraph, testDir) {
+    const byDecl = new Map();
+    for (const [sig, info] of callGraph.functions) {
+        const key = `${path.relative(testDir, info.absolutePath)}:${declarationAnchor(info)}`;
+        byDecl.set(key, [...(byDecl.get(key) || []), sig]);
+    }
+    return [...byDecl].filter(([, sigs]) => sigs.length > 1).map(([key, sigs]) => `${key} → ${sigs.join(', ')}`);
 }
 
 function declarationAnchor(info) {

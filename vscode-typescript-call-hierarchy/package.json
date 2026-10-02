@@ -2,7 +2,7 @@
   "name": "typescript-call-hierarchy",
   "displayName": "TypeScript Call Hierarchy Analyzer",
   "description": "Analyze and visualize TypeScript/TSX function call hierarchies",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "publisher": "share-github",
   "license": "MIT",
   "author": "share-github",

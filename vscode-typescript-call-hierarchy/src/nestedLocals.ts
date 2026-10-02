@@ -207,8 +207,9 @@ export function buildNestedLocalFunctionInfo(
 }
 
 /**
- * If `root` came from `const x = () =>`, map the symbol-based signature from
- * {@link buildFunctionInfoFromSymbol} to the nested {@link FunctionInfo}.
+ * Map the symbol-based signature from {@link buildFunctionInfoFromSymbol} (what a call or callback
+ * reference like `handleSubmit(onSubmit)` resolves to) to the nested {@link FunctionInfo}, for both
+ * `const x = () =>` and a nested `function x() {}`. Without the alias the reference gets a second window.
  */
 export function tryNestedAliasForVariableRoot(
     checker: ts.TypeChecker,
@@ -218,21 +219,20 @@ export function tryNestedAliasForVariableRoot(
     rootDir: string
 ): Map<string, FunctionInfo> {
     const out = new Map<string, FunctionInfo>();
-    if (!root.variableDeclaration || !ts.isIdentifier(root.variableDeclaration.name)) {
-        return out;
-    }
-    try {
-        let sym = checker.getSymbolAtLocation(root.variableDeclaration.name);
-        if (sym && (sym.flags & ts.SymbolFlags.Alias)) {
-            sym = checker.getAliasedSymbol(sym);
+    if (root.variableDeclaration && ts.isIdentifier(root.variableDeclaration.name)) {
+        try {
+            let sym = checker.getSymbolAtLocation(root.variableDeclaration.name);
+            if (sym && (sym.flags & ts.SymbolFlags.Alias)) {
+                sym = checker.getAliasedSymbol(sym);
+            }
+            if (!sym) { return out; }
+            const alt = buildFunctionInfoFromSymbol(sym, root.variableDeclaration, sourceFile, rootDir);
+            if (alt) {
+                out.set(alt.signature, nestedInfo);
+            }
+        } catch {
+            /* ignore */
         }
-        if (!sym) { return out; }
-        const alt = buildFunctionInfoFromSymbol(sym, root.variableDeclaration, sourceFile, rootDir);
-        if (alt) {
-            out.set(alt.signature, nestedInfo);
-        }
-    } catch {
-        /* ignore */
     }
 
     if (ts.isFunctionDeclaration(root.rootNode) && root.rootNode.name) {
