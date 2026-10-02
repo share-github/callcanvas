@@ -1,0 +1,83 @@
+---
+name: callcanvas-comment
+description: Add line comments (code explanations, review notes) to a CallCanvas canvas — the call-hierarchy / change-set diagram the user opened in the browser from Neovim (:CallCanvas / :CallCanvasChangeSet, <leader>vv / <leader>vc). Use when asked to comment on, explain, annotate or review code "on the canvas" / "in callcanvas", or to remove such comments.
+---
+
+# CallCanvas: add line comments to a canvas
+
+A canvas is a JSON file in the user's project that the browser viewer renders as code windows
+(one window = one method or file excerpt). A line comment is shown as a bubble under that line,
+exactly like a comment the user inserts in the viewer. Comments are addressed by **source file +
+line number**; you never edit the JSON yourself.
+
+The CLI below works without a running viewer. It writes the canvas JSON directly; the user sees
+the comments after **reloading the browser tab** — tell them so when you are done.
+
+```
+CALLCANVAS = {{CALLCANVAS}}
+```
+
+Run every command from the project (repository) directory, or pass `--root <dir>`.
+
+## 1. Find the canvas and the lines it shows
+
+```bash
+{{CALLCANVAS}} canvases
+```
+
+Lists the canvases, newest first (`open,latest` = the one the browser is showing now), and for
+each window: `id  file:startLine-endLine  displayName`, plus `(added …; removed …)` lines on a
+change-set canvas and the number of existing comments. `--json` gives the same with the existing
+comment texts. Unless the user names a canvas, use the first one (the default of `comment`),
+and from then on pass it as `--canvas <path>` to every `comment`: without a running viewer the
+default is the most recently written canvas, which your own writes can change.
+
+Only lines inside a window's range can be commented. Read the source file to write the comment —
+the canvas shows the same lines.
+
+## 2. Add comments
+
+One comment:
+
+```bash
+{{CALLCANVAS}} comment --file src/main/java/com/example/OrderService.java --line 42 --text "Validates stock before reserving"
+```
+
+Several at once (preferred — one write, no quoting issues): write a JSON array to a temp file
+
+```json
+[
+  {"file": "src/main/java/com/example/OrderService.java", "line": 42, "text": "Validates stock before reserving"},
+  {"file": "src/main/java/com/example/OrderService.java", "line": 57, "text": "Rolls back the reservation on payment failure"}
+]
+```
+
+```bash
+{{CALLCANVAS}} comment --batch /tmp/callcanvas-comments.json
+```
+
+- `file`: path relative to the project, or absolute; a unique tail like `OrderService.java` also works.
+- The comment goes to **every** window showing that line; add `--window <id>` (or `"window"` in the
+  batch) to pick one.
+- Change-set canvases: an added line is detected from its (new) line number. A **removed** line
+  only exists in the old file — use its old line number with `--diff removed` (`"diff": "removed"`);
+  `canvases` prints which numbers those are. Windows marked `deleted content` (a deleted method or
+  file) show the old file: every line there is a removed line — comment them with `--diff removed`
+  and the old line number (without it, a line number means the new file).
+- An existing comment on the same line is **replaced** (the output says `replaced`). Check
+  `canvases --json` first if the user may have written comments you should keep or extend.
+- Remove: the same arguments with `--remove` (no `--text`).
+- Exit code 1 + `FAILED file:line — reason` for lines that are not on the canvas; the others are
+  still written. Fix the line numbers from the reason and retry only the failed ones.
+
+## Writing good comments
+
+- Plain text, short (one or two sentences); the bubble is narrow. Newlines are kept.
+- Explain intent, data flow, pitfalls — what the code does not say by itself. Don't restate the line.
+- Write in the language the user is using.
+
+## Notes
+
+- Do not edit the canvas JSON with file-editing tools; use the CLI (it keeps the format the viewer reads).
+- A browser tab that was open before you wrote must be reloaded **before** the user edits anything
+  in it; otherwise its next save writes back the old state and your comments are lost.

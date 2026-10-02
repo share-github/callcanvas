@@ -315,6 +315,137 @@ function testSavedCanvasData() {
     fs.rmSync(dir, { recursive: true, force: true });
 }
 
+/**
+ * `callcanvas canvases` / `callcanvas comment`: an AI (the callcanvas-comment skill) comments on
+ * a canvas by file + line, with no host running. Stored where the viewer stores its own comments.
+ */
+async function testCommentCli() {
+    section('callcanvas canvases / comment (AI comments by file + line, no host)');
+    const { withSavedCanvasData } = require('../src/server');
+    const root = fs.mkdtempSync(path.join(require('os').tmpdir(), 'callcanvas-comment-'));
+    const outDir = path.join(root, 'build', 'call-hierarchy-output');
+    fs.mkdirSync(outDir, { recursive: true });
+    const sample = path.join(REPO_ROOT, 'vscode-callcanvas-viewer/test-fixtures/changeset/sample-contract.json');
+    const changeSet = path.join(outDir, 'callcanvas_changeset_e4f5a6b7.json');
+    fs.copyFileSync(sample, changeSet);
+    const jsCanvas = path.join(root, 'app_main_callcanvas.json');
+    fs.writeFileSync(jsCanvas, JSON.stringify({ windows: [
+        { id: 'window-1', displayName: 'main', filePath: 'src/app.js', startLine: 3, code: 'function main() {\n  run();\n}' },
+    ], connections: [] }, null, 2));
+    // the JS canvas is older: the change set comes first
+    const past = new Date(Date.now() - 60000);
+    fs.utimesSync(jsCanvas, past, past);
+    const read = p => JSON.parse(fs.readFileSync(p, 'utf8'));
+    const win = (p, id) => read(p).windows.find(w => w.id === id);
+    const cli = args => runCli([...args, '--root', root], { cwd: root });
+
+    const listed = await cli(['canvases', '--json']);
+    let list = null;
+    try { list = JSON.parse(listed.stdout); } catch { /* checked below */ }
+    check('canvases lists the change set (build/call-hierarchy-output) and the root *_callcanvas.json, newest first',
+        list && list.canvases.length === 2 && list.canvases[0].path === changeSet && list.canvases[1].path === jsCanvas,
+        listed.stdout + listed.stderr);
+    const create = list && list.canvases[0].windows.find(w => w.id === 'w-order-create');
+    check('each window: file, line range and the added / removed lines',
+        !!create && create.filePath === 'src/main/java/com/example/order/OrderController.java'
+        && create.startLine === 24 && create.endLine === 28
+        && JSON.stringify(create.addedLines) === '[26]' && JSON.stringify(create.removedLines) === '[26]',
+        JSON.stringify(create));
+    const text = await cli(['canvases']);
+    check('canvases (text) prints file:start-end per window',
+        text.stdout.includes('w-order-create  src/main/java/com/example/order/OrderController.java:24-28'), text.stdout);
+
+    const original = read(changeSet);
+    const ctx = await cli(['comment', '--file', 'src/main/java/com/example/order/OrderController.java', '--line', '25', '--text', 'context line']);
+    check('an unchanged line -> lineComments (default canvas = newest)',
+        ctx.code === 0 && win(changeSet, 'w-order-create').lineComments['25'] === 'context line', ctx.stdout + ctx.stderr);
+    const added = await cli(['comment', '--file', 'OrderController.java', '--line', '26', '--text', 'added line']);
+    check('an added line (by its new number, file by its tail) -> diffState.diffComments["added:N"]',
+        added.code === 0 && win(changeSet, 'w-order-create').diffState.diffComments['added:26'] === 'added line'
+        && !('26' in win(changeSet, 'w-order-create').lineComments), added.stdout + added.stderr);
+    const removed = await cli(['comment', '--file', 'OrderController.java', '--line', '26', '--diff', 'removed', '--text', 'removed line']);
+    check('--diff removed (old line number) -> diffComments["removed:N"]',
+        removed.code === 0 && win(changeSet, 'w-order-create').diffState.diffComments['removed:26'] === 'removed line',
+        removed.stdout + removed.stderr);
+    const after = read(changeSet);
+    const strip = d => JSON.stringify(d, (k, v) => (k === 'lineComments' || k === 'diffComments') ? undefined : v);
+    check('nothing but the comments changes in the JSON', strip(after) === strip(original));
+
+    const outside = await cli(['comment', '--file', 'OrderController.java', '--line', '99', '--text', 'x']);
+    check('a line not on the canvas fails (exit 1) and says which lines are',
+        outside.code === 1 && outside.stdout.includes('FAILED') && outside.stdout.includes('w-order-create 24-28'),
+        outside.stdout);
+    const unknown = await cli(['comment', '--file', 'Nope.java', '--line', '1', '--text', 'x']);
+    check('a file not on the canvas fails', unknown.code === 1 && /not on this canvas/.test(unknown.stdout), unknown.stdout);
+    check('a failed comment leaves the JSON as it was', JSON.stringify(read(changeSet)) === JSON.stringify(after));
+
+    const batchFile = path.join(root, 'batch.json');
+    fs.writeFileSync(batchFile, JSON.stringify([
+        { file: 'src/app.js', line: 4, text: 'calls run' },
+        { file: 'src/app.js', line: 9, text: 'outside' },
+    ]));
+    const batch = await cli(['comment', '--batch', batchFile, '--canvas', 'app_main_callcanvas.json', '--json']);
+    let batchResult = null;
+    try { batchResult = JSON.parse(batch.stdout); } catch { /* checked below */ }
+    check('--batch + --canvas <file name>: the valid ones are written, the others reported',
+        batch.code === 1 && batchResult && batchResult.applied.length === 1 && batchResult.failed.length === 1
+        && win(jsCanvas, 'window-1').lineComments['4'] === 'calls run', batch.stdout + batch.stderr);
+
+    const replaced = await cli(['comment', '--file', 'OrderController.java', '--line', '25', '--text', 'new text', '--canvas', changeSet]);
+    check('an existing comment is replaced and the output says so',
+        replaced.stdout.includes('replaced') && win(changeSet, 'w-order-create').lineComments['25'] === 'new text', replaced.stdout);
+    await cli(['comment', '--file', 'OrderController.java', '--line', '25', '--remove', '--canvas', changeSet]);
+    await cli(['comment', '--file', 'OrderController.java', '--line', '26', '--remove', '--canvas', changeSet]);
+    await cli(['comment', '--file', 'OrderController.java', '--line', '26', '--diff', 'removed', '--remove', '--canvas', changeSet]);
+    const cleared = win(changeSet, 'w-order-create');
+    check('--remove deletes them (empty maps are dropped)',
+        !('lineComments' in cleared) && !('diffComments' in cleared.diffState), JSON.stringify(cleared));
+
+    // deleted method / deleted file windows (change.source "base") show the OLD file as plain lines:
+    // reachable only with --diff removed (old line number), stored in lineComments like the viewer does
+    const deleted = path.join(outDir, 'callcanvas_changeset_deleted1.json');
+    fs.writeFileSync(deleted, JSON.stringify({ windows: [
+        { id: 'f-file', windowType: 'file', filePath: 'src/Svc.java', startLine: 15, code: 'a\nb\nc',
+            change: { status: 'modified', source: 'worktree' },
+            diffState: { hunks: [{ oldStart: 16, oldCount: 2, newStart: 15, newCount: 0,
+                lines: [{ type: 'remove', content: 'old16' }, { type: 'remove', content: 'old17' }] }] } },
+        { id: 'd-method', windowType: 'file', filePath: 'src/Svc.java', startLine: 16, code: 'old16\nold17',
+            change: { status: 'modified', source: 'base', flags: ['deletedMethod'] } },
+        { id: 'd-file', windowType: 'file', filePath: 'docs/gone.txt', startLine: 1, code: 'x\ny',
+            change: { status: 'deleted', source: 'base', flags: ['deleted'] } },
+    ], connections: [] }, null, 2));
+    const dl = await cli(['canvases', '--canvas', deleted, '--json']);
+    let dWins = null;
+    try { dWins = JSON.parse(dl.stdout).canvases[0].windows; } catch { /* checked below */ }
+    check('canvases marks deleted content windows (all lines removed, old numbers)',
+        !!dWins && dWins.find(w => w.id === 'd-method').baseContent === true
+        && JSON.stringify(dWins.find(w => w.id === 'd-method').removedLines) === '[16,17]'
+        && dWins.find(w => w.id === 'd-file').baseContent === true, dl.stdout + dl.stderr);
+    const rm17 = await cli(['comment', '--file', 'Svc.java', '--line', '17', '--diff', 'removed', '--text', 'gone', '--canvas', deleted]);
+    check('--diff removed reaches the deleted method window (lineComments) and the file window (diffComments)',
+        rm17.code === 0 && win(deleted, 'd-method').lineComments['17'] === 'gone'
+        && win(deleted, 'f-file').diffState.diffComments['removed:17'] === 'gone', rm17.stdout + rm17.stderr);
+    const plain17 = await cli(['comment', '--file', 'Svc.java', '--line', '17', '--text', 'new 17', '--canvas', deleted]);
+    check('a plain (new-file) line number does not land on the deleted content',
+        plain17.code === 0 && win(deleted, 'f-file').lineComments['17'] === 'new 17'
+        && win(deleted, 'd-method').lineComments['17'] === 'gone', plain17.stdout + plain17.stderr);
+    const gonePlain = await cli(['comment', '--file', 'docs/gone.txt', '--line', '1', '--text', 'x', '--canvas', deleted]);
+    const goneRemoved = await cli(['comment', '--file', 'docs/gone.txt', '--line', '1', '--diff', 'removed', '--text', 'was here', '--canvas', deleted]);
+    check('a deleted file: without --diff removed it fails and says to use it; with it -> lineComments',
+        gonePlain.code === 1 && gonePlain.stdout.includes('--diff removed')
+        && goneRemoved.code === 0 && win(deleted, 'd-file').lineComments['1'] === 'was here',
+        gonePlain.stdout + goneRemoved.stdout);
+
+    await cli(['comment', '--file', 'OrderController.java', '--line', '27', '--text', 'shown after reload', '--canvas', changeSet]);
+    const html = '<script>window.CALLCANVAS_CONFIG = {\n'
+        + '            initialData: {"windows":[],"connections":[]},\n'
+        + '            jsonFilePath: "x"\n        };</script>';
+    const served = extractInitialData(withSavedCanvasData(html, changeSet));
+    check('a browser reload serves the comment (the host reads the JSON on disk)',
+        !!served && served.windows.find(w => w.id === 'w-order-create').lineComments['27'] === 'shown after reload');
+    fs.rmSync(root, { recursive: true, force: true });
+}
+
 function testGlob() {
     section('glob translation (workspace.findFiles)');
     check('**/pom.xml matches a nested file', globToRegExp('**/pom.xml').test('a/b/pom.xml'));
@@ -800,6 +931,7 @@ async function main() {
     await testBuildIndexCliFailure();
     testQuickPickLines();
     await testChangeSetCli();
+    await testCommentCli();
 
     if (!fs.existsSync(TARGET_FILE)) {
         console.log(`\nSKIP host tests: ${TARGET_FILE} not found`);
@@ -1174,6 +1306,15 @@ async function main() {
             summaries.map(c => c.shortUrl).join(' '));
         check('an unknown canvas id 404s',
             (await get(base, `/c/deadbeef?t=${token}`)).status === 404);
+
+        // callcanvas-comment skill: the canvas the browser is showing is the default target
+        const latestJson = summaries.find(c => c.latest).jsonPath;
+        const forAi = await runCli(['canvases', '--file', TARGET_FILE, '--json']);
+        let aiList = null;
+        try { aiList = JSON.parse(forAi.stdout).canvases; } catch { /* checked below */ }
+        check('canvases (CLI) lists the open canvases first, the one the browser follows as latest',
+            !!aiList && aiList[0].path === latestJson && aiList[0].open === true && aiList[0].latest === true
+            && aiList.filter(c => c.open).length === 2, forAi.stdout.slice(0, 300) + forAi.stderr);
 
         section('messages are routed to the right canvas');
         const secondStream = new EventStream(base, token, second.canvasId, false);

@@ -156,7 +156,8 @@ done
   dir = '/path/to/callcanvas/callcanvas-nvim',
   main = 'callcanvas',           -- lua モジュール名（ディレクトリ名と異なる）
   cmd = { 'CallCanvas', 'CallCanvasBrowse', 'CallCanvasUrl',
-          'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop', 'CallCanvasChangeSet' },
+          'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop', 'CallCanvasChangeSet',
+          'CallCanvasInstallSkill' },
   keys = { { '<leader>vv', '<cmd>CallCanvas<cr>', desc = 'CallCanvas' } },
   opts = {
     -- Neovim がコンテナ / リモートで、ブラウザが手元にある場合:
@@ -178,6 +179,7 @@ done
 | `:CallCanvasChangeSet [<hash>\|workbench]`（`<leader>vc`） | 変更集合キャンバス。引数なしならワークベンチ / 直近のコミットの一覧から選ぶ |
 | `:CallCanvasList`（`<leader>vl`） | 開いているキャンバスの一覧 |
 | `:CallCanvasUrl`（`<leader>vu`） | URL の再表示・再コピー |
+| `:CallCanvasInstallSkill` | Claude Code にキャンバスへコメントを書かせる skill を書き出す（下記） |
 | `:CallCanvasStatus` / `:CallCanvasStop` | ホストの状態表示 / 終了 |
 
 1. 解析したいメソッド / 関数の行にカーソルを置いて `:CallCanvas`
@@ -188,6 +190,16 @@ done
 4. キャンバスは同時に何枚でも開ける。`:CallCanvas` がクリップボードに入れる URL は
    「今解析したキャンバス」を指すので、**新しいタブに貼れば並べて比較できる**
    （ページ右下の `canvases ▾` からも切り替えられる）
+
+Claude Code にコード解説をキャンバスへ書かせる:
+
+1. nvim で `:CallCanvasInstallSkill` を 1 回実行する（`~/.claude/skills/callcanvas-comment/SKILL.md` に、
+   この環境の CLI のパスを埋めた skill を書き出す。sh を使わないので macOS / Windows / コンテナで同じ。
+   特定のリポジトリだけなら `:CallCanvasInstallSkill .claude/skills`）
+2. 任意のリポジトリの Claude Code に「callcanvas のキャンバスに〜を解説して」と頼む。AI は
+   `callcanvas canvases`（キャンバスと各ウィンドウのファイル・行範囲）を見て、`callcanvas comment
+   --file <path> --line N --text ...` でファイル + 行番号を指定して書く（変更集合の追加・削除行も可）
+3. ブラウザをリロードするとコメントが出る（AI が書く前から開いていたタブは、編集する前にリロードする）
 
 ブラウザ側のキー操作:
 

@@ -570,6 +570,42 @@ function M.build_index(opts)
   end)
 end
 
+--- Write the `callcanvas-comment` Claude Code skill (skill/callcanvas-comment/SKILL.md.tmpl with this
+--- machine's CLI command filled in) so Claude Code in any repository can comment on canvases.
+--- Pure Lua file I/O: no shell, works the same in a container, on macOS and on Windows.
+--- `skills_dir` defaults to $CLAUDE_CONFIG_DIR/skills or ~/.claude/skills.
+function M.install_skill(skills_dir)
+  local template = plugin_root() .. '/skill/callcanvas-comment/SKILL.md.tmpl'
+  local ok, lines = pcall(vim.fn.readfile, template)
+  if not ok or #lines == 0 then
+    notify('skill template not found: ' .. template, vim.log.levels.ERROR)
+    return nil
+  end
+  if not skills_dir or skills_dir == '' then
+    local config_dir = vim.env.CLAUDE_CONFIG_DIR
+    if not config_dir or config_dir == '' then
+      config_dir = vim.fn.expand('~') .. '/.claude'
+    end
+    skills_dir = config_dir .. '/skills'
+  end
+  local slash = function(p) return (vim.fn.fnamemodify(p, ':p'):gsub('\\', '/')) end
+  local node = vim.fn.exepath(M.config.node)
+  node = (node ~= '' and slash(node)) or M.config.node
+  local command = string.format('"%s" "%s"', node, slash(cli_path()))
+  for i, line in ipairs(lines) do
+    lines[i] = line:gsub('{{CALLCANVAS}}', function() return command end)
+  end
+  local dir = vim.fn.fnamemodify(skills_dir, ':p'):gsub('[/\\]$', '') .. '/callcanvas-comment'
+  vim.fn.mkdir(dir, 'p')
+  local target = dir .. '/SKILL.md'
+  if vim.fn.writefile(lines, target) ~= 0 then
+    notify('could not write ' .. target, vim.log.levels.ERROR)
+    return nil
+  end
+  notify('Claude Code skill installed: ' .. target)
+  return target
+end
+
 --- Print host status.
 function M.status()
   local args = { M.config.node, cli_path(), 'status' }
@@ -937,6 +973,14 @@ function M.setup(opts)
     nargs = '?',
     complete = function(arglead) return M.complete_change_set(arglead) end,
     desc = 'CallCanvas: one canvas for the changes of a commit or the workbench (no argument: pick from a list)',
+  })
+
+  vim.api.nvim_create_user_command('CallCanvasInstallSkill', function(cmd)
+    M.install_skill(cmd.args)
+  end, {
+    nargs = '?',
+    complete = 'dir',
+    desc = 'CallCanvas: install the Claude Code skill that lets an AI comment on canvases (default: ~/.claude/skills)',
   })
 
   vim.api.nvim_create_user_command('CallCanvasStatus', function()

@@ -19,7 +19,7 @@ return {
     cmd = {
       'CallCanvas', 'CallCanvasBrowse', 'CallCanvasUrl',
       'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop',
-      'CallCanvasBuildIndex', 'CallCanvasChangeSet',
+      'CallCanvasBuildIndex', 'CallCanvasChangeSet', 'CallCanvasInstallSkill',
     },
     keys = {
       { '<leader>vv', '<cmd>CallCanvas<cr>', desc = 'CallCanvas: analyze at cursor' },

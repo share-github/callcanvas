@@ -506,6 +506,24 @@ LUA
     fi
 fi
 
+step ":CallCanvasInstallSkill writes the Claude Code skill with this machine's CLI"
+nvim --server "$SOCK" --remote-expr "execute('CallCanvasInstallSkill $WORK/skills')" >/dev/null 2>&1
+SKILL="$WORK/skills/callcanvas-comment/SKILL.md"
+if [[ -f "$SKILL" ]] && grep -q '^name: callcanvas-comment$' "$SKILL" && ! grep -q '{{' "$SKILL"; then
+    ok "skill written with the placeholders filled in"
+else
+    bad "skill file: $(head -5 "$SKILL" 2>/dev/null)"
+fi
+# the command line the skill tells Claude Code to run must work as written
+SKILL_CMD="$(sed -n 's/^CALLCANVAS = //p' "$SKILL" 2>/dev/null)"
+mkdir -p "$WORK/empty-project"
+SKILL_OUT="$(eval "$SKILL_CMD canvases --root '$WORK/empty-project'" 2>&1)"
+if [[ "$SKILL_OUT" == "no canvas ("* ]]; then
+    ok "the skill's command runs ($SKILL_CMD)"
+else
+    bad "skill command '$SKILL_CMD': $SKILL_OUT"
+fi
+
 step "host rejects an unauthenticated request"
 CODE="$(curl -s -o /dev/null -w '%{http_code}' "$BASE/?t=nope")"
 if [[ "$CODE" == "403" ]]; then

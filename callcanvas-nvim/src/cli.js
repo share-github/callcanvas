@@ -8,6 +8,8 @@
  *   callcanvas command <commandId> [--arg <json>]...
  *   callcanvas build-index [--file <path>]
  *   callcanvas changeset [<hash>|workbench] [--file <path>]
+ *   callcanvas canvases [--canvas <name|path>] [--json]
+ *   callcanvas comment --file <path> --line N --text <text> | --batch <json file|->
  *   callcanvas status | stop
  *
  * `open` is the command Neovim calls: it reuses a running session for the same
@@ -19,6 +21,7 @@ const http = require('http');
 const { spawn } = require('child_process');
 
 const { CallCanvasHost, detectProjectRoot, sessionFile, sessionDir } = require('./host');
+const { listCanvases, describeCanvas, resolveCanvasArg, applyComments } = require('./comments');
 
 function parseArgs(argv) {
     const options = { _: [], set: {}, arg: [] };
@@ -46,6 +49,12 @@ function parseArgs(argv) {
             case 'json': options.json = true; break;
             case 'no-token': options.auth = false; break;
             case 'arg': options.arg.push(next()); break;
+            case 'canvas': options.canvas = next(); break;
+            case 'text': options.text = next(); break;
+            case 'diff': options.diff = next(); break;
+            case 'window': options.window = next(); break;
+            case 'batch': options.batch = next(); break;
+            case 'remove': options.remove = true; break;
             case 'set': {
                 const pair = next() || '';
                 const eq = pair.indexOf('=');
@@ -81,6 +90,16 @@ Usage:
                        omitted = ask (in Neovim when --nvim is given)
   callcanvas status [--root <dir>] [--json]
   callcanvas stop   [--root <dir>]
+  callcanvas canvases [--root <dir>] [--canvas <name|path>] [--json]
+                       the canvases of the project (open in the host first, then the JSON files
+                       on disk, newest first) and the file lines each window shows
+  callcanvas comment --file <path> --line N --text <text> [--canvas <name|path>]
+                       [--diff added|removed] [--window <id>] [--remove] [--root <dir>] [--json]
+  callcanvas comment --batch <json file|-> [--canvas <name|path>] [--remove] [--json]
+                       batch: [{"file": "...", "line": N, "text": "...", "diff"?: "removed", "window"?: "..."}]
+                       Writes the line comment into the canvas JSON (default: the newest canvas);
+                       a browser tab shows it after a reload. --diff removed = the old line number
+                       of a removed line of a change set; added lines are detected from the line.
 
 Options:
   --root <dir>         project root (default: git root / build file above --file)
@@ -444,6 +463,95 @@ async function cmdStatus(options) {
     }
 }
 
+function projectRootOf(options) {
+    return options.root
+        ? path.resolve(options.root)
+        : detectProjectRoot(options.file ? path.resolve(options.file) : process.cwd());
+}
+
+/** Canvases of the project: the host's open ones (when it runs) first, then the JSON files on disk. */
+async function projectCanvases(projectRoot) {
+    const session = readSession(projectRoot);
+    let open = [];
+    if (await isAlive(session)) {
+        const result = await request(session, '/api/canvases');
+        open = (result.body && result.body.canvases) || [];
+    }
+    return listCanvases(projectRoot, open);
+}
+
+async function cmdCanvases(options) {
+    const projectRoot = projectRootOf(options);
+    let canvases = await projectCanvases(projectRoot);
+    if (options.canvas) {
+        const target = resolveCanvasArg(options.canvas, canvases);
+        canvases = canvases.filter(c => c.path === target);
+        if (!canvases.length) {
+            canvases = [describeCanvas(target)];
+        }
+    }
+    if (options.json) {
+        process.stdout.write(JSON.stringify({ projectRoot, canvases }, null, 2) + '\n');
+        return;
+    }
+    if (!canvases.length) {
+        process.stdout.write(`no canvas (${projectRoot})\n`);
+        return;
+    }
+    for (const canvas of canvases) {
+        const flags = [canvas.open ? 'open' : '', canvas.latest ? 'latest' : ''].filter(Boolean).join(',');
+        process.stdout.write(`${canvas.path}  [${canvas.kind}${flags ? ' ' + flags : ''}]  ${canvas.title}\n`);
+        for (const win of canvas.windows) {
+            const diff = win.baseContent
+                ? 'deleted content: old line numbers, comment with --diff removed'
+                : [
+                    win.addedLines ? `added ${win.addedLines.join(',')}` : '',
+                    win.removedLines ? `removed ${win.removedLines.join(',')}` : '',
+                ].filter(Boolean).join('; ');
+            process.stdout.write(`    ${win.id}  ${win.filePath}:${win.startLine}-${win.endLine}  ${win.displayName || ''}`
+                + `${diff ? `  (${diff})` : ''}${Object.keys(win.comments).length ? `  comments: ${Object.keys(win.comments).length}` : ''}\n`);
+        }
+    }
+}
+
+function readBatch(source) {
+    const raw = source === '-' ? fs.readFileSync(0, 'utf8') : fs.readFileSync(path.resolve(source), 'utf8');
+    const items = JSON.parse(raw);
+    if (!Array.isArray(items)) {
+        throw new Error('--batch must be a JSON array of {file, line, text}');
+    }
+    return items;
+}
+
+async function cmdComment(options) {
+    const items = options.batch
+        ? readBatch(options.batch)
+        : [{ file: options.file, line: options.line, text: options.text, diff: options.diff, window: options.window }];
+    // --file is the commented file, not the anchor: find the project from the cwd unless --root is given
+    const projectRoot = options.root ? path.resolve(options.root) : detectProjectRoot(process.cwd());
+    const canvases = await projectCanvases(projectRoot);
+    const target = resolveCanvasArg(options.canvas, canvases);
+    const result = applyComments(target, items, { remove: options.remove === true });
+    if (options.json) {
+        process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    } else {
+        process.stdout.write(`canvas ${result.path}\n`);
+        for (const a of result.applied) {
+            const what = options.remove ? (a.removed ? 'removed' : 'no comment') : (a.previous !== undefined ? 'replaced' : 'added');
+            process.stdout.write(`  ${what}  ${a.file}:${a.line}${a.diff ? ` (${a.diff})` : ''} -> ${a.window} ${a.displayName || ''}\n`);
+        }
+        for (const f of result.failed) {
+            process.stdout.write(`  FAILED ${f.file}:${f.line} — ${f.error}\n`);
+        }
+        if (result.applied.length) {
+            process.stdout.write('  (reload the browser tab to see it)\n');
+        }
+    }
+    if (result.failed.length) {
+        process.exitCode = 1;
+    }
+}
+
 async function cmdStop(options) {
     const projectRoot = options.root
         ? path.resolve(options.root)
@@ -458,6 +566,13 @@ async function cmdStop(options) {
 }
 
 async function main() {
+    // `callcanvas canvases | head` closes stdout early: not an error
+    process.stdout.on('error', (error) => {
+        if (error.code === 'EPIPE') {
+            process.exit(process.exitCode || 0);
+        }
+        throw error;
+    });
     let options;
     try {
         options = parseArgs(process.argv.slice(2));
@@ -478,6 +593,8 @@ async function main() {
         case 'changeset': await cmdChangeSet(options); return;
         case 'status': await cmdStatus(options); return;
         case 'stop': await cmdStop(options); return;
+        case 'canvases': await cmdCanvases(options); return;
+        case 'comment': await cmdComment(options); return;
         default:
             process.stderr.write(`unknown command: ${command}\n\n${USAGE}`);
             process.exit(2);
