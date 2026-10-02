@@ -890,7 +890,7 @@ export function composeChangeSetCanvas(params: ComposeChangeSetParams): ComposeC
                     id: hashId('d-', `deletedMethod:${f.filePath}:${dm.key}`),
                     group: JAVA_BLOCK_ID,
                     windowType: 'file',
-                    displayName: `${baseName(f.oldPath || f.filePath).replace(/\.java$/, '')}.${dm.name}（削除）`,
+                    displayName: `${baseName(f.oldPath || f.filePath).replace(/\.java$/, '')} # ${dm.name}（削除）`,
                     filePath: f.oldPath || f.filePath,
                     startLine: dm.startLine,
                     code: dm.text,

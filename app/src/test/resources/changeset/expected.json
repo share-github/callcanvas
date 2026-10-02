@@ -103,31 +103,31 @@
       "parent": "blk-java",
       "kind": "island",
       "id": "isl-1",
-      "label": "島 1: OrderController.create \u2026"
+      "label": "島 1: OrderController # create \u2026"
     },
     {
       "parent": "blk-java",
       "kind": "island",
       "id": "isl-2",
-      "label": "島 2: InventoryService.reserve \u2026"
+      "label": "島 2: InventoryService # reserve \u2026"
     },
     {
       "parent": "blk-java",
       "kind": "island",
       "id": "isl-3",
-      "label": "島 3: ReportService.monthly"
+      "label": "島 3: ReportService # monthly"
     },
     {
       "parent": "blk-java",
       "kind": "island",
       "id": "isl-4",
-      "label": "島 4: AuditService.log \u2026"
+      "label": "島 4: AuditService # log \u2026"
     },
     {
       "parent": "blk-java",
       "kind": "island",
       "id": "isl-5",
-      "label": "島 5: JobRunner.runJob \u2026"
+      "label": "島 5: JobRunner # runJob \u2026"
     }
   ],
   "windows": [
@@ -163,7 +163,7 @@
           "line": 10
         }
       ],
-      "displayName": "OrderController.create",
+      "displayName": "OrderController # create",
       "filePath": "src/main/java/com/example/changeset/order/OrderController.java",
       "startLine": 8,
       "change": {
@@ -220,7 +220,7 @@
         "len": 15,
         "line": 15
       }],
-      "displayName": "OrderService.validate",
+      "displayName": "OrderService # validate",
       "filePath": "src/main/java/com/example/changeset/order/OrderService.java",
       "startLine": 8,
       "change": {
@@ -249,7 +249,7 @@
         ],
         "newStart": 5
       }]},
-      "displayName": "OrderRepository.save",
+      "displayName": "OrderRepository # save",
       "filePath": "src/main/java/com/example/changeset/order/OrderRepository.java",
       "startLine": 4,
       "change": {
@@ -268,7 +268,7 @@
         "len": 8,
         "line": 7
       }],
-      "displayName": "OrderFacade.place",
+      "displayName": "OrderFacade # place",
       "filePath": "src/main/java/com/example/changeset/order/OrderFacade.java",
       "startLine": 6,
       "id": "v-c55561f0a4",
@@ -283,7 +283,7 @@
         "len": 12,
         "line": 7
       }],
-      "displayName": "OrderWorkflow.run",
+      "displayName": "OrderWorkflow # run",
       "filePath": "src/main/java/com/example/changeset/order/OrderWorkflow.java",
       "startLine": 6,
       "id": "v-4c2dcf9adb",
@@ -308,7 +308,7 @@
         ],
         "newStart": 5
       }]},
-      "displayName": "InventoryService.reserve",
+      "displayName": "InventoryService # reserve",
       "filePath": "src/main/java/com/example/changeset/checkout/InventoryService.java",
       "startLine": 4,
       "change": {
@@ -337,7 +337,7 @@
         ],
         "newStart": 5
       }]},
-      "displayName": "PaymentService.charge",
+      "displayName": "PaymentService # charge",
       "filePath": "src/main/java/com/example/changeset/checkout/PaymentService.java",
       "startLine": 4,
       "change": {
@@ -364,7 +364,7 @@
           "line": 9
         }
       ],
-      "displayName": "CheckoutService.checkout",
+      "displayName": "CheckoutService # checkout",
       "filePath": "src/main/java/com/example/changeset/checkout/CheckoutService.java",
       "startLine": 7,
       "id": "j-5704d9b017",
@@ -379,7 +379,7 @@
         "len": 14,
         "line": 7
       }],
-      "displayName": "PaymentFacade.pay",
+      "displayName": "PaymentFacade # pay",
       "filePath": "src/main/java/com/example/changeset/checkout/PaymentFacade.java",
       "startLine": 6,
       "id": "v-23352503fc",
@@ -404,7 +404,7 @@
         ],
         "newStart": 5
       }]},
-      "displayName": "ReportService.monthly",
+      "displayName": "ReportService # monthly",
       "filePath": "src/main/java/com/example/changeset/report/ReportService.java",
       "startLine": 4,
       "change": {
@@ -433,7 +433,7 @@
         ],
         "newStart": 5
       }]},
-      "displayName": "AuditService.log",
+      "displayName": "AuditService # log",
       "filePath": "src/main/java/com/example/changeset/admin/AuditService.java",
       "startLine": 4,
       "change": {
@@ -462,7 +462,7 @@
         ],
         "newStart": 5
       }]},
-      "displayName": "MetricsService.count",
+      "displayName": "MetricsService # count",
       "filePath": "src/main/java/com/example/changeset/admin/MetricsService.java",
       "startLine": 4,
       "change": {
@@ -489,7 +489,7 @@
           "line": 6
         }
       ],
-      "displayName": "AdminLauncher.main",
+      "displayName": "AdminLauncher # main",
       "filePath": "src/main/java/com/example/changeset/admin/AdminLauncher.java",
       "startLine": 5,
       "id": "j-d37668096b",
@@ -512,7 +512,7 @@
           "line": 11
         }
       ],
-      "displayName": "AdminController.audit",
+      "displayName": "AdminController # audit",
       "filePath": "src/main/java/com/example/changeset/admin/AdminController.java",
       "startLine": 9,
       "id": "v-9682890ed2",
@@ -535,7 +535,7 @@
           "line": 16
         }
       ],
-      "displayName": "AdminController.stats",
+      "displayName": "AdminController # stats",
       "filePath": "src/main/java/com/example/changeset/admin/AdminController.java",
       "startLine": 14,
       "id": "v-78c032a16a",
@@ -566,7 +566,7 @@
         "len": 10,
         "line": 7
       }],
-      "displayName": "JobRunner.runJob",
+      "displayName": "JobRunner # runJob",
       "filePath": "src/main/java/com/example/changeset/notify/JobRunner.java",
       "startLine": 6,
       "change": {
@@ -595,7 +595,7 @@
         ],
         "newStart": 5
       }]},
-      "displayName": "NotifyService.email",
+      "displayName": "NotifyService # email",
       "filePath": "src/main/java/com/example/changeset/notify/NotifyService.java",
       "startLine": 4,
       "change": {
@@ -624,7 +624,7 @@
         ],
         "newStart": 9
       }]},
-      "displayName": "NotifyService.sms",
+      "displayName": "NotifyService # sms",
       "filePath": "src/main/java/com/example/changeset/notify/NotifyService.java",
       "startLine": 8,
       "change": {
@@ -657,7 +657,7 @@
           "line": 10
         }
       ],
-      "displayName": "Dispatcher.dispatch",
+      "displayName": "Dispatcher # dispatch",
       "filePath": "src/main/java/com/example/changeset/notify/Dispatcher.java",
       "startLine": 7,
       "id": "v-ab04ea2d7c",

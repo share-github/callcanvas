@@ -20,7 +20,7 @@
           "kind": "island",
           "depth": 1,
           "parent": "blk-java",
-          "label": "島 1: OrderController.create …",
+          "label": "島 1: OrderController # create …",
           "windowCount": 3
         },
         {
@@ -28,7 +28,7 @@
           "kind": "island",
           "depth": 1,
           "parent": "blk-java",
-          "label": "島 2: CheckoutService.checkout …",
+          "label": "島 2: CheckoutService # checkout …",
           "windowCount": 4
         },
         {

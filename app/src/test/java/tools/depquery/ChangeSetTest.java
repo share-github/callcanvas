@@ -172,8 +172,8 @@ public class ChangeSetTest {
     /** 直接呼び出し（下向きの到達）でつながる 2 種は 1 つの島。経路は最短 */
     @Test
     void directCallJoinsIsland() {
-        assertEquals(island(out, "OrderService.validate"), island(out, "OrderRepository.save"));
-        JSONObject c = connection(out, "OrderService.validate", "OrderRepository.save");
+        assertEquals(island(out, "OrderService # validate"), island(out, "OrderRepository # save"));
+        JSONObject c = connection(out, "OrderService # validate", "OrderRepository # save");
         assertNotNull(c);
         assertEquals(15, c.getInt("callLine"));
     }
@@ -181,14 +181,14 @@ public class ChangeSetTest {
     /** 未変更の中継（OrderFacade#place → OrderWorkflow#run）は via ウィンドウにして順に実線で結ぶ */
     @Test
     void unchangedRelaysBecomeViaWindows() {
-        String isl = island(out, "OrderController.create");
-        assertEquals(isl, island(out, "OrderService.validate"));
-        assertVia(out, "OrderFacade.place", isl);
-        assertVia(out, "OrderWorkflow.run", isl);
-        assertEquals(10, solid(out, "OrderController.create", "OrderFacade.place").getInt("callLine"));
-        solid(out, "OrderFacade.place", "OrderWorkflow.run");
-        solid(out, "OrderWorkflow.run", "OrderService.validate");
-        assertNull(connection(out, "OrderController.create", "OrderService.validate"));
+        String isl = island(out, "OrderController # create");
+        assertEquals(isl, island(out, "OrderService # validate"));
+        assertVia(out, "OrderFacade # place", isl);
+        assertVia(out, "OrderWorkflow # run", isl);
+        assertEquals(10, solid(out, "OrderController # create", "OrderFacade # place").getInt("callLine"));
+        solid(out, "OrderFacade # place", "OrderWorkflow # run");
+        solid(out, "OrderWorkflow # run", "OrderService # validate");
+        assertNull(connection(out, "OrderController # create", "OrderService # validate"));
     }
 
     /** 接続は隣り合うウィンドウを結ぶ実線だけ（中継をまとめる省略接続は無い）。metadata に探索の上限・しきい値は無い */
@@ -206,9 +206,9 @@ public class ChangeSetTest {
     /** 共通の祖先でつながる 2 種は、最も近い共通の祖先を junction にして 1 つの島 */
     @Test
     void commonAncestorBecomesJunction() {
-        String isl = island(out, "InventoryService.reserve");
-        assertEquals(isl, island(out, "PaymentService.charge"));
-        JSONObject j = window(out, "CheckoutService.checkout");
+        String isl = island(out, "InventoryService # reserve");
+        assertEquals(isl, island(out, "PaymentService # charge"));
+        JSONObject j = window(out, "CheckoutService # checkout");
         assertEquals("junction", j.getString("windowType"));
         assertEquals(isl, j.getString("group"));
         assertFalse(j.has("collapsed"));
@@ -216,26 +216,26 @@ public class ChangeSetTest {
         assertFalse(j.has("diffState"));
         // より遠い共通の祖先（CheckoutController#post）は出さない
         assertTrue(windowsOfFile(out, "checkout/CheckoutController.java").isEmpty());
-        JSONObject toReserve = connection(out, "CheckoutService.checkout", "InventoryService.reserve");
+        JSONObject toReserve = connection(out, "CheckoutService # checkout", "InventoryService # reserve");
         assertNotNull(toReserve);
         assertEquals(8, toReserve.getInt("callLine"));
         // 合流点 → 種の経路の中継 1 段（PaymentFacade#pay）も via ウィンドウ
-        assertVia(out, "PaymentFacade.pay", isl);
-        assertEquals(9, solid(out, "CheckoutService.checkout", "PaymentFacade.pay").getInt("callLine"));
-        solid(out, "PaymentFacade.pay", "PaymentService.charge");
-        assertNull(connection(out, "CheckoutService.checkout", "PaymentService.charge"));
+        assertVia(out, "PaymentFacade # pay", isl);
+        assertEquals(9, solid(out, "CheckoutService # checkout", "PaymentFacade # pay").getInt("callLine"));
+        solid(out, "PaymentFacade # pay", "PaymentService # charge");
+        assertNull(connection(out, "CheckoutService # checkout", "PaymentService # charge"));
     }
 
     /** どの種ともつながらない種は 1 人の島（ラベルに … を付けない） */
     @Test
     void unrelatedSeedIsSeparateIsland() {
-        String isl = island(out, "ReportService.monthly");
-        for (String other : List.of("OrderController.create", "InventoryService.reserve", "AuditService.log",
-                "JobRunner.runJob")) {
+        String isl = island(out, "ReportService # monthly");
+        for (String other : List.of("OrderController # create", "InventoryService # reserve", "AuditService # log",
+                "JobRunner # runJob")) {
             assertNotEquals(isl, island(out, other), other);
         }
         assertEquals(1, membersOf(out, isl).size());
-        assertTrue(groupLabel(out, isl).endsWith("ReportService.monthly"), groupLabel(out, isl));
+        assertTrue(groupLabel(out, isl).endsWith("ReportService # monthly"), groupLabel(out, isl));
     }
 
     /**
@@ -249,17 +249,17 @@ public class ChangeSetTest {
             Set<String> incoming = incomingDisplayNames(root);
             assertTrue(incoming.contains("AdminLauncher # main"), root + ": " + incoming);
         }
-        String isl = island(out, "AuditService.log");
-        assertEquals(isl, island(out, "MetricsService.count"));
-        JSONObject j = window(out, "AdminLauncher.main");
+        String isl = island(out, "AuditService # log");
+        assertEquals(isl, island(out, "MetricsService # count"));
+        JSONObject j = window(out, "AdminLauncher # main");
         assertEquals("junction", j.getString("windowType"));
         assertEquals(isl, j.getString("group"));
-        assertVia(out, "AdminController.audit", isl);
-        assertVia(out, "AdminController.stats", isl);
-        solid(out, "AdminLauncher.main", "AdminController.audit");
-        solid(out, "AdminController.audit", "AuditService.log");
-        solid(out, "AdminLauncher.main", "AdminController.stats");
-        solid(out, "AdminController.stats", "MetricsService.count");
+        assertVia(out, "AdminController # audit", isl);
+        assertVia(out, "AdminController # stats", isl);
+        solid(out, "AdminLauncher # main", "AdminController # audit");
+        solid(out, "AdminController # audit", "AuditService # log");
+        solid(out, "AdminLauncher # main", "AdminController # stats");
+        solid(out, "AdminController # stats", "MetricsService # count");
     }
 
     /** --exclude は既存の呼び出し元解析と同じく効く（除外したクラスは辿らず、合流点にもしない） */
@@ -270,7 +270,7 @@ public class ChangeSetTest {
         assertFalse(incoming.contains("AdminLauncher # main"), incoming.toString());
         assertTrue(incoming.contains("AdminController # audit"), incoming.toString());
         JSONObject excluded = analyze(project, "--exclude", exclude);
-        assertNotEquals(island(excluded, "AuditService.log"), island(excluded, "MetricsService.count"));
+        assertNotEquals(island(excluded, "AuditService # log"), island(excluded, "MetricsService # count"));
         assertTrue(windowsOfFile(excluded, "admin/AdminLauncher.java").isEmpty());
         assertTrue(windowsOfFile(excluded, "admin/AdminController.java").isEmpty());
     }
@@ -278,21 +278,21 @@ public class ChangeSetTest {
     /** 2 経路で共有する中継（Dispatcher#dispatch）は via ウィンドウ 1 つ・区間 runJob → dispatch も 1 本 */
     @Test
     void sharedRelayIsOneViaWindow() {
-        assertEquals(island(out, "JobRunner.runJob"), island(out, "NotifyService.email"));
-        assertEquals(island(out, "JobRunner.runJob"), island(out, "NotifyService.sms"));
-        String isl = island(out, "JobRunner.runJob");
-        assertVia(out, "Dispatcher.dispatch", isl);
+        assertEquals(island(out, "JobRunner # runJob"), island(out, "NotifyService # email"));
+        assertEquals(island(out, "JobRunner # runJob"), island(out, "NotifyService # sms"));
+        String isl = island(out, "JobRunner # runJob");
+        assertVia(out, "Dispatcher # dispatch", isl);
         assertEquals(1, windowsOfFile(out, "notify/Dispatcher.java").size());
-        solid(out, "Dispatcher.dispatch", "NotifyService.email");
-        solid(out, "Dispatcher.dispatch", "NotifyService.sms");
-        String from = window(out, "JobRunner.runJob").getString("id"), to = window(out, "Dispatcher.dispatch").getString("id");
+        solid(out, "Dispatcher # dispatch", "NotifyService # email");
+        solid(out, "Dispatcher # dispatch", "NotifyService # sms");
+        String from = window(out, "JobRunner # runJob").getString("id"), to = window(out, "Dispatcher # dispatch").getString("id");
         JSONArray cs = out.getJSONArray("connections");
         int n = 0;
         for (int i = 0; i < cs.length(); i++) {
             if (cs.getJSONObject(i).getString("from").equals(from) && cs.getJSONObject(i).getString("to").equals(to)) n++;
         }
         assertEquals(1, n);
-        assertNull(connection(out, "JobRunner.runJob", "NotifyService.email"));
+        assertNull(connection(out, "JobRunner # runJob", "NotifyService # email"));
     }
 
     /** 既存の呼び出し元解析（--direction incoming --depth -1 --format callcanvas）のウィンドウの displayName */
@@ -331,7 +331,7 @@ public class ChangeSetTest {
         assertEquals(1, hunks.length());
         assertEquals(4, hunks.getJSONObject(0).getInt("newStart"));
         // Javadoc の hunk と本体の hunk はメソッドの種に当たる（Javadoc から始まるウィンドウ）
-        JSONObject validate = window(out, "OrderService.validate");
+        JSONObject validate = window(out, "OrderService # validate");
         assertEquals("method", validate.getString("windowType"));
         assertEquals(8, validate.getInt("startLine"));
         assertEquals(2, validate.getJSONObject("diffState").getJSONArray("hunks").length());

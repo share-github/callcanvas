@@ -286,13 +286,13 @@
               "id": "isl-1",
               "kind": "island",
               "parent": "blk-java",
-              "label": "島 1: OrderController.create …"
+              "label": "島 1: OrderController # create …"
             },
             {
               "id": "isl-2",
               "kind": "island",
               "parent": "blk-java",
-              "label": "島 2: New.run"
+              "label": "島 2: New # run"
             }
           ],
           "windows": [
@@ -300,7 +300,7 @@
               "id": "m-ctrl",
               "group": "isl-1",
               "windowType": "method",
-              "displayName": "OrderController.create",
+              "displayName": "OrderController # create",
               "filePath": "src/main/java/com/ex/OrderController.java",
               "startLine": 3,
               "code": "void create() {\n  b\n}",
@@ -333,7 +333,7 @@
               "id": "j-app",
               "group": "isl-1",
               "windowType": "junction",
-              "displayName": "App.main",
+              "displayName": "App # main",
               "filePath": "src/main/java/com/ex/App.java",
               "startLine": 1,
               "code": "void main() {}"
@@ -342,7 +342,7 @@
               "id": "m-svc",
               "group": "isl-1",
               "windowType": "method",
-              "displayName": "OrderService.place",
+              "displayName": "OrderService # place",
               "filePath": "src/main/java/com/ex/OrderService.java",
               "startLine": 8,
               "code": "void place() {\n  y\n}",
@@ -407,7 +407,7 @@
               "id": "m-new",
               "group": "isl-2",
               "windowType": "method",
-              "displayName": "New.run",
+              "displayName": "New # run",
               "filePath": "src/main/java/com/ex/New.java",
               "startLine": 2,
               "code": "void run() {}",
@@ -2366,7 +2366,7 @@
               "id": "m-x",
               "group": "isl-9",
               "windowType": "method",
-              "displayName": "A.x",
+              "displayName": "A # x",
               "filePath": "/abs/src/main/java/com/ex/OrderController.java",
               "startLine": 1,
               "code": "x"
@@ -2893,13 +2893,13 @@
               "id": "isl-1",
               "kind": "island",
               "parent": "blk-java",
-              "label": "島 1: OrderController.create …"
+              "label": "島 1: OrderController # create …"
             },
             {
               "id": "isl-2",
               "kind": "island",
               "parent": "blk-java",
-              "label": "島 2: New.run"
+              "label": "島 2: New # run"
             }
           ],
           "windows": [
@@ -2907,7 +2907,7 @@
               "id": "m-ctrl",
               "group": "isl-1",
               "windowType": "method",
-              "displayName": "OrderController.create",
+              "displayName": "OrderController # create",
               "filePath": "src/main/java/com/ex/OrderController.java",
               "startLine": 3,
               "code": "void create() {\n  b\n}",
@@ -2940,7 +2940,7 @@
               "id": "j-app",
               "group": "isl-1",
               "windowType": "junction",
-              "displayName": "App.main",
+              "displayName": "App # main",
               "filePath": "src/main/java/com/ex/App.java",
               "startLine": 1,
               "code": "void main() {}"
@@ -2949,7 +2949,7 @@
               "id": "v-fac",
               "group": "isl-1",
               "windowType": "via",
-              "displayName": "OrderFacade.place",
+              "displayName": "OrderFacade # place",
               "filePath": "src/main/java/com/ex/OrderFacade.java",
               "startLine": 4,
               "code": "void place() {\n  svc.place();\n}"
@@ -2958,7 +2958,7 @@
               "id": "v-wf",
               "group": "isl-1",
               "windowType": "via",
-              "displayName": "OrderWorkflow.run",
+              "displayName": "OrderWorkflow # run",
               "filePath": "src/main/java/com/ex/OrderWorkflow.java",
               "startLine": 6,
               "code": "void run() {\n  facade.place();\n}"
@@ -2967,7 +2967,7 @@
               "id": "m-svc",
               "group": "isl-1",
               "windowType": "method",
-              "displayName": "OrderService.place",
+              "displayName": "OrderService # place",
               "filePath": "src/main/java/com/ex/OrderService.java",
               "startLine": 8,
               "code": "void place() {\n  y\n}",
@@ -3032,7 +3032,7 @@
               "id": "m-new",
               "group": "isl-2",
               "windowType": "method",
-              "displayName": "New.run",
+              "displayName": "New # run",
               "filePath": "src/main/java/com/ex/New.java",
               "startLine": 2,
               "code": "void run() {}",

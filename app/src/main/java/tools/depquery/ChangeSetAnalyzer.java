@@ -568,12 +568,12 @@ class ChangeSetAnalyzer {
         return arr;
     }
 
-    /** 表示名 {@code 単純クラス名.メソッド名}（コンストラクタはクラス名） */
+    /** 表示名 {@code 単純クラス名 # メソッド名}（既存の OutputGenerator / NodeFactory と同じ作り方） */
     static String displayName(MethodEntry e) {
-        String cls = e.classFqn != null ? e.classFqn : e.fqn.substring(0, e.fqn.indexOf('#'));
-        cls = cls.substring(cls.lastIndexOf('.') + 1);
-        String name = e.methodName != null ? e.methodName : e.fqn.substring(e.fqn.indexOf('#') + 1, e.fqn.indexOf('('));
-        return cls + "." + name;
+        String cls = e.classFqn != null ? e.classFqn : "Unknown";
+        if (cls.contains(".")) cls = cls.substring(cls.lastIndexOf('.') + 1);
+        String name = e.methodName != null ? e.methodName : "unknown";
+        return cls + " # " + name;
     }
 
     /** 安定した不透明 ID 用の短いハッシュ */
