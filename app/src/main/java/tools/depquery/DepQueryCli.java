@@ -175,32 +175,42 @@ public class DepQueryCli {
         CallIndex callIndex;
         long indexBuildStart = startTiming("Index Construction");
         CallIndex oldIndex = null;
+        IndexDeps oldDeps = null;
         if (indexManager.indexExists()) {
             long loadStart = startTiming("Index Load");
             oldIndex = indexManager.loadIndex();
+            oldDeps = indexManager.loadDeps();
             endTiming("Index Load", loadStart);
             if (oldIndex != null && !CallIndex.CURRENT_VERSION.equals(oldIndex.version)) {
                 info("[INFO] Existing index was built by an older analyzer (version " + oldIndex.version
                         + "). Rebuilding from scratch...");
                 oldIndex = null;
+            } else if (oldIndex != null && oldDeps == null) {
+                info("[INFO] Existing index has no dependency data. Rebuilding from scratch...");
+                oldIndex = null;
+            } else if (oldIndex != null && !oldDeps.environment.equals(LibraryIndex.environment(cfg))) {
+                info("[INFO] JDK or language level changed since the last build. Rebuilding from scratch...");
+                oldIndex = null;
             }
         }
+        CallIndexBuilder.Built built;
         if (oldIndex != null) {
             timing("META buildMode=incremental");
             info("[INFO] Existing index found. Performing incremental update...");
-            callIndex = builder.updateIndex(oldIndex, indexManager);
+            built = builder.updateIndex(oldIndex, oldDeps, indexManager);
         } else {
             timing("META buildMode=full");
             info("[INFO] No existing index found. Building from scratch...");
-            callIndex = builder.buildFullIndex();
+            built = builder.buildFullIndex();
         }
+        callIndex = built.index();
         timing("SUMMARY index=methods=" + callIndex.methods.size()
                 + ",indexedFiles=" + callIndex.fileHashes.size());
         endTiming("Index Construction", indexBuildStart);
         
         // インデックスを保存
         long saveStart = startTiming("Index Save");
-        indexManager.saveIndex(callIndex);
+        indexManager.saveIndex(callIndex, built.deps());
         endTiming("Index Save", saveStart);
         
         info("[INFO] Call index build complete!");

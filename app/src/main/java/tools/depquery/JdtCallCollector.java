@@ -72,9 +72,9 @@ final class JdtCallCollector {
         Caller(MethodEntry entry) { this.entry = entry; }
     }
 
-    /** 1 ファイルの解析結果 */
+    /** 1 ファイルの解析結果。deps は差分更新の依存情報（{@link #collectDeps()} したときだけ。それ以外は null） */
     record FileResult(Path file, List<Caller> callers, Map<String, ConstantEntry> constants,
-                      Map<String, SymbolEntry> symbols) {}
+                      Map<String, SymbolEntry> symbols, IndexDeps.FileDeps deps) {}
 
     /** 解析の統計（--timing / --debug 用） */
     static final class Stats {
@@ -88,6 +88,15 @@ final class JdtCallCollector {
 
     /** JDT のクラスパス（null なら analyze のたびに cfg から作る） */
     private final List<String> classpath;
+
+    /** 差分更新の依存情報（{@link IndexDeps}）を集めるか。インデックス構築だけが使う */
+    private boolean collectDeps;
+
+    /** 差分更新の依存情報も集める（インデックス構築用。インデックス無しの解析は集めない） */
+    JdtCallCollector collectDeps() {
+        this.collectDeps = true;
+        return this;
+    }
 
     JdtCallCollector(AnalyzerConfig cfg) {
         this(cfg, null);
@@ -154,7 +163,9 @@ final class JdtCallCollector {
                     Visitor v = new Visitor(cu, orig.toString(), Path.of(sourceFilePath));
                     cu.accept(v);
                     for (Caller c : v.callers) c.entry.refs = c.refs;
-                    results.add(new FileResult(orig, v.callers, v.constants, v.symbols));
+                    results.add(new FileResult(orig, v.callers, v.constants, v.symbols,
+                            collectDeps ? new IndexDeps.FileDeps(v.usedNames, v.usedTypes, v.api, v.constants,
+                                    v.usedLibs, v.unresolvedNames) : null));
                 } catch (Throwable ex) {
                     debugVerbose("Failed to collect calls in " + orig + ": " + ex);
                 }
@@ -201,6 +212,9 @@ final class JdtCallCollector {
     }
 
     /** Spring Boot fat-jar の BOOT-INF/lib/*.jar を一時ファイルに取り出す（終了時に消す） */
+    /** fat-jar から取り出した一時 JAR → 元の fat-jar（クラスパスの JAR の持ち主を元の fat-jar にするため。{@link LibraryIndex}） */
+    static final Map<String, String> NESTED_JAR_OWNER = new HashMap<>();
+
     private static List<Path> expandBootJarLibs(Path bootJar) {
         List<Path> out = new ArrayList<>();
         if (!Files.isRegularFile(bootJar) || !bootJar.toString().endsWith(".jar")) return out;
@@ -216,6 +230,7 @@ final class JdtCallCollector {
                         Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
                     }
                     out.add(tmp);
+                    NESTED_JAR_OWNER.put(tmp.toString(), bootJar.toString());
                 }
             }
         } catch (Throwable ex) {
@@ -364,6 +379,17 @@ final class JdtCallCollector {
         String source;
         final Deque<TypeCtx> types = new ArrayDeque<>();
         final Deque<ASTNode> typeNodes = new ArrayDeque<>();
+        /** 差分更新の依存情報（{@link IndexDeps}。collectDeps のときだけ集める） */
+        final Set<String> usedNames = new HashSet<>();
+        final Set<String> usedTypes = new HashSet<>();
+        /** 使ったライブラリ（ソース以外）の型のバイナリ名（上位型を含む。JDK の型も入る） */
+        final Set<String> usedLibs = new HashSet<>();
+        /** 解決できなかった識別子（クラスパスに JAR が増えたとき、その JAR のクラス名と突き合わせる） */
+        final Set<String> unresolvedNames = new HashSet<>();
+        final Set<String> seenTypeKeys = new HashSet<>();
+        /** 同じバインディングの 2 回目以降をすぐ返すため（式ごとに呼ばれるので getKey() の文字列を作らない） */
+        final Set<ITypeBinding> seenBindings = Collections.newSetFromMap(new IdentityHashMap<>());
+        final Map<String, IndexDeps.TypeApi> api = new HashMap<>();
         /** 現在の呼び出し元。body の外（型の宣言部）では空 */
         final Deque<Caller> owners = new ArrayDeque<>();
         final Deque<ASTNode> ownerNodes = new ArrayDeque<>();
@@ -389,7 +415,154 @@ final class JdtCallCollector {
          * 生成メソッドへの呼び出し（ユーザーコード側）はそのまま解決・記録する。
          * agent が無い解析では判定しない（構文エラーの回復で範囲が崩れた実在のノードを落とさないため）。
          */
-        @Override public boolean preVisit2(ASTNode n) { return !(skipLombokGenerated && isLombokGenerated(n)); }
+        @Override public boolean preVisit2(ASTNode n) {
+            if (skipLombokGenerated && isLombokGenerated(n)) return false;
+            if (collectDeps) collectDepsOf(n);
+            return true;
+        }
+
+        // --- 差分更新の依存情報（IndexDeps） ---
+
+        /**
+         * 識別子はすべて names に、解決に使った型は上位型まで types に入れる: 書かれた型・変数の型・
+         * 呼び出し先 / フィールドの宣言クラス・呼び出し先の引数型と戻り値（オーバーロードの解決と、チェーンの
+         * レシーバの型）・ラムダ / メソッド参照のターゲット型・宣言した型。式ごとの型は引かない（全式の型解決は
+         * フル構築を 2 割遅くするうえ、名前・変数・戻り値で同じ型が拾える）。トップレベル型の宣言では、その型と
+         * メンバー型の API を作る。
+         */
+        void collectDepsOf(ASTNode n) {
+            if (n instanceof SimpleName sn) {
+                usedNames.add(sn.getIdentifier());
+                IBinding b = sn.resolveBinding();
+                if (b == null || b.isRecovered()) unresolvedNames.add(sn.getIdentifier());
+                if (b instanceof ITypeBinding tb) {
+                    useType(tb);
+                } else if (b instanceof IVariableBinding vb) {
+                    useType(vb.getType());
+                    if (vb.isField()) useType(vb.getDeclaringClass());
+                } else if (b instanceof IMethodBinding mb) {
+                    useMethod(mb);
+                }
+            }
+            // コンストラクタの呼び出しは名前を持たない（super(...)・this(...)）か型名なので、API のメンバー名と同じ
+            // <init> を使った名前に入れる（オーバーロードの追加・削除で解決先が変わる）
+            if (n instanceof CreationReference) usedNames.add(INSTANCE_INIT);
+            if (n instanceof LambdaExpression || n instanceof MethodReference) {
+                useType(((Expression) n).resolveTypeBinding());
+            } else if (n instanceof ClassInstanceCreation c) {
+                usedNames.add(INSTANCE_INIT);
+                useMethod(c.resolveConstructorBinding());
+            } else if (n instanceof ConstructorInvocation c) {
+                usedNames.add(INSTANCE_INIT);
+                useMethod(c.resolveConstructorBinding());
+            } else if (n instanceof SuperConstructorInvocation c) {
+                usedNames.add(INSTANCE_INIT);
+                useMethod(c.resolveConstructorBinding());
+            } else if (n instanceof EnumConstantDeclaration c) {
+                usedNames.add(INSTANCE_INIT);
+                useMethod(c.resolveConstructorBinding());
+            }
+            if (n instanceof AbstractTypeDeclaration td) {
+                ITypeBinding b = td.resolveBinding();
+                useType(b);
+                if (td.getParent() instanceof CompilationUnit) collectApi(b);
+            } else if (n instanceof AnonymousClassDeclaration ac) {
+                useType(ac.resolveBinding());
+            }
+        }
+
+        void useMethod(IMethodBinding mb) {
+            if (mb == null) return;
+            useType(mb.getDeclaringClass());
+            useType(mb.getReturnType());
+            for (ITypeBinding p : mb.getParameterTypes()) useType(p);
+        }
+
+        /**
+         * ソースの型なら FQN を types に、ライブラリの型ならバイナリ名を libs に記録し、上位型・型引数もたどる
+         * （ライブラリの型の上位は別の JAR のこともあるので、ライブラリの型もたどる）
+         */
+        void useType(ITypeBinding t) {
+            if (t == null || !seenBindings.add(t)) return;
+            while (t.isArray()) t = t.getElementType();
+            if (t.isWildcardType() || t.isCapture()) {
+                useType(t.isCapture() ? t.getWildcard().getBound() : t.getBound());
+                return;
+            }
+            if (t.isPrimitive() || t.isNullType()) return;
+            for (ITypeBinding a : t.getTypeArguments()) useType(a);
+            if (t.isTypeVariable()) {
+                if (!seenTypeKeys.add(t.getKey())) return;
+                for (ITypeBinding bound : t.getTypeBounds()) useType(bound);
+                return;
+            }
+            ITypeBinding d = t.getTypeDeclaration();
+            if (d == null || d.isRecovered() || !seenTypeKeys.add(d.getKey())) return;
+            if (d.isFromSource()) {
+                usedTypes.add(className(d));
+            } else {
+                String binary = d.getBinaryName();
+                if (binary != null) usedLibs.add(binary);
+            }
+            useType(d.getSuperclass());
+            for (ITypeBinding i : d.getInterfaces()) useType(i);
+        }
+
+        /** 型とメンバー型（Lombok の生成型を含む。バインディングからたどる）の API */
+        void collectApi(ITypeBinding b) {
+            if (b == null) return;
+            StringBuilder header = new StringBuilder(typeKind(b)).append(' ').append(b.getModifiers());
+            header.append(typeParams(b.getTypeParameters()));
+            header.append(" extends ").append(b.getSuperclass() != null ? describe(b.getSuperclass()) : "-");
+            header.append(" implements");
+            for (ITypeBinding i : b.getInterfaces()) header.append(' ').append(describe(i));
+            Map<String, List<String>> members = new TreeMap<>();
+            for (IMethodBinding m : b.getDeclaredMethods()) {
+                StringBuilder sig = new StringBuilder("M").append(typeParams(m.getTypeParameters())).append('(');
+                ITypeBinding[] ps = m.getParameterTypes();
+                for (int i = 0; i < ps.length; i++) {
+                    if (i > 0) sig.append(',');
+                    sig.append(describe(ps[i]));
+                }
+                sig.append(')').append(describe(m.getReturnType())).append(':').append(m.getModifiers());
+                if (m.isVarargs()) sig.append(":varargs");
+                members.computeIfAbsent(m.isConstructor() ? INSTANCE_INIT : m.getName(), k -> new ArrayList<>())
+                        .add(sig.toString());
+            }
+            for (IVariableBinding f : b.getDeclaredFields()) {
+                members.computeIfAbsent(f.getName(), k -> new ArrayList<>())
+                        .add("F" + describe(f.getType()) + ':' + f.getModifiers());
+            }
+            for (ITypeBinding t : b.getDeclaredTypes()) {
+                members.computeIfAbsent(t.getName(), k -> new ArrayList<>()).add("T" + typeKind(t) + ':' + t.getModifiers());
+                collectApi(t);
+            }
+            Map<String, String> joined = new TreeMap<>();
+            members.forEach((k, v) -> {
+                Collections.sort(v);
+                joined.put(k, String.join("|", v));
+            });
+            api.put(className(b), new IndexDeps.TypeApi(header.toString(), joined));
+        }
+
+        String typeKind(ITypeBinding b) {
+            if (b.isAnnotation()) return "@interface";
+            if (b.isInterface()) return "interface";
+            if (b.isEnum()) return "enum";
+            if (b.isRecord()) return "record";
+            return "class";
+        }
+
+        String typeParams(ITypeBinding[] tps) {
+            if (tps.length == 0) return "";
+            StringBuilder sb = new StringBuilder("<");
+            for (ITypeBinding tp : tps) {
+                sb.append(tp.getName());
+                for (ITypeBinding bound : tp.getTypeBounds()) sb.append(" & ").append(describe(bound));
+                sb.append(',');
+            }
+            return sb.append('>').toString();
+        }
 
         // --- 型宣言 ---
 

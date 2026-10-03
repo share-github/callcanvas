@@ -25,15 +25,26 @@ class CallIndexModels {
         int endCol;
         @JsonProperty("type")
         String type;
+        /**
+         * 仮想呼び出し（CHA で override を展開する対象）か。差分更新で未変更メソッドの override 辺を
+         * 新しい継承関係で展開し直すのに使う（callees のみ。true のときだけ書く）
+         */
+        @JsonProperty("virtual")
+        boolean virtual;
 
         CallRef() {}
 
         CallRef(String fqn, int line, int endLine, int endCol, String type) {
+            this(fqn, line, endLine, endCol, type, false);
+        }
+
+        CallRef(String fqn, int line, int endLine, int endCol, String type, boolean virtual) {
             this.fqn = fqn;
             this.line = line;
             this.endLine = endLine;
             this.endCol = endCol;
             this.type = type;
+            this.virtual = virtual;
         }
 
         JSONObject toJson() {
@@ -43,6 +54,7 @@ class CallIndexModels {
             obj.put("endLine", endLine);
             obj.put("endCol", endCol);
             obj.put("type", type);
+            if (virtual) obj.put("virtual", true);
             return obj;
         }
 
@@ -52,7 +64,8 @@ class CallIndexModels {
                 obj.getInt("line"),
                 obj.getInt("endLine"),
                 obj.optInt("endCol", 0),
-                obj.getString("type")
+                obj.getString("type"),
+                obj.optBoolean("virtual", false)
             );
         }
     }
@@ -125,7 +138,11 @@ class CallIndexModels {
         }
 
         void addCallee(String calleeFqn, int line, int endLine, int endCol, String type) {
-            callees.add(new CallRef(calleeFqn, line, endLine, endCol, type));
+            addCallee(calleeFqn, line, endLine, endCol, type, false);
+        }
+
+        void addCallee(String calleeFqn, int line, int endLine, int endCol, String type, boolean virtual) {
+            callees.add(new CallRef(calleeFqn, line, endLine, endCol, type, virtual));
         }
 
         JSONObject toJson() {
@@ -350,11 +367,12 @@ class CallIndexModels {
          * 構築した解析器の世代。1.0 = JavaParser 版、1.1 = JDT 版（ファイル形式は同じ）、
          * 1.2 = フィールド参照（methods[].fieldRefs と fields）を追加、
          * 1.3 = 型参照を加えて汎用化（methods[].refs と symbols。fieldRefs / fields は廃止）、
-         * 1.4 = 呼び出しの終端の列（callers / callees の endCol。同じ行の呼び出しの実行順）を追加。
+         * 1.4 = 呼び出しの終端の列（callers / callees の endCol。同じ行の呼び出しの実行順）を追加、
+         * 1.5 = 差分更新の依存情報（callees の virtual と call-index.deps）を追加。
          * 世代が違うインデックスは差分更新せずフル再構築する（新旧の解析結果を混在させないため）。
          * 解析では世代違いを使わずソースを解析する。上げたら拡張の CALL_INDEX_VERSION（extension.ts）も合わせる。
          */
-        static final String CURRENT_VERSION = "1.4";
+        static final String CURRENT_VERSION = "1.5";
 
         @JsonProperty("version")
         String version;

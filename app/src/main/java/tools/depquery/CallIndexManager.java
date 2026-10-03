@@ -24,6 +24,7 @@ class CallIndexManager {
     private static final String OFF_FILE_NAME = "call-index.off";   // TSV: fqn \t offset \t length
     private static final String META_FILE_NAME = "call-index.meta"; // version/timestamp/symbolIndex
     private static final String SYMBOLS_FILE_NAME = "call-index.symbols"; // 1 行 1 シンボル: key \t JSON
+    private static final String DEPS_FILE_NAME = "call-index.deps"; // 差分更新の依存情報（IndexDeps。構築時だけ読む）
     /** 1.2 のフィールド宣言のサイドカー（1.3 で symbols に置き換え。残っていれば保存時に消す） */
     private static final String LEGACY_FIELDS_FILE_NAME = "call-index.fields";
 
@@ -34,6 +35,7 @@ class CallIndexManager {
     private final Path offFilePath;
     private final Path metaFilePath;
     private final Path symbolsFilePath;
+    private final Path depsFilePath;
 
     CallIndexManager(Path projectRoot) {
         this.projectRoot = projectRoot;
@@ -43,6 +45,35 @@ class CallIndexManager {
         this.offFilePath = cacheDir.resolve(OFF_FILE_NAME);
         this.metaFilePath = cacheDir.resolve(META_FILE_NAME);
         this.symbolsFilePath = cacheDir.resolve(SYMBOLS_FILE_NAME);
+        this.depsFilePath = cacheDir.resolve(DEPS_FILE_NAME);
+    }
+
+    /**
+     * 差分更新の依存情報を読む。無い・読めない・形式の版が違うときは null（呼び出し側はフル構築する）
+     */
+    IndexDeps loadDeps() {
+        if (!Files.exists(depsFilePath)) return null;
+        try {
+            return IndexDeps.fromJson(new JSONObject(Files.readString(depsFilePath)));
+        } catch (Exception e) {
+            debug("Failed to load deps: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * インデックスと依存情報を保存する。依存情報を書けなければ消す（古い依存情報で差分更新しないため。
+     * 次回はフル構築になる）
+     */
+    void saveIndex(CallIndex index, IndexDeps deps) throws IOException {
+        Files.deleteIfExists(depsFilePath);
+        saveIndex(index);
+        try {
+            Files.writeString(depsFilePath, deps.toJson().toString());
+        } catch (Exception e) {
+            System.err.println("[WARN] Failed to write index dependencies (next build will be full): " + e.getMessage());
+            Files.deleteIfExists(depsFilePath);
+        }
     }
 
     /**
@@ -212,6 +243,8 @@ class CallIndexManager {
      * 変更されたファイルを検出（増分更新用）
      */
     static class FileChanges {
+        /** 今のファイル → ハッシュ（新しいインデックスにそのまま入れる） */
+        Map<String, String> currentHashes = new HashMap<>();
         List<Path> added = new ArrayList<>();
         List<Path> modified = new ArrayList<>();
         List<String> deleted = new ArrayList<>();
@@ -223,6 +256,7 @@ class CallIndexManager {
         long hashStart = startTiming("Change Detection Hash");
         Map<String, String> currentHashes = calculateFileHashes(currentFiles);
         endTiming("Change Detection Hash", hashStart);
+        changes.currentHashes = currentHashes;
 
         long diffStart = startTiming("Change Detection Diff");
         Set<String> currentFilePaths = currentHashes.keySet();

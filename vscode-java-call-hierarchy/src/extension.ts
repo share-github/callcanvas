@@ -311,7 +311,7 @@ function findJavaProjectsInWorkspace(): { name: string; path: string }[] {
 }
 
 /** Index generation the bundled analyzer writes (CallIndex.CURRENT_VERSION in app/). Bump both together. */
-const CALL_INDEX_VERSION = '1.4';
+const CALL_INDEX_VERSION = '1.5';
 
 /**
  * Check if a usable call index exists for a project.
