@@ -49,8 +49,9 @@ function composeAndCheck(input) {
     const files = withDefaults(input.files);
     const { canvas, javaError } = cs.composeChangeSetCanvas({
         kind: input.kind || 'commit',
-        commit: input.kind === 'workbench' ? null : (input.commit || 'h'.repeat(40)),
+        commit: input.kind === 'workbench' || input.kind === 'live' ? null : (input.commit || 'h'.repeat(40)),
         base: input.base || 'b'.repeat(40),
+        head: input.kind === 'live' ? (input.head || 't'.repeat(40)) : undefined,
         files,
         java: input.java === undefined ? null : input.java,
     });
@@ -86,7 +87,10 @@ function composeAndCheck(input) {
             if (f.reason) o.reason = f.reason;
             return o;
         }),
-        changeSet: { kind: csMeta.kind, commit: csMeta.commit },
+        changeSet: csMeta.kind === 'live'
+            ? { kind: csMeta.kind, commit: csMeta.commit, base: csMeta.base, head: csMeta.head, keys: Object.keys(csMeta),
+                shortName: cs.changeSetShortName(null, csMeta.base) }
+            : { kind: csMeta.kind, commit: csMeta.commit },
         symbols: canvas.symbols ? Object.keys(canvas.symbols) : null,
         javaError: javaError ? javaError.replace(/: .*$/, '') : null,
     };

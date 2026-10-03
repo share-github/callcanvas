@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { exec, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 
 /** Detailed diff types for before/after display */
 export type DiffLineEntry = { type: 'add' | 'remove'; content: string };
@@ -217,17 +218,44 @@ export async function showCommitHashInput(): Promise<string | undefined> {
 /**
  * 変更集合の対象。既存の差分表示（「📝 コミット変更」「📄 ワークベンチ」）と同じ 2 種:
  * commit = そのコミットの変更（第 1 親との差 C^1..C。ルートコミットは空ツリーとの差）、
- * workbench = 未コミットの変更（git diff HEAD = 作業ツリー＋ステージと HEAD の差。追跡ファイルのみ）
+ * workbench = 未コミットの変更（git diff HEAD = 作業ツリー＋ステージと HEAD の差。追跡ファイルのみ）。
+ * live = ライブ（固定の base から、ある時点の作業ツリーのスナップショット head までの差。未追跡ファイルも含む）。
+ * base はライブを始めたときに決まって動かない（起動時点の作業ツリーのスナップショット、または切り替え元の変更集合の base）。
+ * head は作り直すたびに撮る（snapshotWorktree）
  */
 export type ChangeSetTarget =
     | { kind: 'commit'; commit: string }
-    | { kind: 'workbench' };
+    | { kind: 'workbench' }
+    | { kind: 'live'; base: string; head: string };
 
 /** ワークベンチを指す引数（nvim の `:CallCanvasChangeSet workbench`・`callcanvas changeset workbench`） */
 export const WORKBENCH_ARG = 'workbench';
 
-/** 解決済みの比較。base / head は完全な hash。head が null なら作業ツリー（ワークベンチ。base は HEAD） */
-export type ResolvedChangeSet = { base: string; head: string | null };
+/**
+ * ライブを指す引数。`live` = 今の作業ツリーを base にして始める（`callcanvas changeset live`）、
+ * `live:<base>` = その base から始める（開いている変更集合から切り替えるとき。base は元の変更集合の base）
+ */
+export const LIVE_ARG = 'live';
+
+/** ライブの始め方（parseLiveArg の結果）。base が null なら今の作業ツリーを base にする */
+export type LiveStart = { base: string | null };
+
+/** 引数がライブ（`live` / `live:<base>`）ならその始め方、そうでなければ null */
+export function parseLiveArg(text: string): LiveStart | null {
+    const t = (text || '').trim();
+    if (t.toLowerCase() === LIVE_ARG) return { base: null };
+    const m = /^live:(.+)$/i.exec(t);
+    if (!m) return null;
+    const base = m[1].trim();
+    if (!base || base.startsWith('-') || base.includes('..')) throw new Error(`ライブの base が不正です: '${text}'`);
+    return { base };
+}
+
+/**
+ * 解決済みの比較。base / head は完全な hash（ライブは tree の hash もある）。head が null なら作業ツリー（ワークベンチ。base は HEAD）。
+ * excludeCallcanvasOutputs（ライブ）: CallCanvas 自身の出力を差分に入れない（AI が `git add -A` でコミットして追跡済みになっていても）
+ */
+export type ResolvedChangeSet = { base: string; head: string | null; excludeCallcanvasOutputs?: boolean };
 
 export type ChangeStatus = 'added' | 'modified' | 'deleted' | 'renamed';
 
@@ -253,10 +281,10 @@ const GIT_BASE_ARGS = ['-c', 'core.quotePath=false', '-c', 'diff.noprefix=false'
 
 type GitRunResult = { code: number; stdout: Buffer; stderr: string };
 
-/** git を実行する（シェルを通さない）。input があれば stdin に書く */
-export function runGit(cwd: string, args: string[], input?: string): Promise<GitRunResult> {
+/** git を実行する（シェルを通さない）。input があれば stdin に書く。env は追加の環境変数 */
+export function runGit(cwd: string, args: string[], input?: string, env?: Record<string, string>): Promise<GitRunResult> {
     return new Promise((resolve, reject) => {
-        const child = spawn('git', [...GIT_BASE_ARGS, ...args], { cwd, env: { ...process.env, GIT_PAGER: 'cat', LC_ALL: 'C' } });
+        const child = spawn('git', [...GIT_BASE_ARGS, ...args], { cwd, env: { ...process.env, GIT_PAGER: 'cat', LC_ALL: 'C', ...(env || {}) } });
         const out: Buffer[] = [];
         const err: Buffer[] = [];
         child.stdout.on('data', (d: Buffer) => out.push(d));
@@ -270,8 +298,8 @@ export function runGit(cwd: string, args: string[], input?: string): Promise<Git
     });
 }
 
-async function gitText(cwd: string, args: string[], input?: string): Promise<string> {
-    const r = await runGit(cwd, args, input);
+async function gitText(cwd: string, args: string[], input?: string, env?: Record<string, string>): Promise<string> {
+    const r = await runGit(cwd, args, input, env);
     if (r.code !== 0) throw new Error(`git ${args.join(' ')} failed: ${r.stderr.trim()}`);
     return r.stdout.toString('utf-8');
 }
@@ -304,10 +332,69 @@ export function parseChangeSetTarget(text: string): ChangeSetTarget {
     return { kind: 'commit', commit: t };
 }
 
+/**
+ * CallCanvas 自身が作業ツリーに書くもの（キャンバスの JSON と作り直しの保留・解析器の入出力・呼び出しインデックス・
+ * 一時ディレクトリ）。ライブのスナップショットから除く: 利用者の .gitignore に無いと、自分の出力が AI の変更として
+ * キャンバスに出て、作り直すたびに作業ツリーが変わって毎回作り直しになる。
+ */
+const CALLCANVAS_OUTPUT_PATHSPECS = [
+    ':(exclude,glob)**/build/call-hierarchy-output/**',
+    ':(exclude,glob)**/.callcanvas-cache/**',
+    ':(exclude,glob)**/.callcanvas-temp*/**',
+    ':(exclude,glob)**/*_callcanvas.json',
+    ':(exclude,glob)**/*_callcanvas.json.bak',
+];
+
+/**
+ * 作業ツリーのスナップショット（tree の hash）。未追跡ファイルを含み、.gitignore に当たるファイルは含まない
+ * （`git add -A` と同じ。CallCanvas 自身の出力も含まない）。利用者のインデックス・HEAD・作業ツリーには触れない（一時インデックスに書いて write-tree）。
+ * 一時インデックスは実際のインデックスを写してから始める: 空から始めると、追跡しているが .gitignore に当たる
+ * ファイルとサブモジュールが落ちて削除に見える（実際の作業の再現で確認）。写したインデックスの stat 情報で
+ * 変わっていないファイルは読み直さない。
+ */
+export async function snapshotWorktree(cwd: string): Promise<string> {
+    const indexPath = (await gitText(cwd, ['rev-parse', '--path-format=absolute', '--git-path', 'index'])).trim();
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'callcanvas-live-'));
+    const tmpIndex = path.join(tmpDir, 'index');
+    try {
+        if (fs.existsSync(indexPath)) fs.copyFileSync(indexPath, tmpIndex);
+        const env = { GIT_INDEX_FILE: tmpIndex };
+        await gitText(cwd, ['add', '-A', '--', '.', ...CALLCANVAS_OUTPUT_PATHSPECS], undefined, env);
+        return (await gitText(cwd, ['write-tree'], undefined, env)).trim();
+    } finally {
+        try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* 一時ファイル */ }
+    }
+}
+
+/**
+ * 2 つのスナップショットに CallCanvas 自身の出力以外の差があるか。出力が追跡済みになると（AI の `git add -A`）
+ * tree の hash は変わるが、キャンバスに出る差は変わらない
+ */
+export async function snapshotsDiffer(cwd: string, a: string, b: string): Promise<boolean> {
+    if (a === b) return false;
+    const r = await runGit(cwd, ['diff', '--quiet', '--no-ext-diff', '--ignore-submodules=dirty', a, b, '--', '.', ...CALLCANVAS_OUTPUT_PATHSPECS]);
+    if (r.code === 0) return false;
+    if (r.code === 1) return true;
+    throw new Error(`git diff ${a} ${b} failed: ${r.stderr.trim()}`);
+}
+
+/** ライブの base を完全な hash にする（コミットか tree。tree はスナップショット） */
+export async function resolveLiveBase(cwd: string, base: string): Promise<string> {
+    const v = (base || '').trim();
+    if (!v || v.startsWith('-')) throw new Error(`Invalid revision: '${base}'`);
+    const r = await runGit(cwd, ['rev-parse', '--verify', '--quiet', `${v}^{tree}`]);
+    if (r.code !== 0) throw new Error(`Unknown revision: '${base}'`);
+    const full = await runGit(cwd, ['rev-parse', '--verify', '--quiet', v]);
+    return full.stdout.toString('utf-8').trim();
+}
+
 /** 対象を hash に解決する。コミットが親を持たない（ルート）なら空ツリーと比べる。ワークベンチは HEAD と作業ツリー */
 export async function resolveChangeSetTarget(cwd: string, target: ChangeSetTarget): Promise<ResolvedChangeSet> {
     if (target.kind === 'workbench') {
         return { base: await resolveCommit(cwd, 'HEAD'), head: null };
+    }
+    if (target.kind === 'live') {
+        return { base: await resolveLiveBase(cwd, target.base), head: await resolveLiveBase(cwd, target.head), excludeCallcanvasOutputs: true };
     }
     const head = await resolveCommit(cwd, target.commit);
     const parent = await runGit(cwd, ['rev-parse', '--verify', '--quiet', `${head}^1`]);
@@ -350,8 +437,9 @@ function parseNameStatusZ(out: string): { status: ChangeStatus; filePath: string
 export async function getChangeSetFiles(cwd: string, range: ResolvedChangeSet): Promise<ChangedFile[]> {
     const revs = range.head ? [range.base, range.head] : [range.base];
     const common = ['diff', '-M', '--no-ext-diff', '--no-textconv', '--no-color', '--ignore-submodules=dirty'];
-    const nameStatus = await gitText(cwd, [...common, '--name-status', '-z', ...revs, '--']);
-    const patch = await gitText(cwd, [...common, '--unified=0', '--src-prefix=a/', '--dst-prefix=b/', ...revs, '--']);
+    const paths = range.excludeCallcanvasOutputs ? ['.', ...CALLCANVAS_OUTPUT_PATHSPECS] : [];
+    const nameStatus = await gitText(cwd, [...common, '--name-status', '-z', ...revs, '--', ...paths]);
+    const patch = await gitText(cwd, [...common, '--unified=0', '--src-prefix=a/', '--dst-prefix=b/', ...revs, '--', ...paths]);
 
     const diffs = parseGitDiffDetailed(patch);
     const byPath = new Map<string, FileDiff>();

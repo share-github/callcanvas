@@ -43,12 +43,14 @@ export type JavaChangeSetRequestFile = {
 };
 
 export type ComposeChangeSetParams = {
-    /** commit = そのコミットの変更、workbench = 未コミットの変更（metadata.changeSet.kind） */
+    /** commit = そのコミットの変更、workbench = 未コミットの変更、live = ライブ（metadata.changeSet.kind） */
     kind: ChangeSetTarget['kind'];
-    /** 対象コミットの完全な hash（workbench は null） */
+    /** 対象コミットの完全な hash（workbench・live は null） */
     commit: string | null;
-    /** 比較元の完全な hash（コミットの第 1 親・ルートは空ツリー、workbench は HEAD） */
+    /** 比較元の完全な hash（コミットの第 1 親・ルートは空ツリー、workbench は HEAD、live は始めたときに決めた base） */
     base: string;
+    /** live だけ: 作業ツリーのスナップショット（tree の hash） */
+    head?: string;
     files: ChangeSetFileInput[];
     /** Java の解析結果。Java ファイルが無い・拡張が無いときは null */
     java: JavaChangeSetResult | null;
@@ -105,8 +107,12 @@ export function buildJavaChangeSetRequest(files: ChangeSetFileInput[]): JavaChan
         });
 }
 
-/** 保存ファイル名に使う短い名前（callcanvas_changeset_<名前>.json）。コミットは hash の先頭 8 文字、ワークベンチは workbench */
-export function changeSetShortName(commit: string | null): string {
+/**
+ * 保存ファイル名に使う短い名前（callcanvas_changeset_<名前>.json）。コミットは hash の先頭 8 文字、ワークベンチは workbench、
+ * ライブは live_<base の先頭 8 文字>（作り直しても同じファイル＝同じキャンバス）
+ */
+export function changeSetShortName(commit: string | null, liveBase?: string): string {
+    if (liveBase) return `live_${liveBase.substring(0, 8)}`;
     return commit ? commit.substring(0, 8) : 'workbench';
 }
 
@@ -962,8 +968,9 @@ export function composeChangeSetCanvas(params: ComposeChangeSetParams): ComposeC
         kind: params.kind,
         commit: params.commit,
         base: params.base,
-        files: files.map(f => entries.get(f.filePath)!),
     };
+    if (params.kind === 'live') changeSet.head = params.head;
+    changeSet.files = files.map(f => entries.get(f.filePath)!);
 
     const canvas: any = {
         autoLayout: true,
@@ -1112,7 +1119,7 @@ export function makeFilePathNormalizer(repoRoot: string, inputPaths: string[], r
     };
 }
 
-/** 対象（コミットかワークベンチ）から変更集合キャンバスを作る（保存はしない） */
+/** 対象（コミット・ワークベンチ・ライブ）から変更集合キャンバスを作る（保存はしない） */
 export async function generateChangeSetCanvas(opts: GenerateChangeSetOptions): Promise<GenerateChangeSetResult> {
     const range = await resolveChangeSetTarget(opts.repoRoot, opts.target);
     const files = await collectChangeSetInputs(opts.repoRoot, range);
@@ -1142,10 +1149,12 @@ export async function generateChangeSetCanvas(opts: GenerateChangeSetOptions): P
     if (clientside) {
         for (const a of Object.values(clientside.analyses || {})) if (a && a.success) resultPaths.push(...windowPaths(a.data));
     }
+    const live = opts.target.kind === 'live';
     const { canvas, javaError, clientsideError } = composeChangeSetCanvas({
         kind: opts.target.kind,
-        commit: range.head,
+        commit: live ? null : range.head,
         base: range.base,
+        head: live ? range.head! : undefined,
         files,
         java,
         clientside,
@@ -1156,7 +1165,7 @@ export async function generateChangeSetCanvas(opts: GenerateChangeSetOptions): P
         javaError,
         clientsideError,
         errors: validateChangeSetCanvas(canvas, inputPaths),
-        shortName: changeSetShortName(range.head),
+        shortName: changeSetShortName(range.head, live ? range.base : undefined),
         fileCount: files.length,
     };
 }

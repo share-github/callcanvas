@@ -3445,5 +3445,82 @@
       ],
       "javaError": null
     }
+  },
+  {
+    "label": "ライブ: metadata.changeSet は kind live・commit null・base（固定の起点）・head（作業ツリーのスナップショットの tree）。追加ファイル（未追跡）は other ブロックのファイル単位。保存名は live_<base 先頭 8 文字>",
+    "input": {
+      "kind": "live",
+      "base": "0123456789abcdef0123456789abcdef01234567",
+      "head": "fedcba9876543210fedcba9876543210fedcba98",
+      "files": [
+        {
+          "filePath": "notes/plan.md",
+          "status": "added",
+          "hunks": [
+            {
+              "oldStart": 0,
+              "oldCount": 0,
+              "newStart": 1,
+              "newCount": 1,
+              "lines": [
+                {
+                  "type": "add",
+                  "content": "# plan"
+                }
+              ]
+            }
+          ],
+          "headContent": "# plan\n"
+        }
+      ]
+    },
+    "expected": {
+      "invariantErrors": [],
+      "allFilesListed": true,
+      "allWindowsNonEmptyAndExist": true,
+      "allGroupsExist": true,
+      "autoLayout": true,
+      "hasAnalysisMetadata": false,
+      "groups": [
+        "other:blk-other"
+      ],
+      "windows": [
+        {
+          "group": "blk-other",
+          "windowType": "file",
+          "filePath": "notes/plan.md",
+          "startLine": 1,
+          "source": "worktree",
+          "code": "# plan",
+          "diffHunks": 1
+        }
+      ],
+      "connections": 0,
+      "files": [
+        {
+          "path": "notes/plan.md",
+          "status": "added",
+          "block": "other",
+          "inGraph": false,
+          "windowCount": 1
+        }
+      ],
+      "changeSet": {
+        "kind": "live",
+        "commit": null,
+        "base": "0123456789abcdef0123456789abcdef01234567",
+        "head": "fedcba9876543210fedcba9876543210fedcba98",
+        "keys": [
+          "kind",
+          "commit",
+          "base",
+          "head",
+          "files"
+        ],
+        "shortName": "live_01234567"
+      },
+      "symbols": null,
+      "javaError": null
+    }
   }
 ]

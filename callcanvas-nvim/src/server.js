@@ -475,6 +475,39 @@ class ViewerServer {
                     }
                 });
                 return;
+            // Live change set (see CallCanvasHost.registerLive): the Claude Code hook's
+            // `callcanvas notify`, and the badge of a canvas tab (state, take in, switch to live).
+            case '/api/live/notify':
+                this.readJson(req, res, body => {
+                    this.json(res, 200, this.handlers.onLiveNotify
+                        ? this.handlers.onLiveNotify(body)
+                        : { ok: false, error: 'not supported' });
+                });
+                return;
+            case '/api/live/status':
+                this.json(res, 200, this.handlers.onLiveStatus
+                    ? this.handlers.onLiveStatus(parsed.searchParams.get('c') || this.latestId)
+                    : { ok: true, live: false, canStart: false });
+                return;
+            case '/api/live/apply':
+                this.readJson(req, res, body => {
+                    this.json(res, 200, this.handlers.onLiveApply
+                        ? this.handlers.onLiveApply(body.canvasId || this.latestId)
+                        : { ok: false, error: 'not supported' });
+                });
+                return;
+            case '/api/live/start':
+                this.readJson(req, res, async body => {
+                    try {
+                        const result = this.handlers.onLiveStart
+                            ? await this.handlers.onLiveStart(body.canvasId || this.latestId)
+                            : { ok: false, error: 'not supported' };
+                        this.json(res, 200, result);
+                    } catch (error) {
+                        this.json(res, 200, { ok: false, error: String(error && error.message ? error.message : error) });
+                    }
+                });
+                return;
             case '/api/shutdown':
                 this.json(res, 200, { ok: true });
                 setTimeout(() => {

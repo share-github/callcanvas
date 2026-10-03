@@ -2,15 +2,17 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { log, logError } from './logger';
-import { ChangeSetTarget, getRepoRoot, parseChangeSetTarget, showCommitHashInput } from './gitUtils';
+import { ChangeSetTarget, getRepoRoot, parseChangeSetTarget, parseLiveArg, showCommitHashInput, snapshotsDiffer, snapshotWorktree } from './gitUtils';
 import {
     ClientsideAnalysis, ClientsideChangeSetResult, ClientsideRequestFile, JavaChangeSetRequestFile, JavaChangeSetResult,
-    clientsideSeedKey, generateChangeSetCanvas
+    GenerateChangeSetResult, clientsideSeedKey, generateChangeSetCanvas
 } from './changeSet';
 
-/** 表示用の対象名（コミットは入力どおりの hash、ワークベンチは「ワークベンチ」） */
+/** 表示用の対象名（コミットは入力どおりの hash、ワークベンチは「ワークベンチ」、ライブは「ライブ」） */
 function targetLabel(target: ChangeSetTarget): string {
-    return target.kind === 'workbench' ? 'ワークベンチ' : target.commit;
+    if (target.kind === 'workbench') return 'ワークベンチ';
+    if (target.kind === 'live') return 'ライブ';
+    return target.commit;
 }
 
 /**
@@ -112,10 +114,36 @@ async function analyzeClientsideChangeSet(repoRoot: string, files: ClientsideReq
     return result;
 }
 
+/** 変更集合を作る（Java・clientside の解析を含む。保存はしない） */
+function generateFor(repoRoot: string, target: ChangeSetTarget, anchorFile: string | undefined): Promise<GenerateChangeSetResult> {
+    return generateChangeSetCanvas({
+        repoRoot,
+        target,
+        analyzeJava: (files) => analyzeJavaChangeSet(repoRoot, anchorFile, files),
+        analyzeClientside: (files) => analyzeClientsideChangeSet(repoRoot, files),
+    });
+}
+
+/** 保存先: <リポジトリ>/build/call-hierarchy-output/callcanvas_changeset_<名前>.json */
+function changeSetJsonPath(repoRoot: string, shortName: string): string {
+    return path.join(repoRoot, 'build', 'call-hierarchy-output', `callcanvas_changeset_${shortName}.json`);
+}
+
+/** 生成結果の数（ホストの通知・バッジ用） */
+function changeSetCounts(generated: GenerateChangeSetResult) {
+    return {
+        fileCount: generated.fileCount,
+        islandCount: (generated.canvas.groups || []).filter((g: any) => g && g.kind === 'island').length,
+        windowCount: (generated.canvas.windows || []).length,
+    };
+}
+
 /**
- * callcanvas.openChangeSet: コミットかワークベンチの変更を 1 枚のキャンバスにして Viewer で開く。
- * 保存先は <リポジトリ>/build/call-hierarchy-output/callcanvas_changeset_<hash 先頭 8 文字 | workbench>.json。
- * targetArg（executeCommand の引数。hash か `workbench`）があれば訊かずにそれを使う（nvim ホストの `callcanvas changeset <hash>`）。
+ * callcanvas.openChangeSet: コミット・ワークベンチ・ライブの変更を 1 枚のキャンバスにして Viewer で開く。
+ * 保存先は <リポジトリ>/build/call-hierarchy-output/callcanvas_changeset_<hash 先頭 8 文字 | workbench | live_<base 先頭 8 文字>>.json。
+ * targetArg（executeCommand の引数。hash か `workbench` か `live` / `live:<base>`）があれば訊かずにそれを使う
+ * （nvim ホストの `callcanvas changeset <hash>`）。ライブは引数でだけ始める（作り直しと取り込みは nvim ホストが持つ）。
+ * ライブは変更が 0 ファイルでもキャンバスを開く（これから AI が変更していくのを追う起点のため）。
  */
 export async function openChangeSet(openViewer: (jsonPath: vscode.Uri) => Promise<void>, targetArg?: string): Promise<void> {
     const editorFile = vscode.window.activeTextEditor?.document?.uri?.fsPath;
@@ -134,9 +162,15 @@ export async function openChangeSet(openViewer: (jsonPath: vscode.Uri) => Promis
 
     let target: ChangeSetTarget | undefined;
     try {
-        target = (typeof targetArg === 'string' && targetArg.trim())
-            ? parseChangeSetTarget(targetArg)
-            : await askChangeSetTarget();
+        const arg = typeof targetArg === 'string' ? targetArg.trim() : '';
+        const live = arg ? parseLiveArg(arg) : null;
+        if (live) {
+            // 起点（base）は始めたときに決めて動かさない。`live` は今の作業ツリーそのものを base にする（最初は 0 ファイル）
+            const head = await snapshotWorktree(repoRoot);
+            target = { kind: 'live', base: live.base || head, head };
+        } else {
+            target = arg ? parseChangeSetTarget(arg) : await askChangeSetTarget();
+        }
     } catch (e) {
         vscode.window.showErrorMessage(`変更集合の対象が不正です: ${e instanceof Error ? e.message : e}`);
         return;
@@ -146,25 +180,20 @@ export async function openChangeSet(openViewer: (jsonPath: vscode.Uri) => Promis
 
     const anchorFile = (editorFile && editorFile.endsWith('.java') && editorFile.startsWith(repoRoot + path.sep)) ? editorFile : undefined;
 
-    let generated;
+    let generated: GenerateChangeSetResult;
     try {
         generated = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: `変更集合を作成中: ${text}`,
             cancellable: false
-        }, () => generateChangeSetCanvas({
-            repoRoot,
-            target,
-            analyzeJava: (files) => analyzeJavaChangeSet(repoRoot, anchorFile, files),
-            analyzeClientside: (files) => analyzeClientsideChangeSet(repoRoot, files),
-        }));
+        }, () => generateFor(repoRoot, target!, anchorFile));
     } catch (e) {
         logError(`openChangeSet failed: ${e}`);
         vscode.window.showErrorMessage(`変更集合の作成に失敗しました: ${e instanceof Error ? e.message : e}`);
         return;
     }
 
-    if (generated.fileCount === 0) {
+    if (generated.fileCount === 0 && target.kind !== 'live') {
         // 既存の差分表示と同じ言い方（ワークベンチは getWorkbenchChanges の「ワークベンチの変更: N ファイル」）
         vscode.window.showInformationMessage(target.kind === 'workbench'
             ? 'ワークベンチの変更: 0 ファイル'
@@ -183,15 +212,70 @@ export async function openChangeSet(openViewer: (jsonPath: vscode.Uri) => Promis
         vscode.window.showErrorMessage(`変更集合キャンバスに不整合があります（${generated.errors.length} 件。出力チャンネル参照）`);
     }
 
-    const outDir = path.join(repoRoot, 'build', 'call-hierarchy-output');
-    const jsonPath = path.join(outDir, `callcanvas_changeset_${generated.shortName}.json`);
+    const jsonPath = changeSetJsonPath(repoRoot, generated.shortName);
     try {
-        fs.mkdirSync(outDir, { recursive: true });
+        fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
         fs.writeFileSync(jsonPath, JSON.stringify(generated.canvas, null, 2), 'utf8');
+        // 前のライブの取り込まれていない作り直しは、新しく始めたライブには関係ない
+        if (target.kind === 'live') fs.rmSync(livePendingPath(jsonPath), { force: true });
     } catch (e) {
         vscode.window.showErrorMessage(`変更集合キャンバスの保存に失敗しました: ${e}`);
         return;
     }
     log(`Change set canvas saved: ${jsonPath} (${generated.fileCount} files, ${generated.canvas.windows.length} windows)`);
     await openViewer(vscode.Uri.file(jsonPath));
+}
+
+/** ライブの作り直しの保存先（取り込むまでキャンバスの JSON は変えない） */
+function livePendingPath(jsonPath: string): string {
+    return `${jsonPath}.pending`;
+}
+
+/** callcanvas.refreshLiveChangeSet の結果 */
+export type LiveRefreshResult = {
+    success: boolean;
+    error?: string;
+    /** 撮った作業ツリーのスナップショット（tree の hash） */
+    head?: string;
+    /** since（無ければキャンバスの head）から作業ツリーが変わったか。変わっていなければ作り直していない */
+    changed?: boolean;
+    /** 作り直したキャンバスの保存先（<jsonPath>.pending） */
+    pendingPath?: string;
+    fileCount?: number;
+    islandCount?: number;
+    windowCount?: number;
+    javaError?: string;
+    clientsideError?: string;
+};
+
+/**
+ * callcanvas.refreshLiveChangeSet: ライブのキャンバス（jsonPath）を今の作業ツリーで作り直し、<jsonPath>.pending に書く
+ * （キャンバスの JSON は変えない。人が取り込むときにホストが置き換える）。UI は出さない（結果で返す）。
+ * since（前に作り直したときの head）と今のスナップショットが同じなら作り直さない（changed: false）。
+ */
+export async function refreshLiveChangeSet(jsonPath: string, since?: string): Promise<LiveRefreshResult> {
+    try {
+        if (typeof jsonPath !== 'string' || !jsonPath) return { success: false, error: 'jsonPath is required' };
+        const canvas = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+        const cs = canvas && canvas.metadata && canvas.metadata.changeSet;
+        if (!cs || cs.kind !== 'live' || typeof cs.base !== 'string') return { success: false, error: `ライブの変更集合キャンバスではありません: ${jsonPath}` };
+        const repoRoot = await getRepoRoot(path.dirname(jsonPath));
+        if (!repoRoot) return { success: false, error: `git リポジトリが見つかりません: ${jsonPath}` };
+        const head = await snapshotWorktree(repoRoot);
+        if (!await snapshotsDiffer(repoRoot, since || cs.head, head)) return { success: true, head, changed: false };
+        const generated = await generateFor(repoRoot, { kind: 'live', base: cs.base, head }, undefined);
+        if (generated.errors.length > 0) {
+            logError(`Change set invariant violations:\n  ${generated.errors.join('\n  ')}`);
+        }
+        const pendingPath = livePendingPath(jsonPath);
+        fs.writeFileSync(pendingPath, JSON.stringify(generated.canvas, null, 2), 'utf8');
+        log(`Live change set rebuilt: ${pendingPath} (${generated.fileCount} files, ${generated.canvas.windows.length} windows)`);
+        const res: LiveRefreshResult = { success: true, head, changed: true, pendingPath, ...changeSetCounts(generated) };
+        if (generated.javaError) res.javaError = generated.javaError;
+        if (generated.clientsideError) res.clientsideError = generated.clientsideError;
+        return res;
+    } catch (e) {
+        logError(`refreshLiveChangeSet failed: ${e}`);
+        return { success: false, error: e instanceof Error ? e.message : String(e) };
+    }
 }

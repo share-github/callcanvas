@@ -535,6 +535,9 @@
             case 'canvas-added':
                 announceCanvas(payload);
                 break;
+            case 'live':
+                renderLive(payload.state);
+                break;
             case 'batch':
                 (payload.events || []).forEach(handle);
                 break;
@@ -619,6 +622,11 @@
             'padding:5px 9px', 'border-radius:4px', 'max-width:46vw'
         ].join(';'));
 
+        // The live change set line (filled by renderLive) sits above the rest.
+        liveRow = document.createElement('div');
+        liveRow.style.display = 'none';
+        switcherBox.appendChild(liveRow);
+
         var head = document.createElement('div');
         var pretty = function (binding) {
             return binding.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
@@ -660,6 +668,120 @@
         });
 
         (document.body || document.documentElement).appendChild(switcherBox);
+        fetchLive();
+    }
+
+    // --- live change set ----------------------------------------------------
+    // A live change set canvas is rebuilt by the host while an AI edits the working tree
+    // (the Claude Code hook runs `callcanvas notify`). A rebuild waits until it is taken in
+    // here, so the canvas never changes under the person reading it.
+    var liveRow = null;
+    var liveBusy = false;
+
+    function fetchLive() {
+        fetch(url('/api/live/status') + '&c=' + encodeURIComponent(CANVAS_ID))
+            .then(function (r) { return r.json(); })
+            .then(renderLive)
+            .catch(function () { /* the badge works without it */ });
+    }
+
+    function liveLink(text, onClick) {
+        var a = document.createElement('a');
+        a.href = '#';
+        a.textContent = text;
+        a.setAttribute('style', 'color:#7fb9ff;text-decoration:none;font-weight:bold');
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!liveBusy) { onClick(); }
+        });
+        return a;
+    }
+
+    function postJson(pathname, body) {
+        return fetch(url(pathname), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(function (r) { return r.json(); });
+    }
+
+    function applyLive() {
+        liveBusy = true;
+        postJson('/api/live/apply', { canvasId: CANVAS_ID })
+            .then(function (res) {
+                liveBusy = false;
+                // On success the host reloads this tab (navigate); a failure is shown.
+                if (!res.ok) { toast(res.error || 'could not take the update in', 'warning'); fetchLive(); }
+            })
+            .catch(function () { liveBusy = false; toast('CallCanvas host connection lost', 'error'); });
+    }
+
+    function startLive() {
+        liveBusy = true;
+        liveRow.textContent = '● ライブを開始中…';
+        postJson('/api/live/start', { canvasId: CANVAS_ID })
+            .then(function (res) {
+                liveBusy = false;
+                if (res.ok && res.canvasId) {
+                    location.href = url('/c/' + encodeURIComponent(res.canvasId));
+                } else {
+                    toast(res.error || 'could not start live', 'error');
+                    fetchLive();
+                }
+            })
+            .catch(function () { liveBusy = false; toast('CallCanvas host connection lost', 'error'); });
+    }
+
+    function renderLive(state) {
+        if (!liveRow || !state) { return; }
+        liveRow.textContent = '';
+        liveRow.setAttribute('style', 'margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #555');
+        if (!state.live) {
+            if (!state.canStart) {
+                liveRow.style.display = 'none';
+                return;
+            }
+            liveRow.appendChild(liveLink('● ライブ追従を開始', startLive));
+            liveRow.title = 'この変更集合の起点のまま、これからの作業ツリーの変更を追う';
+            return;
+        }
+        var dot = document.createElement('span');
+        dot.textContent = '● LIVE ';
+        dot.setAttribute('style', 'color:#ff6b6b;font-weight:bold');
+        liveRow.appendChild(dot);
+        var text = document.createElement('span');
+        var parts = [state.fileCount + ' ファイル / ' + state.islandCount + ' 島'];
+        if (state.running) { parts.push('更新中…'); }
+        text.textContent = parts.join(' · ') + ' ';
+        liveRow.appendChild(text);
+        if (state.pending) {
+            var p = state.pending;
+            var note = document.createElement('span');
+            note.textContent = '· 更新あり（' + p.fileCount + ' ファイル'
+                + (p.islandCount === null || p.islandCount === undefined ? '' : ' / ' + p.islandCount + ' 島') + '） ';
+            note.setAttribute('style', 'color:#ffd479');
+            liveRow.appendChild(note);
+            liveRow.appendChild(liveLink('取り込む', applyLive));
+        } else if (!state.running && state.hookInstalled !== false) {
+            var latest = document.createElement('span');
+            latest.textContent = '· 最新';
+            latest.setAttribute('style', 'color:#888');
+            liveRow.appendChild(latest);
+        }
+        if (state.hookInstalled === false) {
+            // Nothing asks for a rebuild without the Claude Code hook: "up to date" would be a lie.
+            var hook = document.createElement('div');
+            hook.textContent = '⚠ Claude Code の hook が未設定のため追従しません（Neovim で :CallCanvasInstallHook）';
+            hook.setAttribute('style', 'color:#ffd479;white-space:normal');
+            liveRow.appendChild(hook);
+        }
+        if (state.error) {
+            var err = document.createElement('div');
+            err.textContent = '⚠ ' + state.error;
+            err.setAttribute('style', 'color:#ff9b9b;white-space:normal');
+            liveRow.appendChild(err);
+        }
+        liveRow.title = '作業ツリーが変わるたびに裏で作り直し、取り込むまで表示は変えない';
     }
 
     /** A new canvas was analysed elsewhere: offer it without stealing this tab. */

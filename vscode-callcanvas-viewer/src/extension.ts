@@ -18,7 +18,7 @@ import { perfSection, perfTotal, isPerfLogEnabled } from './perfLogger';
 import { getCommitChanges, getWorkbenchChanges, showCommitHashInput } from './gitUtils';
 import { openFileAtLine } from './fileNavigator';
 import { isChangeSetCanvas } from './changeSet';
-import { openChangeSet } from './changeSetCommand';
+import { openChangeSet, refreshLiveChangeSet } from './changeSetCommand';
 import { parseJacocoCoverage } from './coverageParser';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -471,10 +471,13 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    // Command: callcanvas.openChangeSet（コミットかワークベンチの変更を 1 枚の変更集合キャンバスにして開く）
+    // Command: callcanvas.openChangeSet（コミット・ワークベンチ・ライブの変更を 1 枚の変更集合キャンバスにして開く）
     let disposableOpenChangeSet = vscode.commands.registerCommand('callcanvas.openChangeSet', async (target?: string) => {
         await openChangeSet((jsonPath) => openViewerWithJsonPath(jsonPath, context), target);
     });
+    // API Command: ライブの変更集合を今の作業ツリーで作り直して <json>.pending に書く（UI なし。nvim ホストが呼ぶ）
+    let disposableRefreshLive = vscode.commands.registerCommand('callcanvas.refreshLiveChangeSet',
+        (jsonPath: string, since?: string) => refreshLiveChangeSet(jsonPath, since));
 
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposableWithFile);
@@ -486,6 +489,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposableClearCoverage);
     context.subscriptions.push(disposableReloadFromJson);
     context.subscriptions.push(disposableOpenChangeSet);
+    context.subscriptions.push(disposableRefreshLive);
 }
 
 async function loadCoverageReportForPanel(panel: vscode.WebviewPanel): Promise<void> {

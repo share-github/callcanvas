@@ -11,7 +11,8 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const { execFile } = require('child_process');
+const os = require('os');
+const { execFile, execFileSync } = require('child_process');
 
 const { CallCanvasHost, detectProjectRoot, persistentToken, canvasIdFor } = require('../src/host');
 const { globToRegExp } = require('../src/vscodeShim');
@@ -271,6 +272,205 @@ async function testChangeSetCli() {
     } finally {
         await runCli(['stop'], opts);
         fs.rmSync(fixture.workDir, { recursive: true, force: true });
+    }
+}
+
+/**
+ * Live change set: `callcanvas changeset live` takes the working tree as it is now as the base
+ * and opens an empty canvas; `callcanvas notify` (the Claude Code hook) makes the host rebuild
+ * it into `<json>.pending` (untracked files included, CallCanvas's own outputs not), and
+ * /api/live/apply takes the rebuild in. The base never moves: a commit made by the AI does not
+ * drop its changes. A commit / workbench change set switches to live with its own base.
+ */
+async function testLiveChangeSet() {
+    section('callcanvas changeset live / notify / take in / switch to live');
+    let fixture;
+    try {
+        fixture = createChangeSetFixture();
+    } catch (error) {
+        console.log(`  SKIP: ${error.message}`);
+        return;
+    }
+    const repo = fixture.repo;
+    // The host looks for the Claude Code hook in $CLAUDE_CONFIG_DIR/settings.json: an empty one first.
+    const claudeDir = path.join(fixture.workDir, 'claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    const opts = { cwd: repo, env: Object.assign({ CLAUDE_CONFIG_DIR: claudeDir }, fixture.env), timeout: 600000 };
+    const gitIn = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim();
+    const write = (rel, text) => {
+        fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
+        fs.writeFileSync(path.join(repo, rel), text);
+    };
+    const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
+    const lastJson = (out) => { try { return JSON.parse(out.trim().split('\n').pop()); } catch { return {}; } };
+    try {
+        // CallCanvas's own outputs (canvas JSON, analyzer input, index cache) are NOT ignored here,
+        // like in a project that never heard of CallCanvas: they must still not count as changes.
+        write('.gitignore', 'target/\n');
+        gitIn('commit', '-q', '-am', 'stop ignoring the callcanvas outputs');
+
+        const started = Date.now();
+        const result = await runCli(['changeset', 'live', '--json'], opts);
+        const body = lastJson(result.stdout);
+        check('changeset live exits 0 and opens a canvas even with no change yet',
+            result.code === 0 && typeof body.canvasId === 'string', `code=${result.code} ${result.stderr.trim()}`);
+        check('the answer says live, 0 files', body.changeSet && body.changeSet.kind === 'live' && body.changeSet.fileCount === 0,
+            JSON.stringify(body.changeSet));
+        check('the canvas is named 変更集合 ライブ', body.title === '変更集合 ライブ', body.title);
+        check('the answer says the Claude Code hook is not installed (Neovim warns)',
+            body.changeSet && body.changeSet.hookInstalled === false, JSON.stringify(body.changeSet));
+        const origin = String(body.permalink).replace(/\/c\/.*/, '');
+        const token = (String(body.permalink).match(/[?&]t=([^&]+)/) || [])[1];
+        const outDir = path.join(repo, 'build/call-hierarchy-output');
+        const liveFiles = fs.readdirSync(outDir).filter(n => /^callcanvas_changeset_live_[0-9a-f]{8}\.json$/.test(n));
+        check('saved as callcanvas_changeset_live_<base>.json', liveFiles.length === 1, fs.readdirSync(outDir).join(','));
+        const jsonPath = path.join(outDir, liveFiles[0] || 'missing.json');
+        const meta0 = (readJson(jsonPath).metadata || {}).changeSet || {};
+        check('metadata: kind live, base = head = the working tree now (a tree, not HEAD)',
+            meta0.kind === 'live' && meta0.base === meta0.head && meta0.base === gitIn('rev-parse', 'HEAD^{tree}') && meta0.commit === null,
+            JSON.stringify({ kind: meta0.kind, base: meta0.base, head: meta0.head }));
+
+        const status = async (id) => (await get(origin, `/api/live/status?t=${token}&c=${id}`)).body;
+        const idle = async (id, until) => {
+            for (let i = 0; i < 600; i++) {
+                const st = JSON.parse(await status(id));
+                if (!st.running && (!until || until(st))) { return st; }
+                await new Promise(r => setTimeout(r, 500));
+            }
+            return JSON.parse(await status(id));
+        };
+        const id = body.canvasId;
+        const events = new EventStream(origin, token, id);
+        let st = await idle(id);
+        check('status: live, nothing to take in (its own outputs are not changes)', st.live === true && st.pending === null && !st.error,
+            JSON.stringify(st));
+        check('status: the hook is not installed (the badge warns)', st.hookInstalled === false, JSON.stringify(st));
+        await runCli(['install-hook', '--settings', path.join(claudeDir, 'settings.json')]);
+        st = JSON.parse(await status(id));
+        check('after install-hook the status says the hook is installed', st.hookInstalled === true, JSON.stringify(st));
+
+        // The AI edits: a tracked file, a new (untracked) Java class, a new note
+        const service = 'src/main/java/com/example/changeset/order/OrderService.java';
+        const text = fs.readFileSync(path.join(repo, service), 'utf8');
+        const end = text.lastIndexOf('}');
+        write(service, text.slice(0, end) + '\n    public int liveProbe() {\n        return changeSetProbe() + 1;\n    }\n' + text.slice(end));
+        write('src/main/java/com/example/changeset/order/LiveHelper.java',
+            'package com.example.changeset.order;\n\npublic class LiveHelper {\n    public int help(OrderService s) {\n        return s.liveProbe();\n    }\n}\n');
+        write('notes/live.md', '# live\n');
+
+        const t0 = Date.now();
+        const notified = await runCli(['notify'], { cwd: repo });
+        const notifyMs = Date.now() - t0;
+        check('notify exits 0 at once and prints nothing (it is a hook)',
+            notified.code === 0 && notified.stdout === '' && notified.stderr === '' && notifyMs < 3000, `code=${notified.code} ${notifyMs}ms`);
+        st = await idle(id, s => !!s.pending);
+        check('the host rebuilt it: 3 files waiting (modified + 2 untracked)', st.pending && st.pending.fileCount === 3, JSON.stringify(st));
+        check('the rebuild waits: the canvas JSON is unchanged until taken in',
+            ((readJson(jsonPath).metadata || {}).changeSet.files || []).length === 0 && fs.existsSync(`${jsonPath}.pending`));
+        check('the tab hears about it (SSE live event with the waiting rebuild)',
+            events.events.some(e => e.kind === 'live' && e.state && e.state.pending && e.state.pending.fileCount === 3));
+
+        const pendingAt = st.pending.at;
+        await runCli(['notify'], { cwd: repo });
+        st = await idle(id);
+        check('notify with nothing changed does not rebuild', st.pending && st.pending.at === pendingAt, JSON.stringify(st));
+
+        const nav = events.events.length;
+        const applied = await post(origin, token, '/api/live/apply', { canvasId: id });
+        check('take in answers ok', applied.body && applied.body.ok === true, JSON.stringify(applied.body));
+        const meta1 = (readJson(jsonPath).metadata || {}).changeSet || {};
+        const paths1 = (meta1.files || []).map(f => `${f.status}:${f.path}`).sort();
+        check('the canvas JSON is now the rebuild (untracked files as added)',
+            JSON.stringify(paths1) === JSON.stringify([
+                'added:notes/live.md',
+                'added:src/main/java/com/example/changeset/order/LiveHelper.java',
+                `modified:${service}`
+            ]), paths1.join(','));
+        check('the base did not move', meta1.base === meta0.base, `${meta1.base} vs ${meta0.base}`);
+        check('the pending file is gone', !fs.existsSync(`${jsonPath}.pending`));
+        await new Promise(r => setTimeout(r, 300));
+        check('the tabs of the canvas reload (navigate)', events.events.slice(nav).some(e => e.kind === 'navigate'));
+        st = JSON.parse(await status(id));
+        check('status: nothing waiting, 3 files on the canvas', st.pending === null && st.fileCount === 3, JSON.stringify(st));
+        const page = await get(origin, `/c/${id}?t=${token}`);
+        check('the page serves the rebuilt canvas', page.status === 200 && page.body.includes('liveProbe'), `status=${page.status}`);
+        const canvas1 = readJson(jsonPath);
+        check('the new method and the new class are connected in one island',
+            (canvas1.groups || []).filter(g => g.kind === 'island').length >= 1
+            && (canvas1.windows || []).some(w => /liveProbe/.test(w.displayName || ''))
+            && (canvas1.windows || []).some(w => /LiveHelper/.test(w.displayName || '')),
+            (canvas1.windows || []).map(w => w.displayName).join(' | '));
+
+        // The AI commits its work: the base stays, so nothing drops out (and the tree did not change)
+        gitIn('add', '-A');
+        gitIn('commit', '-q', '-m', 'ai work');
+        await runCli(['notify'], { cwd: repo });
+        st = await idle(id);
+        check('a commit by the AI changes nothing (same tree, base fixed)', st.pending === null && st.fileCount === 3, JSON.stringify(st));
+        write('notes/live.md', '# live\nmore\n');
+        await runCli(['notify'], { cwd: repo });
+        st = await idle(id, s => !!s.pending);
+        check('a change after the commit is still against the base (3 files)', st.pending && st.pending.fileCount === 3, JSON.stringify(st));
+        events.close();
+
+        // Switch a commit change set to live: same base (the commit's parent)
+        const commitResult = lastJson((await runCli(['changeset', fixture.commit, '--json'], opts)).stdout);
+        st = JSON.parse(await status(commitResult.canvasId));
+        check('a commit change set can switch to live', st.live === false && st.canStart === true, JSON.stringify(st));
+        const switched = await post(origin, token, '/api/live/start', { canvasId: commitResult.canvasId });
+        const sw = switched.body || {};
+        check('switching answers a new live canvas', sw.ok === true && sw.canvasId && sw.canvasId !== commitResult.canvasId
+            && sw.changeSet && sw.changeSet.kind === 'live', JSON.stringify(sw).slice(0, 300));
+        const parent = gitIn('rev-parse', `${fixture.commit}^`);
+        const swPath = path.join(outDir, `callcanvas_changeset_live_${parent.slice(0, 8)}.json`);
+        const swMeta = fs.existsSync(swPath) ? (readJson(swPath).metadata || {}).changeSet : {};
+        check('its base is the commit change set\'s base (the commit\'s parent)', swMeta.base === parent, swMeta.base);
+        const swPaths = (swMeta.files || []).map(f => f.path);
+        check('it shows the commit\'s change and everything since',
+            swPaths.includes(service) && swPaths.includes('notes/live.md') && swPaths.includes('.gitignore'), swPaths.join(','));
+        const again = await post(origin, token, '/api/live/start', { canvasId: sw.canvasId });
+        check('a live canvas does not switch again', again.body && again.body.ok === false, JSON.stringify(again.body));
+    } finally {
+        await runCli(['stop'], opts);
+        fs.rmSync(fixture.workDir, { recursive: true, force: true });
+    }
+}
+
+/**
+ * `callcanvas install-hook` edits the Claude Code settings: adds the PostToolUse (any tool)
+ * and Stop hooks running `callcanvas notify`, keeps everything else, does not duplicate
+ * itself, and `--remove` gives back the file it started from.
+ */
+async function testInstallHook() {
+    section('callcanvas install-hook');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'callcanvas-hook-'));
+    const file = path.join(dir, 'settings.json');
+    const original = {
+        theme: 'dark',
+        hooks: { Stop: [{ hooks: [{ type: 'command', command: '/usr/local/bin/other-tool' }] }] },
+        permissions: { defaultMode: 'default' }
+    };
+    fs.writeFileSync(file, JSON.stringify(original, null, 2));
+    try {
+        const first = await runCli(['install-hook', '--settings', file]);
+        await runCli(['install-hook', '--settings', file]);
+        const s = JSON.parse(fs.readFileSync(file, 'utf8'));
+        const ours = (groups) => (groups || []).filter(g => (g.hooks || []).some(h => / notify$/.test(h.command) && /cli\.js/.test(h.command)));
+        check('install-hook exits 0', first.code === 0, first.stderr.trim());
+        check('one PostToolUse hook for every tool (matcher *) running notify',
+            ours(s.hooks.PostToolUse).length === 1 && ours(s.hooks.PostToolUse)[0].matcher === '*', JSON.stringify(s.hooks.PostToolUse));
+        check('one Stop hook running notify, the other Stop hook kept',
+            ours(s.hooks.Stop).length === 1 && s.hooks.Stop.some(g => g.hooks[0].command === '/usr/local/bin/other-tool'), JSON.stringify(s.hooks.Stop));
+        check('the rest of the settings is kept', s.theme === 'dark' && s.permissions.defaultMode === 'default');
+        await runCli(['install-hook', '--remove', '--settings', file]);
+        check('--remove gives back the original settings',
+            JSON.stringify(JSON.parse(fs.readFileSync(file, 'utf8'))) === JSON.stringify(original), fs.readFileSync(file, 'utf8'));
+        fs.writeFileSync(file, '{ not json');
+        const broken = await runCli(['install-hook', '--settings', file]);
+        check('a settings file that is not JSON is left alone (exit 1)',
+            broken.code === 1 && fs.readFileSync(file, 'utf8') === '{ not json', broken.stderr.trim());
+    } finally {
+        fs.rmSync(dir, { recursive: true, force: true });
     }
 }
 
@@ -773,8 +973,10 @@ function testBridgeKeys() {
     onPathText.dblclick({
         closest: (sel) => (sel === '.file-path' ? pathEl : (sel === '.title-bar' ? titleBar : null))
     });
+    // (the badge asks for the live change set state on load — not a double-click)
+    const fileFetches = onPathText.calls.fetched.filter(u => !String(u).startsWith('/api/live/status'));
     check('viewer.js keeps owning the .file-path double-click (no double fire)',
-        onPathText.calls.fetched.length === 0, onPathText.calls.fetched.join(' '));
+        fileFetches.length === 0, fileFetches.join(' '));
 
     const custom = loadBridge({ jumpBackKey: 'shift+u', interceptBrowserBack: false });
     custom.press({ key: 'U', shiftKey: true });
@@ -931,6 +1133,8 @@ async function main() {
     await testBuildIndexCliFailure();
     testQuickPickLines();
     await testChangeSetCli();
+    await testLiveChangeSet();
+    await testInstallHook();
     await testCommentCli();
 
     if (!fs.existsSync(TARGET_FILE)) {

@@ -534,5 +534,83 @@
         ]
       }
     }
+  },
+  {
+    "label": "ライブ: 実インデックスを写した一時インデックスでスナップショット（未追跡を含み、無視ファイルと CallCanvas 自身の出力は含まない。追跡済みの無視ファイルは残る）。利用者のインデックス・HEAD・status は変えない。base→head の差に未追跡ファイルが追加で出る。AI が出力ごとコミットしても差分に出力は出ず、出力の書き換えで tree は変わらない。引数 live / live:<base>",
+    "input": {
+      "scenario": "live"
+    },
+    "expected": {
+      "startEqualsBaseTree": true,
+      "sameTreeTwice": false,
+      "treePaths": [
+        ".gitignore",
+        "kept.log",
+        "src/A.java",
+        "src/B.java"
+      ],
+      "indexUntouched": false,
+      "statusUntouched": false,
+      "headUntouched": false,
+      "resolvedKeepsHashes": true,
+      "filesFromStart": [
+        {
+          "filePath": "src/A.java",
+          "status": "modified"
+        },
+        {
+          "filePath": "src/B.java",
+          "status": "added"
+        }
+      ],
+      "filesAfterAiCommit": [
+        {
+          "filePath": "src/A.java",
+          "status": "modified"
+        },
+        {
+          "filePath": "src/B.java",
+          "status": "added"
+        }
+      ],
+      "rewrittenOutputKeepsTree": true,
+      "differsAfterAiCommit": false,
+      "differsWithRealChange": true,
+      "filesFromCommit": [
+        {
+          "filePath": "src/A.java",
+          "status": "modified"
+        },
+        {
+          "filePath": "src/B.java",
+          "status": "added"
+        }
+      ],
+      "worktreeMatches": {
+        "src/A.java": true,
+        "src/B.java": true
+      },
+      "parse": {
+        "live": {
+          "base": null
+        },
+        "upper": {
+          "base": null
+        },
+        "withBase": {
+          "base": "abc123"
+        },
+        "commit": null,
+        "workbench": null,
+        "empty": null,
+        "range": {
+          "error": "ライブの base が不正です: 'live:a..b'"
+        },
+        "dash": {
+          "error": "ライブの base が不正です: 'live:--x'"
+        }
+      },
+      "unknownBase": "Unknown revision: 'no-such-rev'"
+    }
   }
 ]

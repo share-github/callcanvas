@@ -39,6 +39,9 @@ const OPEN_COMMANDS = {
     jsp: 'jsCallHierarchy.exportIncludeMap'
 };
 
+/** The viewer command that builds a change set canvas (commit / workbench / live). */
+const CHANGE_SET_COMMAND = 'callcanvas.openChangeSet';
+
 /** The Java extension prefixes every automatic (background) index build line with this. */
 const AUTO_INDEX_PREFIX = '[Auto-Index]';
 
@@ -333,7 +336,7 @@ function changeSetSummary(jsonPath) {
         return null;
     }
     const summary = {
-        kind: changeSet.kind === 'workbench' ? 'workbench' : 'commit',
+        kind: changeSet.kind === 'workbench' || changeSet.kind === 'live' ? changeSet.kind : 'commit',
         commit: null,
         subject: null,
         fileCount: Array.isArray(changeSet.files) ? changeSet.files.length : 0,
@@ -367,11 +370,67 @@ function quickPickLines(items) {
     ));
 }
 
-/** The canvas title of a change set: `変更集合 <short hash> <subject>` / `変更集合 ワークベンチ`. */
+/** The canvas title of a change set: `変更集合 <short hash> <subject>` / `変更集合 ワークベンチ` / `変更集合 ライブ`. */
 function changeSetTitle(summary) {
-    return summary.kind === 'workbench'
-        ? '変更集合 ワークベンチ'
-        : ['変更集合', summary.commit, summary.subject].filter(Boolean).join(' ');
+    if (summary.kind === 'workbench') {
+        return '変更集合 ワークベンチ';
+    }
+    if (summary.kind === 'live') {
+        return '変更集合 ライブ';
+    }
+    return ['変更集合', summary.commit, summary.subject].filter(Boolean).join(' ');
+}
+
+/** `metadata.changeSet` of a canvas JSON, or null. */
+function readChangeSet(jsonPath) {
+    try {
+        const canvas = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+        const changeSet = canvas && canvas.metadata && canvas.metadata.changeSet;
+        return changeSet && typeof changeSet === 'object' ? changeSet : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Matches the hook command `callcanvas install-hook` writes (whatever node / checkout it pointed at). */
+const NOTIFY_HOOK_PATTERN = /callcanvas[^\s"]*[\\/]src[\\/]cli\.js"?\s+notify\b/;
+
+/** Claude Code's user settings file ($CLAUDE_CONFIG_DIR/settings.json, else ~/.claude/settings.json). */
+function claudeUserSettingsPath() {
+    const configDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+    return path.join(configDir, 'settings.json');
+}
+
+/**
+ * The Claude Code settings files that have the `callcanvas notify` hook (PostToolUse): the
+ * user settings, and `.claude/settings.json` / `.claude/settings.local.json` of the project
+ * root or a directory above it (Claude Code may run at the repository root while Neovim opened
+ * a sub-project). Empty when none has it — a live change set would then never be rebuilt.
+ */
+function notifyHookSettings(projectRoot) {
+    const files = [claudeUserSettingsPath()];
+    for (let dir = path.resolve(projectRoot); ; dir = path.dirname(dir)) {
+        files.push(path.join(dir, '.claude', 'settings.json'), path.join(dir, '.claude', 'settings.local.json'));
+        if (path.dirname(dir) === dir) {
+            break;
+        }
+    }
+    return [...new Set(files)].filter((file) => {
+        let settings;
+        try {
+            settings = JSON.parse(fs.readFileSync(file, 'utf8'));
+        } catch {
+            return false;
+        }
+        const groups = settings && settings.hooks && Array.isArray(settings.hooks.PostToolUse) ? settings.hooks.PostToolUse : [];
+        return groups.some(group => group && Array.isArray(group.hooks)
+            && group.hooks.some(h => h && typeof h.command === 'string' && NOTIFY_HOOK_PATTERN.test(h.command)));
+    });
+}
+
+/** Where `callcanvas.refreshLiveChangeSet` writes a rebuilt live canvas until it is taken in. */
+function livePendingPath(jsonPath) {
+    return `${jsonPath}.pending`;
 }
 
 /** Stable, short canvas id derived from the JSON path (keeps permalinks valid). */
@@ -427,6 +486,13 @@ class CallCanvasHost {
         this.lastInfo = null;
         /** canvas id -> changeSetSummary() of a change set canvas (null for others) */
         this.changeSets = new Map();
+        /**
+         * canvas id -> live state of a live change set canvas (see registerLive). Rebuilt on
+         * `callcanvas notify` (the Claude Code hook), one rebuild at a time per canvas; a
+         * notification arriving during a rebuild asks for one more afterwards. The rebuild goes
+         * to `<json>.pending` and is shown in the browser only when the person takes it in.
+         */
+        this.live = new Map();
         this.uiRequests = new Map();
         this.uiSequence = 0;
         this.activeCanvasId = null;
@@ -470,6 +536,10 @@ class CallCanvasHost {
                 onMessage: (message, canvasId) => this.onBrowserMessage(message, canvasId),
                 onUiReply: (id, value) => this.onUiReply(id, value),
                 onOpen: (body) => this.open(body),
+                onLiveNotify: () => this.notifyLive(),
+                onLiveStatus: (canvasId) => this.liveStatus(canvasId),
+                onLiveApply: (canvasId) => this.applyLive(canvasId),
+                onLiveStart: (canvasId) => this.startLive(canvasId),
                 onClientCount: (count) => this.onClientCount(count),
                 onShutdown: () => this.shutdown()
             }
@@ -687,7 +757,7 @@ class CallCanvasHost {
             title: entry ? entry.title : null,
             // For a change set: kind / commit / subject / fileCount / islandCount, so Neovim can
             // say what it opened without reading the JSON.
-            changeSet: (canvasId && this.changeSets.get(canvasId)) || null,
+            changeSet: (canvasId && this.liveAwareSummary(canvasId)) || null,
             canvasCount: this.server.canvases.size,
             clients: canvasId ? this.server.clientsForCanvas(canvasId) : 0
         };
@@ -759,6 +829,11 @@ class CallCanvasHost {
                     title: changeSet ? changeSetTitle(changeSet) : panel.title,
                     jsonPath: jsonPath || ''
                 });
+                if (changeSet && changeSet.kind === 'live') {
+                    this.registerLive(id, jsonPath);
+                } else {
+                    this.live.delete(id);
+                }
             },
             onPost: (panel, message) => {
                 const id = this.panelIds.get(panel);
@@ -785,6 +860,7 @@ class CallCanvasHost {
                 if (id && this.panels.get(id) === panel) {
                     this.panels.delete(id);
                     this.changeSets.delete(id);
+                    this.live.delete(id);
                     this.server.dropCanvas(id);
                 }
                 if (this.latestPanel === panel) {
@@ -794,6 +870,179 @@ class CallCanvasHost {
             onReveal: () => {},
             assetUrl: (fsPath) => this.server.assetUrl(fsPath)
         };
+    }
+
+    // --- live change set ---------------------------------------------------
+    /**
+     * Start following a live change set canvas. A rebuild left over from an earlier host
+     * (`<json>.pending`) is offered again; a refresh catches up with what changed meanwhile
+     * (it does nothing when the working tree is the canvas's).
+     */
+    registerLive(id, jsonPath) {
+        const existing = this.live.get(id);
+        if (existing && existing.jsonPath === jsonPath) {
+            return;
+        }
+        const entry = { id, jsonPath, running: false, dirty: false, since: null, pending: null, error: null };
+        const pendingSet = readChangeSet(livePendingPath(jsonPath));
+        if (pendingSet && pendingSet.kind === 'live' && typeof pendingSet.head === 'string') {
+            entry.since = pendingSet.head;
+            entry.pending = { head: pendingSet.head, fileCount: (pendingSet.files || []).length, at: null };
+        }
+        this.live.set(id, entry);
+        this.scheduleLive(entry);
+    }
+
+    /** `callcanvas notify` (the Claude Code hook after every tool call): rebuild every live canvas. */
+    notifyLive() {
+        for (const entry of this.live.values()) {
+            this.scheduleLive(entry);
+        }
+        return { ok: true, live: this.live.size };
+    }
+
+    /** One rebuild at a time; a notification during one asks for exactly one more afterwards. */
+    scheduleLive(entry) {
+        if (entry.running) {
+            entry.dirty = true;
+            return;
+        }
+        this.runLive(entry).catch(error => this.log(`live rebuild failed: ${error && error.stack ? error.stack : error}`));
+    }
+
+    async runLive(entry) {
+        entry.running = true;
+        this.runningCommands++;
+        if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+            this.idleTimer = null;
+        }
+        this.broadcastLive(entry);
+        this.beginWork('live: 変更集合を更新中');
+        try {
+            do {
+                entry.dirty = false;
+                const result = await this.shim.vscode.commands.executeCommand(
+                    'callcanvas.refreshLiveChangeSet', entry.jsonPath, entry.since || undefined
+                );
+                if (this.live.get(entry.id) !== entry) {
+                    return;                                   // closed meanwhile
+                }
+                if (!result || !result.success) {
+                    entry.error = (result && result.error) || 'ライブの変更集合を作り直せませんでした';
+                    continue;
+                }
+                entry.error = result.javaError || result.clientsideError || null;
+                entry.since = result.head;
+                if (result.changed) {
+                    entry.pending = {
+                        head: result.head,
+                        fileCount: result.fileCount,
+                        islandCount: result.islandCount,
+                        windowCount: result.windowCount,
+                        at: Date.now()
+                    };
+                }
+                this.broadcastLive(entry);
+            } while (entry.dirty);
+        } finally {
+            entry.running = false;
+            this.endWork();
+            this.runningCommands--;
+            if (this.server.clients.size === 0) {
+                this.scheduleIdleShutdown();
+            }
+            this.broadcastLive(entry);
+        }
+    }
+
+    /**
+     * What the badge of a canvas shows: a live canvas's state (rebuilding, a rebuild waiting to
+     * be taken in, the last error), or whether a commit / workbench change set can switch to live.
+     */
+    liveStatus(canvasId) {
+        const entry = this.live.get(canvasId);
+        if (entry) {
+            const summary = this.changeSets.get(canvasId);
+            return {
+                ok: true,
+                live: true,
+                running: entry.running,
+                pending: entry.pending ? {
+                    fileCount: entry.pending.fileCount,
+                    islandCount: entry.pending.islandCount === undefined ? null : entry.pending.islandCount,
+                    at: entry.pending.at
+                } : null,
+                error: entry.error,
+                // Without the hook nothing asks for a rebuild: the badge says so instead of "up to date".
+                hookInstalled: notifyHookSettings(this.projectRoot).length > 0,
+                fileCount: summary ? summary.fileCount : 0,
+                islandCount: summary ? summary.islandCount : 0
+            };
+        }
+        const summary = this.changeSets.get(canvasId);
+        return { ok: true, live: false, canStart: !!(summary && (summary.kind === 'commit' || summary.kind === 'workbench')) };
+    }
+
+    /**
+     * The change set summary `open` answers with. A live one also says whether the Claude Code
+     * hook is installed: without it nothing ever asks for a rebuild, and Neovim should say so.
+     */
+    liveAwareSummary(canvasId) {
+        const summary = this.changeSets.get(canvasId);
+        if (!summary || summary.kind !== 'live') {
+            return summary;
+        }
+        return Object.assign({}, summary, { hookInstalled: notifyHookSettings(this.projectRoot).length > 0 });
+    }
+
+    broadcastLive(entry) {
+        this.server.broadcastTo(entry.id, { kind: 'live', state: this.liveStatus(entry.id) });
+    }
+
+    /**
+     * Take the waiting rebuild in: it replaces the canvas JSON, and the tabs of the canvas
+     * reload (the page is served from the JSON, see withSavedCanvasData). Edits made on the
+     * canvas since are replaced with it.
+     */
+    applyLive(canvasId) {
+        const entry = this.live.get(canvasId);
+        if (!entry) {
+            return { ok: false, error: 'ライブのキャンバスではありません' };
+        }
+        const pendingPath = livePendingPath(entry.jsonPath);
+        if (!entry.pending || !fs.existsSync(pendingPath)) {
+            entry.pending = null;
+            this.broadcastLive(entry);
+            return { ok: false, error: '取り込む更新はありません' };
+        }
+        fs.renameSync(pendingPath, entry.jsonPath);
+        entry.pending = null;
+        const summary = changeSetSummary(entry.jsonPath);
+        if (summary) {
+            this.changeSets.set(canvasId, summary);
+        }
+        this.broadcastLive(entry);
+        this.server.broadcastTo(canvasId, { kind: 'navigate' });
+        return { ok: true };
+    }
+
+    /**
+     * Switch a commit / workbench change set to live: a live canvas with the same base (so
+     * what it already shows stays, and what changes from now on is added), followed from the
+     * working tree. Answers like `open`, so the browser can go to the new canvas.
+     */
+    async startLive(canvasId) {
+        const entry = this.server.canvases.get(canvasId);
+        const changeSet = entry && entry.jsonPath ? readChangeSet(entry.jsonPath) : null;
+        if (!changeSet || (changeSet.kind !== 'commit' && changeSet.kind !== 'workbench') || !changeSet.base) {
+            return { ok: false, error: 'コミットかワークベンチの変更集合キャンバスからだけライブにできます' };
+        }
+        return this.open({
+            file: path.dirname(entry.jsonPath),
+            command: CHANGE_SET_COMMAND,
+            args: [`live:${changeSet.base}`]
+        });
     }
 
     onBrowserMessage(message, canvasId) {
@@ -1168,5 +1417,6 @@ class CallCanvasHost {
 
 module.exports = {
     CallCanvasHost, detectProjectRoot, findMultiModuleRoot, sessionFile, sessionDir, persistentToken,
-    extractJsonPath, canvasIdFor, OPEN_COMMANDS, quickPickLines, changeSetSummary, changeSetTitle
+    extractJsonPath, canvasIdFor, OPEN_COMMANDS, quickPickLines, changeSetSummary, changeSetTitle, livePendingPath,
+    NOTIFY_HOOK_PATTERN, claudeUserSettingsPath, notifyHookSettings
 };

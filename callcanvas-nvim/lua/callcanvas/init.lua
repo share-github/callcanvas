@@ -290,6 +290,11 @@ local RECENT_COMMIT_COUNT = 20
 -- The argument that means the workbench (`:CallCanvasChangeSet workbench`).
 local WORKBENCH_ARG = 'workbench'
 
+-- The argument that starts a live change set (`:CallCanvasChangeSet live`): the working
+-- tree as it is now is the base, and the canvas follows what changes from here on (the
+-- Claude Code hook installed by :CallCanvasInstallHook tells the host).
+local LIVE_ARG = 'live'
+
 --- Lines of a git command's stdout, or nil when it failed.
 local function git_lines(dir, args)
   local ok, result = pcall(function()
@@ -331,13 +336,15 @@ local function recent_commits(repo)
   return commits
 end
 
---- The choices for :CallCanvasChangeSet without an argument, in order: the workbench
---- (with its file count, so an empty one shows as 0), then the commits, newest first.
---- Each is { text = <shown>, target = <hash | 'workbench'> }.
+--- The choices for :CallCanvasChangeSet without an argument, in order: live (follow
+--- the changes from now on), the workbench (with its file count, so an empty one shows
+--- as 0), then the commits, newest first.
+--- Each is { text = <shown>, target = <hash | 'workbench' | 'live'> }.
 function M.change_set_choices(repo)
   -- Same files as the viewer's workbench: git diff HEAD (tracked files only).
   local workbench = git_lines(repo, { 'diff', 'HEAD', '--name-only' }) or {}
   local choices = {
+    { text = 'ライブ（今からの変更を追う）', target = LIVE_ARG },
     { text = ('ワークベンチ（未コミットの変更: %d ファイル）'):format(#workbench), target = WORKBENCH_ARG },
   }
   for index, commit in ipairs(recent_commits(repo)) do
@@ -355,7 +362,9 @@ local function change_set_headline(target, payload)
   local cs = type(payload.changeSet) == 'table' and payload.changeSet or {}
   local function value(v) return v ~= vim.NIL and v or nil end
   local name
-  if cs.kind == 'workbench' then
+  if cs.kind == 'live' then
+    return ('変更集合 ライブ: %d ファイル / %d 島（ブラウザの「取り込む」で最新に）'):format(cs.fileCount or 0, cs.islandCount or 0)
+  elseif cs.kind == 'workbench' then
     name = 'ワークベンチ'
   else
     local subject = value(cs.subject)
@@ -382,9 +391,20 @@ end
 
 --- Build the canvas for a target that is already decided (a hash or 'workbench').
 local function run_change_set(target, anchor)
-  notify('変更集合を作成中: ' .. (target == WORKBENCH_ARG and 'ワークベンチ' or target) .. ' ...')
+  local label = (target == WORKBENCH_ARG and 'ワークベンチ') or (target == LIVE_ARG and 'ライブ') or target
+  notify('変更集合を作成中: ' .. label .. ' ...')
   run_open(open_args(anchor, 1, 'changeset', { target }), {
-    headline = function(payload) return change_set_headline(target, payload) end,
+    headline = function(payload)
+      local cs = type(payload.changeSet) == 'table' and payload.changeSet or {}
+      if cs.kind == 'live' and cs.hookInstalled == false then
+        -- Without the hook nothing tells the host that the working tree changed.
+        vim.schedule(function()
+          notify('Claude Code の hook が未設定のため、ライブは AI の変更を追従しません。'
+            .. ':CallCanvasInstallHook を 1 回実行し、Claude Code を起動し直してください', vim.log.levels.WARN)
+        end)
+      end
+      return change_set_headline(target, payload)
+    end,
     failed = function(err) return change_set_failed(target, err) end,
   })
 end
@@ -401,7 +421,8 @@ function M.change_set(target, opts)
   local anchor = change_set_anchor(opts.file)
   target = vim.trim(target or '')
   if target ~= '' then
-    run_change_set(target:lower() == WORKBENCH_ARG and WORKBENCH_ARG or target, anchor)
+    local lower = target:lower()
+    run_change_set((lower == WORKBENCH_ARG or lower == LIVE_ARG) and lower or target, anchor)
     return
   end
   local repo = change_set_repo(anchor)
@@ -419,9 +440,9 @@ function M.change_set(target, opts)
   end)
 end
 
---- Completion for :CallCanvasChangeSet: workbench, HEAD and the recent short hashes.
+--- Completion for :CallCanvasChangeSet: live, workbench, HEAD and the recent short hashes.
 function M.complete_change_set(arglead)
-  local candidates = { WORKBENCH_ARG, 'HEAD' }
+  local candidates = { LIVE_ARG, WORKBENCH_ARG, 'HEAD' }
   local repo = change_set_repo(change_set_anchor())
   if repo then
     for _, commit in ipairs(recent_commits(repo)) do
@@ -604,6 +625,23 @@ function M.install_skill(skills_dir)
   end
   notify('Claude Code skill installed: ' .. target)
   return target
+end
+
+--- Add the Claude Code hooks that keep live change sets following the AI
+--- (`callcanvas install-hook`: `callcanvas notify` after every tool call and when a turn
+--- ends, in ~/.claude/settings.json). With `remove`, take them out again.
+function M.install_hook(remove)
+  local args = { M.config.node, cli_path(), 'install-hook' }
+  if remove then
+    table.insert(args, '--remove')
+  end
+  local result = vim.system(args, { text = true }):wait()
+  if result.code ~= 0 then
+    notify(((result.stderr or '') .. (result.stdout or '')):gsub('%s+$', ''), vim.log.levels.ERROR)
+    return false
+  end
+  notify((result.stdout or ''):gsub('%s+$', ''))
+  return true
 end
 
 --- Print host status.
@@ -975,6 +1013,9 @@ function M.setup(opts)
     desc = 'CallCanvas: one canvas for the changes of a commit or the workbench (no argument: pick from a list)',
   })
 
+  vim.api.nvim_create_user_command('CallCanvasInstallHook', function(cmd)
+    M.install_hook(cmd.bang)
+  end, { bang = true, desc = 'CallCanvas: add the Claude Code hooks for live change sets (! removes them)' })
   vim.api.nvim_create_user_command('CallCanvasInstallSkill', function(cmd)
     M.install_skill(cmd.args)
   end, {

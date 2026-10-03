@@ -243,6 +243,71 @@ const scenarios = {
         const total = Object.values(grouped).reduce((a, v) => a + v.length, 0);
         return { inputCount: list.length, total, byBlock };
     },
+    async 'live'() {
+        // ライブ: 専用の一時リポジトリ（ほかのシナリオの作業ツリーを変えない）
+        const r = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'callcanvas-live-')));
+        try {
+            const rg = (...args) => execFileSync('git', args, { cwd: r, encoding: 'utf-8' }).trim();
+            const w = (rel, content) => { const p = path.join(r, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, content); };
+            rg('init', '-q', '-b', 'main');
+            w('.gitignore', '*.log\n');
+            w('src/A.java', 'class A {}\n');
+            w('kept.log', 'tracked but ignored\n');
+            rg('add', '.gitignore', 'src/A.java');
+            rg('add', '-f', 'kept.log');
+            rg('commit', '-q', '-m', 'base');
+            const base = rg('rev-parse', 'HEAD');
+            const start = await g.snapshotWorktree(r);
+            // AI の作業: 追跡ファイルの変更・未追跡ファイルの追加・無視ファイル・CallCanvas 自身の出力
+            w('src/A.java', 'class A { void f() {} }\n');
+            w('src/B.java', 'class B {}\n');
+            w('debug.log', 'ignored\n');
+            w('build/call-hierarchy-output/callcanvas_changeset_live_x.json', '{}\n');
+            w('build/call-hierarchy-output/callcanvas_changeset_live_x.json.pending', '{}\n');
+            w('sub/.callcanvas-cache/call-index.meta', 'x\n');
+            w('.callcanvas-temp-123/out.json', '{}\n');
+            w('web/page_callcanvas.json', '{}\n');
+            const indexBefore = rg('write-tree');
+            const statusBefore = rg('status', '--porcelain');
+            const head = await g.snapshotWorktree(r);
+            const paths = rg('ls-tree', '-r', '--name-only', head).split('\n');
+            const rangeFromStart = await g.resolveChangeSetTarget(r, { kind: 'live', base: start, head });
+            const rangeFromCommit = await g.resolveChangeSetTarget(r, { kind: 'live', base, head });
+            const filesOf = async (range) => (await g.getChangeSetFiles(r, range)).map(f => ({ filePath: f.filePath, status: f.status }));
+            const filesFromStartBeforeCommit = await filesOf(rangeFromStart);
+            // AI が出力ごと `git add -A` でコミットしても（このリポジトリは出力を ignore していない）差分に出力は出ない
+            rg('add', '-A');
+            rg('commit', '-q', '-m', 'ai commits everything');
+            w('build/call-hierarchy-output/callcanvas_changeset_live_x.json.pending', '{"rewritten": true}\n');
+            const afterCommit = await g.snapshotWorktree(r);
+            const filesAfterAiCommit = await filesOf(await g.resolveChangeSetTarget(r, { kind: 'live', base: start, head: afterCommit }));
+            const p = (t) => { try { return g.parseLiveArg(t); } catch (e) { return { error: e.message }; } };
+            return {
+                startEqualsBaseTree: start === rg('rev-parse', `${base}^{tree}`),
+                sameTreeTwice: head === await g.snapshotWorktree(r),
+                treePaths: paths,
+                indexUntouched: indexBefore === rg('write-tree'),
+                statusUntouched: statusBefore === rg('status', '--porcelain'),
+                headUntouched: rg('rev-parse', 'HEAD') === base,
+                resolvedKeepsHashes: rangeFromStart.base === start && rangeFromStart.head === head && rangeFromCommit.base === base,
+                filesFromStart: filesFromStartBeforeCommit,
+                filesAfterAiCommit,
+                rewrittenOutputKeepsTree: afterCommit === rg('rev-parse', 'HEAD^{tree}'),
+                // 出力が追跡済みになって tree は変わっても、出力以外の差は無い（作り直さない）
+                differsAfterAiCommit: await g.snapshotsDiffer(r, head, afterCommit),
+                differsWithRealChange: await g.snapshotsDiffer(r, start, head),
+                filesFromCommit: await filesOf(rangeFromCommit),
+                worktreeMatches: Object.fromEntries(await g.getWorktreeMatchMap(r, head, ['src/A.java', 'src/B.java'])),
+                parse: {
+                    live: p(' live '), upper: p('LIVE'), withBase: p('live:abc123'), commit: p('abc123'),
+                    workbench: p('workbench'), empty: p('live:'), range: p('live:a..b'), dash: p('live:--x'),
+                },
+                unknownBase: await errorOf(() => g.resolveLiveBase(r, 'no-such-rev')),
+            };
+        } finally {
+            fs.rmSync(r, { recursive: true, force: true });
+        }
+    },
 };
 
 (async () => {

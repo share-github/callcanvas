@@ -387,10 +387,10 @@ else
     nvim --server "$SOCK" --remote-expr \
         "execute('tabnew $CS_REPO/src/main/java/com/example/changeset/order/OrderService.java')" >/dev/null
 
-    # Completion: workbench, HEAD and the recent short hashes.
+    # Completion: live, workbench, HEAD and the recent short hashes.
     COMPLETION="$(nvim --server "$SOCK" --remote-expr "join(getcompletion('CallCanvasChangeSet ', 'cmdline'), ',')" 2>/dev/null)"
-    if [[ ",$COMPLETION," == *",workbench,"* && ",$COMPLETION," == *",HEAD,"* && ",$COMPLETION," == *",$CS_COMMIT,"* ]]; then
-        ok "completion offers workbench, HEAD and the commits ($COMPLETION)"
+    if [[ ",$COMPLETION," == *",live,"* && ",$COMPLETION," == *",workbench,"* && ",$COMPLETION," == *",HEAD,"* && ",$COMPLETION," == *",$CS_COMMIT,"* ]]; then
+        ok "completion offers live, workbench, HEAD and the commits ($COMPLETION)"
     else
         bad "completion: '$COMPLETION'"
     fi
@@ -425,15 +425,21 @@ LUA
     OFFERED="$(nvim --server "$SOCK" --remote-expr "luaeval('table.concat(_G.cs_offered or {}, \"\\n\")')" 2>/dev/null)"
     FIRST="$(sed -n 1p <<<"$OFFERED")"
     SECOND="$(sed -n 2p <<<"$OFFERED")"
-    if [[ "$FIRST" == "ワークベンチ（未コミットの変更: 0 ファイル）" ]]; then
-        ok "the list starts with the workbench and its count, 0 with nothing uncommitted ($FIRST)"
+    THIRD="$(sed -n 3p <<<"$OFFERED")"
+    if [[ "$FIRST" == "ライブ（今からの変更を追う）" ]]; then
+        ok "the list starts with live, following the changes from now on ($FIRST)"
     else
         bad "first item: '$FIRST'"
     fi
-    if [[ "$SECOND" == "直前のコミット  $CS_COMMIT  $CS_SUBJECT  ("*")" ]]; then
-        ok "then the last commit, readable ($SECOND)"
+    if [[ "$SECOND" == "ワークベンチ（未コミットの変更: 0 ファイル）" ]]; then
+        ok "then the workbench and its count, 0 with nothing uncommitted ($SECOND)"
     else
         bad "second item: '$SECOND'"
+    fi
+    if [[ "$THIRD" == "直前のコミット  $CS_COMMIT  $CS_SUBJECT  ("*")" ]]; then
+        ok "then the last commit, readable ($THIRD)"
+    else
+        bad "third item: '$THIRD'"
     fi
     if [[ "$OFFERED" != *".."* && "$OFFERED" != *"範囲"* ]]; then
         ok "no range items are offered"
@@ -497,7 +503,7 @@ LUA
     step "the workbench count follows the working tree"
     echo "// uncommitted" >>"$CS_REPO/src/main/java/com/example/changeset/order/OrderService.java"
     DIRTY="$(nvim --server "$SOCK" --remote-expr \
-        "luaeval('require(\"callcanvas\").change_set_choices(_A)[1].text', '$CS_REPO')" 2>/dev/null)"
+        "luaeval('require(\"callcanvas\").change_set_choices(_A)[2].text', '$CS_REPO')" 2>/dev/null)"
     git -C "$CS_REPO" checkout -q -- .
     if [[ "$DIRTY" == "ワークベンチ（未コミットの変更: 1 ファイル）" ]]; then
         ok "one uncommitted file shows as 1 ($DIRTY)"

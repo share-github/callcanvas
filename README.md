@@ -157,7 +157,7 @@ done
   main = 'callcanvas',           -- lua モジュール名（ディレクトリ名と異なる）
   cmd = { 'CallCanvas', 'CallCanvasBrowse', 'CallCanvasUrl',
           'CallCanvasList', 'CallCanvasStatus', 'CallCanvasStop', 'CallCanvasChangeSet',
-          'CallCanvasInstallSkill' },
+          'CallCanvasInstallHook', 'CallCanvasInstallSkill' },
   keys = { { '<leader>vv', '<cmd>CallCanvas<cr>', desc = 'CallCanvas' } },
   opts = {
     -- Neovim がコンテナ / リモートで、ブラウザが手元にある場合:
@@ -176,7 +176,8 @@ done
 | コマンド / キー | 動作 |
 |---|---|
 | `:CallCanvas`（`<leader>vv`） | カーソル位置のメソッド / 関数を解析し、URL をクリップボードへ入れる |
-| `:CallCanvasChangeSet [<hash>\|workbench]`（`<leader>vc`） | 変更集合キャンバス。引数なしならワークベンチ / 直近のコミットの一覧から選ぶ |
+| `:CallCanvasChangeSet [<hash>\|workbench\|live]`（`<leader>vc`） | 変更集合キャンバス。引数なしならライブ / ワークベンチ / 直近のコミットの一覧から選ぶ。`live` は AI の作業を追う（下記） |
+| `:CallCanvasInstallHook[!]` | ライブ変更集合に必要な Claude Code の hook を足す（`!` で外す。下記） |
 | `:CallCanvasList`（`<leader>vl`） | 開いているキャンバスの一覧 |
 | `:CallCanvasUrl`（`<leader>vu`） | URL の再表示・再コピー |
 | `:CallCanvasInstallSkill` | Claude Code にキャンバスへコメントを書かせる skill を書き出す（下記） |
@@ -200,6 +201,28 @@ Claude Code にコード解説をキャンバスへ書かせる:
    `callcanvas canvases`（キャンバスと各ウィンドウのファイル・行範囲）を見て、`callcanvas comment
    --file <path> --line N --text ...` でファイル + 行番号を指定して書く（変更集合の追加・削除行も可）
 3. ブラウザをリロードするとコメントが出る（AI が書く前から開いていたタブは、編集する前にリロードする）
+
+AI（Claude Code）の作業をライブで追う（ライブ変更集合）:
+
+**Claude Code の hook が必要**（無いと作業ツリーの変化がホストに伝わらず、キャンバスは更新されない。
+その場合はブラウザのバッジと nvim の通知に「hook が未設定」と出る）。
+
+1. nvim で `:CallCanvasInstallHook` を 1 回実行する。`~/.claude/settings.json`（`$CLAUDE_CONFIG_DIR` があればその下）に、
+   ツール呼び出しのたび（`PostToolUse`。全ツール）とターンの終わり（`Stop`）に `callcanvas notify` を呼ぶ hook を足す
+   （既存の設定と hook は残す。何度実行しても重複しない。`:CallCanvasInstallHook!` で外す）。
+   特定のリポジトリだけにするなら CLI で `node <このリポジトリ>/callcanvas-nvim/src/cli.js install-hook --settings <リポジトリ>/.claude/settings.local.json`。
+   入れたあと、起動中の Claude Code は起動し直す
+2. AI に作業させる前に `:CallCanvasChangeSet live`（一覧の先頭「ライブ」でも可）。今の作業ツリーを起点にした空のキャンバスが開く
+3. 同じマシンの同じリポジトリで Claude Code に作業させる。作業ツリーが変わるたびにホストが裏で作り直し、
+   ブラウザ右下のバッジに `更新あり（N ファイル / M 島） 取り込む` が出る。**押したときだけ**表示が新しくなる（読んでいる最中に変わらない）
+4. AI の 1 回目の作業をコミット / ワークベンチの変更集合で見たあとに追い始めるなら、そのキャンバスのバッジの
+   「● ライブ追従を開始」（その変更集合の起点のまま、これからの変更を足していく）
+
+- 起点は動かない。AI が途中でコミットしても、それまでの変更はキャンバスに残る
+- 未追跡の新しいファイルも載る（.gitignore に当たるものと CallCanvas 自身の出力は載らない）
+- `callcanvas notify` は作り直しを待たず、何も出力せず、常に終了コード 0（ホストが動いていなければ何もしない）。
+  AI 側はこの hook を意識しない（会話には何も入らない）
+- hook のコマンドはこのリポジトリの `callcanvas-nvim/src/cli.js` を絶対パスで呼ぶ。Claude Code と nvim は同じマシン（同じコンテナ）で動かす
 
 ブラウザ側のキー操作:
 
@@ -274,3 +297,6 @@ Claude Code にコード解説をキャンバスへ書かせる:
 4. Java を解析する場合は `java -version` が 21 以上か確認する。足りなければユーザーに伝え、`javaCallHierarchy.javaPath` の設定を提案する
 5. 「.vscode/settings.json の導入」に従って、対象プロジェクトに設定を入れる。既存の設定ファイルは上書きしない。`javaCallHierarchy.languageLevel` は対象プロジェクトの Java バージョン（`pom.xml` / `build.gradle` など）に合わせる
 6. ユーザーにウィンドウの再読み込みを依頼する
+7. Neovim で AI の作業をライブで追う（ライブ変更集合）なら Claude Code の hook が必要。`~/.claude/settings.json` を書き換えるので、
+   ユーザーの了承を得てから `node <このリポジトリ>/callcanvas-nvim/src/cli.js install-hook`（nvim では `:CallCanvasInstallHook`）を実行し、
+   起動中の Claude Code の再起動を依頼する（特定のリポジトリだけなら `--settings <リポジトリ>/.claude/settings.local.json`）

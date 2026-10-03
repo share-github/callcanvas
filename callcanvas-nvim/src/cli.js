@@ -7,7 +7,9 @@
  *   callcanvas serve [--file <path> --line N] [--host H] [--port P]
  *   callcanvas command <commandId> [--arg <json>]...
  *   callcanvas build-index [--file <path>]
- *   callcanvas changeset [<hash>|workbench] [--file <path>]
+ *   callcanvas changeset [<hash>|workbench|live] [--file <path>]
+ *   callcanvas notify
+ *   callcanvas install-hook [--remove] [--settings <path>]
  *   callcanvas canvases [--canvas <name|path>] [--json]
  *   callcanvas comment --file <path> --line N --text <text> | --batch <json file|->
  *   callcanvas status | stop
@@ -20,7 +22,9 @@ const path = require('path');
 const http = require('http');
 const { spawn } = require('child_process');
 
-const { CallCanvasHost, detectProjectRoot, sessionFile, sessionDir } = require('./host');
+const {
+    CallCanvasHost, detectProjectRoot, sessionFile, sessionDir, NOTIFY_HOOK_PATTERN, claudeUserSettingsPath
+} = require('./host');
 const { listCanvases, describeCanvas, resolveCanvasArg, applyComments } = require('./comments');
 
 function parseArgs(argv) {
@@ -55,6 +59,7 @@ function parseArgs(argv) {
             case 'window': options.window = next(); break;
             case 'batch': options.batch = next(); break;
             case 'remove': options.remove = true; break;
+            case 'settings': options.settings = next(); break;
             case 'set': {
                 const pair = next() || '';
                 const eq = pair.indexOf('=');
@@ -84,10 +89,19 @@ Usage:
   callcanvas serve [--file <path>] [--line N] [options]
   callcanvas command <commandId> [--arg <json>] [--file <path> --line N]
   callcanvas build-index [--file <path>] [--root <dir>]
-  callcanvas changeset [<hash>|workbench] [--file <path>] [--nvim <servername>] [--json] [options]
+  callcanvas changeset [<hash>|workbench|live] [--file <path>] [--nvim <servername>] [--json] [options]
                        <hash>: that commit's changes (against its first parent);
                        workbench: the uncommitted changes (git diff HEAD);
+                       live: follow the working tree from now on (untracked files too) —
+                       rebuilt on \`callcanvas notify\`, taken in from the canvas's badge;
                        omitted = ask (in Neovim when --nvim is given)
+  callcanvas notify    tell the running hosts that the working tree may have changed (live
+                       change sets rebuild). For a Claude Code hook: never blocks, prints
+                       nothing, always exits 0
+  callcanvas install-hook [--remove] [--settings <path>]
+                       add (remove) the Claude Code hooks that run \`callcanvas notify\` after
+                       every tool call and when a turn ends, to ~/.claude/settings.json
+                       (or $CLAUDE_CONFIG_DIR/settings.json, or --settings)
   callcanvas status [--root <dir>] [--json]
   callcanvas stop   [--root <dir>]
   callcanvas canvases [--root <dir>] [--canvas <name|path>] [--json]
@@ -420,6 +434,117 @@ async function cmdChangeSet(options) {
     printOpened(session, body, projectRoot, options);
 }
 
+/**
+ * `callcanvas notify` — the Claude Code hook (after every tool call, and when a turn ends):
+ * tell the running hosts of this project that the working tree may have changed, so their
+ * live change set canvases rebuild. It must never get in the AI's way: it does not wait for
+ * the rebuild (the host answers at once), prints nothing and always exits 0 — no host
+ * running is the normal case.
+ * A host is "of this project" when its project root contains the cwd (Claude Code runs the
+ * hook in its project directory) or lies inside it (Neovim may have opened a sub-module).
+ */
+async function cmdNotify(options) {
+    const cwd = path.resolve(options.root || process.cwd());
+    let names = [];
+    try {
+        names = fs.readdirSync(sessionDir()).filter(name => name.endsWith('.json'));
+    } catch {
+        return;
+    }
+    const within = (child, parent) => child === parent || child.startsWith(parent.endsWith(path.sep) ? parent : parent + path.sep);
+    await Promise.all(names.map(async (name) => {
+        let session;
+        try {
+            session = JSON.parse(fs.readFileSync(path.join(sessionDir(), name), 'utf8'));
+            process.kill(session.pid, 0);
+        } catch {
+            return;
+        }
+        const root = path.resolve(session.projectRoot || '');
+        if (!within(cwd, root) && !within(root, cwd)) {
+            return;
+        }
+        await request(session, '/api/live/notify', { cwd }, 2000);
+    }));
+}
+
+/** The Claude Code settings file install-hook edits (the user settings unless --settings). */
+function claudeSettingsPath(options) {
+    return options.settings ? path.resolve(options.settings) : claudeUserSettingsPath();
+}
+
+/**
+ * Remove (in place) every hook entry install-hook wrote; drop the groups and events left empty.
+ * Other hooks are kept as they are.
+ */
+function removeNotifyHooks(settings) {
+    const hooks = settings.hooks;
+    if (!hooks || typeof hooks !== 'object') {
+        return 0;
+    }
+    let removed = 0;
+    for (const event of Object.keys(hooks)) {
+        if (!Array.isArray(hooks[event])) {
+            continue;
+        }
+        hooks[event] = hooks[event].filter(group => {
+            if (!group || !Array.isArray(group.hooks)) {
+                return true;
+            }
+            const before = group.hooks.length;
+            group.hooks = group.hooks.filter(h => !(h && typeof h.command === 'string' && NOTIFY_HOOK_PATTERN.test(h.command)));
+            removed += before - group.hooks.length;
+            return group.hooks.length > 0;
+        });
+        if (hooks[event].length === 0) {
+            delete hooks[event];
+        }
+    }
+    if (Object.keys(hooks).length === 0) {
+        delete settings.hooks;
+    }
+    return removed;
+}
+
+/**
+ * `callcanvas install-hook` — add the Claude Code hooks that keep live change set canvases
+ * following the AI: `callcanvas notify` after every tool call (PostToolUse, any tool: edits go
+ * through Bash as well as Edit / Write) and when a turn ends (Stop). Idempotent: an earlier
+ * install (also from another checkout) is replaced. `--remove` takes them out again. The rest
+ * of the settings file is kept.
+ */
+async function cmdInstallHook(options) {
+    const file = claudeSettingsPath(options);
+    let settings = {};
+    if (fs.existsSync(file)) {
+        const text = fs.readFileSync(file, 'utf8');
+        try {
+            settings = text.trim() ? JSON.parse(text) : {};
+        } catch (error) {
+            throw new Error(`${file} is not valid JSON (${error.message}) — not touching it`);
+        }
+    }
+    const removed = removeNotifyHooks(settings);
+    if (options.remove) {
+        if (removed === 0) {
+            process.stdout.write(`no callcanvas hook in ${file}\n`);
+            return;
+        }
+    } else {
+        const slash = (p) => p.split(path.sep).join('/');
+        const command = `"${slash(process.execPath)}" "${slash(path.resolve(__filename))}" notify`;
+        const hook = { type: 'command', command, timeout: 5 };
+        settings.hooks = settings.hooks && typeof settings.hooks === 'object' ? settings.hooks : {};
+        settings.hooks.PostToolUse = (settings.hooks.PostToolUse || []).concat([{ matcher: '*', hooks: [hook] }]);
+        settings.hooks.Stop = (settings.hooks.Stop || []).concat([{ hooks: [Object.assign({}, hook)] }]);
+    }
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(settings, null, 2) + '\n');
+    process.stdout.write(options.remove
+        ? `removed the callcanvas hooks from ${file}\n`
+        : `installed the callcanvas hooks (PostToolUse, Stop → callcanvas notify) in ${file}\n`);
+}
+
 /** `callcanvas build-index` — build the Java call index for this project. */
 async function cmdBuildIndex(options) {
     return cmdCommand(options, BUILD_INDEX_COMMAND);
@@ -591,6 +716,11 @@ async function main() {
         case 'command': await cmdCommand(options); return;
         case 'build-index': await cmdBuildIndex(options); return;
         case 'changeset': await cmdChangeSet(options); return;
+        case 'notify':
+            // A hook must not fail the tool call it follows, whatever happens here.
+            try { await cmdNotify(options); } catch { /* ignore */ }
+            return;
+        case 'install-hook': await cmdInstallHook(options); return;
         case 'status': await cmdStatus(options); return;
         case 'stop': await cmdStop(options); return;
         case 'canvases': await cmdCanvases(options); return;
